@@ -1,0 +1,24 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.elf
+*.hex
+*.bin
+
+# IDE files
+.vscode/
+.idea/
+*.code-workspace
+
+# CodeQL analysis
+_codeql_detected_source_root
+*.sarif
+
+# Test outputs
+/tmp/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
