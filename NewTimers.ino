@@ -10,16 +10,20 @@
  * - TimerManager: Centralized timer management
  * - Timer: Individual software timer instances
  * - ModuleBase: Base class for all managed modules
- * - Example modules: BlinkModule, RetryModule
+ * - Example modules: BlinkModule, RetryModule, SensorModule, StateMachineModule
  */
 
 #include "TimerManager.h"
 #include "BlinkModule.h"
 #include "RetryModule.h"
+#include "SensorModule.h"
+#include "StateMachineModule.h"
 
 // Module instances
 BlinkModule ledBlink(LED_BUILTIN, 500);  // Blink built-in LED every 500ms
 RetryModule retryExample(5, 2000);       // Max 5 attempts, 2 second retry delay
+SensorModule sensorExample(3000);        // Read sensor every 3 seconds
+StateMachineModule stateMachine;         // State machine example
 
 // Timer for periodic status reporting
 Timer statusTimer;
@@ -34,6 +38,7 @@ void setup() {
   Serial.println("- Centralized timing through TimerManager");
   Serial.println("- No direct millis() calls in modules");
   Serial.println("- Layered managed module architecture");
+  Serial.println("- Multiple example modules demonstrating patterns");
   Serial.println();
 
   // Initialize timer manager
@@ -42,12 +47,14 @@ void setup() {
   // Initialize modules
   ledBlink.begin();
   retryExample.begin();
+  sensorExample.begin();
+  stateMachine.begin();
   
   // Register status timer
   tm.registerTimer(&statusTimer);
-  statusTimer.start(10000); // Status every 10 seconds
+  statusTimer.start(15000); // Status every 15 seconds
   
-  Serial.println("Setup complete. Modules initialized.");
+  Serial.println("Setup complete. All modules initialized.");
   Serial.println();
   
   // Start retry operation after 3 seconds
@@ -62,6 +69,9 @@ void setup() {
   
   Serial.println("Starting retry operation...");
   retryExample.startOperation();
+  
+  Serial.println("Starting state machine...");
+  stateMachine.start();
 }
 
 void loop() {
@@ -73,21 +83,28 @@ void loop() {
   // Update all modules
   ledBlink.update();
   retryExample.update();
+  sensorExample.update();
+  stateMachine.update();
   
   // Periodic status reporting using timer
   if (statusTimer.expired()) {
     statusTimer.reset();
     
     Serial.println();
-    Serial.println("--- Status Report ---");
+    Serial.println("========== Status Report ==========");
     Serial.print("Uptime: ");
     Serial.print(tm.now() / 1000);
     Serial.println(" seconds");
-    Serial.print("LED Blinks: ");
+    
+    Serial.println();
+    Serial.println("--- BlinkModule ---");
+    Serial.print("Total blinks: ");
     Serial.println(ledBlink.getBlinkCount());
     
+    Serial.println();
+    Serial.println("--- RetryModule ---");
     if (retryExample.isComplete()) {
-      Serial.print("Retry operation: ");
+      Serial.print("Status: ");
       Serial.println(retryExample.wasSuccessful() ? "SUCCESS" : "FAILED");
       Serial.print("Attempts used: ");
       Serial.println(retryExample.getCurrentAttempt());
@@ -96,11 +113,26 @@ void loop() {
       Serial.println("Starting new retry operation...");
       retryExample.startOperation();
     } else {
-      Serial.print("Retry operation in progress (attempt ");
+      Serial.print("Status: IN PROGRESS (attempt ");
       Serial.print(retryExample.getCurrentAttempt());
       Serial.println(")");
     }
-    Serial.println("---------------------");
+    
+    Serial.println();
+    Serial.println("--- SensorModule ---");
+    Serial.print("Initialized: ");
+    Serial.println(sensorExample.isInitialized() ? "YES" : "NO");
+    Serial.print("Last reading: ");
+    Serial.println(sensorExample.getLastReading());
+    Serial.print("Average: ");
+    Serial.println(sensorExample.getAverage());
+    
+    Serial.println();
+    Serial.println("--- StateMachineModule ---");
+    Serial.print("Current state: ");
+    Serial.println(stateMachine.getStateName());
+    
+    Serial.println("===================================");
     Serial.println();
   }
 }

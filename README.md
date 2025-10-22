@@ -143,6 +143,63 @@ void loop() {
 }
 ```
 
+### SensorModule
+
+Shows complex timer usage with multiple timers for different purposes:
+
+```cpp
+SensorModule sensor(1000);  // Read every second
+
+void setup() {
+  sensor.begin();
+}
+
+void loop() {
+  sensor.update();
+  
+  if (sensor.isInitialized()) {
+    int reading = sensor.getLastReading();
+    float average = sensor.getAverage();
+  }
+}
+```
+
+Features:
+- Periodic sensor reading timer
+- Initialization timeout timer
+- Debounce timer for sensor readings
+- Rolling average calculation
+
+### StateMachineModule
+
+Demonstrates state machine implementation using timers:
+
+```cpp
+StateMachineModule stateMachine;
+
+void setup() {
+  stateMachine.begin();
+  stateMachine.start();
+}
+
+void loop() {
+  stateMachine.update();
+  
+  // Check state
+  Serial.println(stateMachine.getStateName());
+  
+  // Control state
+  stateMachine.pause();
+  stateMachine.resume();
+}
+```
+
+Features:
+- State transitions with timing
+- Timeout handling
+- Auto-recovery from errors
+- All timing through TimerManager
+
 ## Benefits of This Architecture
 
 1. **Maintainability**: Centralized timing logic makes code easier to maintain and debug
@@ -164,18 +221,23 @@ This is an Arduino sketch. To use it:
 
 ```
 NewTimers/
-├── NewTimers.ino          # Main sketch
-├── Timer.h                # Timer class header
-├── Timer.cpp              # Timer class implementation
-├── TimerManager.h         # TimerManager class header
-├── TimerManager.cpp       # TimerManager class implementation
-├── ModuleBase.h           # Base module class header
-├── ModuleBase.cpp         # Base module class implementation
-├── BlinkModule.h          # Example blink module header
-├── BlinkModule.cpp        # Example blink module implementation
-├── RetryModule.h          # Example retry module header
-├── RetryModule.cpp        # Example retry module implementation
-└── README.md              # This file
+├── NewTimers.ino              # Main sketch
+├── Timer.h                    # Timer class header
+├── Timer.cpp                  # Timer class implementation
+├── TimerManager.h             # TimerManager class header
+├── TimerManager.cpp           # TimerManager class implementation
+├── ModuleBase.h               # Base module class header
+├── ModuleBase.cpp             # Base module class implementation
+├── BlinkModule.h              # Example blink module header
+├── BlinkModule.cpp            # Example blink module implementation
+├── RetryModule.h              # Example retry module header
+├── RetryModule.cpp            # Example retry module implementation
+├── SensorModule.h             # Example sensor module header
+├── SensorModule.cpp           # Example sensor module implementation
+├── StateMachineModule.h       # Example state machine module header
+├── StateMachineModule.cpp     # Example state machine module implementation
+├── ARCHITECTURE.md            # Architecture comparison and migration guide
+└── README.md                  # This file
 ```
 
 ## License
