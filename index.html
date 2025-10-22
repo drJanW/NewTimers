@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Kwal</title>
+  <style>
+    :root{
+      --bg:#0f1115; --text:#e7eaf0; --muted:#a8b0bf;
+      --accent:#4ca3ff; --ok:#2ecc71; --warn:#ffb020; --bad:#ff5d5d;
+      --card-audio:#141a24;
+      --card-light:#141d16;
+      --card-ota:#1e1717;
+      --radius:14px; --pad:16px;
+      --line:#2a2f3a;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f5f6fa; --text:#101218; --muted:#5b6473;
+        --accent:#2563eb; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+        --card-audio:#eaf0fb; --card-light:#eaf6ee; --card-ota:#f8eaea;
+        --line:#d9dee7;
+      }
+    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body{ height:100%; }
+    body{
+      margin:0; font:16px system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      background:var(--bg); color:var(--text);
+      display:flex; flex-direction:column;
+    }
+    .wrap{ width:min(640px,100%); margin:0 auto; padding:16px 16px 40px; }
+    h1{ margin:0 0 12px; font-size:20px; font-weight:700; letter-spacing:.2px; }
+    h2{ margin:0 0 10px; font-size:16px; font-weight:700; color:var(--muted); }
+    .card{ border-radius:var(--radius); padding:var(--pad); margin:12px 0; box-shadow:0 2px 12px rgba(0,0,0,.18); }
+    .audio{ background:var(--card-audio); }
+    .light{ background:var(--card-light); }
+    .ota  { background:var(--card-ota); }
+    .row{ display:grid; gap:12px; }
+    .sliderBlock{ padding:8px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .slider{ display:grid; grid-template-columns:1fr auto; align-items:center; gap:10px; }
+    input[type="range"]{ width:100%; appearance:none; height:6px; border-radius:999px; background:#2a2f3a; outline:none; }
+    input[type="range"]::-webkit-slider-thumb{
+      appearance:none; width:22px; height:22px; border-radius:50%; background:var(--accent); box-shadow:0 2px 6px rgba(0,0,0,.35);
+      border:0; margin-top:-8px;
+    }
+    .value{ min-width:64px; text-align:right; color:var(--muted); font-variant-numeric:tabular-nums; }
+    .btnrow{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .btn{ padding:10px 14px; border:0; border-radius:12px; color:white; font-size:15px; font-weight:700; cursor:pointer; flex:0 0 auto; }
+    .btn:active{ transform:translateY(1px); }
+    .btn-accent{ background:var(--accent); }
+    .btn-ok{ background:var(--ok); }
+    .btn-bad{ background:var(--bad); }
+    .btn-warn{ background:var(--warn); }
+    .btn-ghost{ background:transparent; color:var(--muted); border:1px solid var(--line); }
+    .center{ display:flex; justify-content:center; }
+    .status{ color:var(--muted); font-size:14px; margin-top:6px; min-height:1.2em; white-space:pre-line; }
+    details{ border-radius:12px; }
+    summary{ cursor:pointer; list-style:none; font-weight:700; color:var(--muted); }
+    summary::-webkit-details-marker{ display:none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1><Kwal>
+
+    <!-- GELUID -->
+    <section class="card audio">
+      <h2>Geluid</h2>
+      <div class="row">
+        <div class="sliderBlock">
+          <div class="slider">
+            <input type="range" id="audioSlider" min="0" max="100" />
+            <div class="value" id="audioValue">0%</div>
+          </div>
+        </div>
+
+        <div class="btnrow">
+          <button id="upBtn"   class="btn btn-ok">👍 Meer</button>
+          <button id="downBtn" class="btn btn-bad">👎 Minder</button>
+          <button id="nextBtn" class="btn btn-accent">⏭ Volgende</button>
+          <button id="banBtn"  class="btn btn-warn">🚫 Nooit</button>
+          <button id="delBtn"  class="btn btn-ghost">🗑 Weg</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LICHT -->
+    <section class="card light">
+      <h2>Licht</h2>
+      <div class="row">
+        <div class="sliderBlock">
+          <div class="slider">
+            <input type="range" id="brightnessSlider" min="0" max="100" />
+            <div class="value" id="brightnessValue">0%</div>
+          </div>
+        </div>
+
+        <div class="center">
+          <button id="nextShowBtn" class="btn btn-accent">🎬 Volgende</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- OTA -->
+    <section class="card ota">
+      <details>
+        <summary>OTA-instellingen</summary>
+        <div class="row" style="margin-top:10px">
+          <div class="btnrow">
+            <button id="armBtn" class="btn btn-ghost">Klaar voor OTA (5 min)</button>
+            <button id="confirmBtn" class="btn btn-accent">Bevestig OTA</button>
+          </div>
+          <div id="status" class="status">gereed</div>
+        </div>
+      </details>
+    </section>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    const audioSlider = $("audioSlider");
+    const audioValue  = $("audioValue");
+    const upBtn       = $("upBtn");
+    const downBtn     = $("downBtn");
+    const nextBtn     = $("nextBtn");
+    const banBtn      = $("banBtn");
+    const delBtn      = $("delBtn");
+
+    const brightnessSlider = $("brightnessSlider");
+    const brightnessValue  = $("brightnessValue");
+    const nextShowBtn      = $("nextShowBtn");
+
+    const armBtn     = $("armBtn");
+    const confirmBtn = $("confirmBtn");
+    const statusDiv  = $("status");
+    const setStatus  = t => { if(statusDiv) statusDiv.textContent = t; };
+
+    const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+
+    // Geluid 0–100% UI <-> 0.00–1.00 device
+    audioSlider.addEventListener("input", () => {
+      const p = clamp(parseInt(audioSlider.value,10)||0,0,100);
+      audioValue.textContent = `${p}%`;
+      const v = (p/100).toFixed(2);
+      fetch(`/setWebAudioLevel?value=${v}`);
+    });
+    fetch("/getWebAudioLevel")
+      .then(r => r.text())
+      .then(t => {
+        const f = parseFloat(t);
+        const p = Number.isFinite(f) ? clamp(Math.round(f*100),0,100) : 0;
+        audioSlider.value = p;
+        audioValue.textContent = `${p}%`;
+      })
+      .catch(()=>{});
+
+    // Licht 0–100% UI <-> 0..255 device
+    brightnessSlider.addEventListener("input", () => {
+      const p = clamp(parseInt(brightnessSlider.value,10)||0,0,100);
+      brightnessValue.textContent = `${p}%`;
+      const val255 = Math.round(p * 2.55);
+      fetch(`/setBrightness?value=${val255}`);
+    });
+    fetch("/getBrightness")
+      .then(r => r.text())
+      .then(t => {
+        const raw = parseInt(t,10);
+        const p = Number.isFinite(raw) ? clamp(Math.round(raw/255*100),0,100) : 0;
+        brightnessSlider.value = p;
+        brightnessValue.textContent = `${p}%`;
+      })
+      .catch(()=>{});
+
+    // Geluid actions
+    function vote(delta){ fetch(`/vote?delta=${delta}`).catch(()=>{}); }
+    function nextTrack(){ fetch(`/next`).catch(()=>{}); }
+    function ban(){       fetch(`/vote?ban=1`).catch(()=>{}); }
+    function delItem(){   fetch(`/vote?del=1`).catch(()=>{}); }
+
+    upBtn  .addEventListener("click", ()=>vote(+1));
+    downBtn.addEventListener("click", ()=>vote(-1));
+    nextBtn.addEventListener("click", ()=>nextTrack());
+    banBtn .addEventListener("click", ()=>ban());
+    delBtn .addEventListener("click", ()=>delItem());
+
+    // Licht actions
+    nextShowBtn.addEventListener("click", ()=>{
+      nextShowBtn.disabled = true;
+      fetch(`/light/next`).then(()=>{ nextShowBtn.disabled=false; }).catch(()=>{ nextShowBtn.disabled=false; });
+    });
+
+    // OTA
+    if (armBtn) armBtn.addEventListener("click", () => {
+      setStatus("OTA-venster activeren…");
+      fetch("/ota/arm").then(r=>r.text()).then(t=> setStatus(t)).catch(()=> setStatus("Fout"));
+    });
+    if (confirmBtn) confirmBtn.addEventListener("click", () => {
+      setStatus("OTA bevestigen… apparaat herstart bij akkoord.");
+      fetch("/ota/confirm", { method:"POST" })
+        .then(async r=>{ const t=await r.text(); setStatus(r.ok ? t : `Fout: ${t}`); })
+        .catch(()=> setStatus("Fout"));
+    });
+  </script>
+</body>
+</html>
