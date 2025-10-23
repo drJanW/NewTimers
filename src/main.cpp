@@ -9,7 +9,7 @@
 void setup() {
     Serial.begin(115200);
      while (!Serial) { delay(10); } 
-    PL("\n[Main] System starting...");
+    PL("\n[Main] System booting...");
     ConductManager::begin();
     PL("[Main] Setup ready.");
 }

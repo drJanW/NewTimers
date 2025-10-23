@@ -1,0 +1,198 @@
+Folder PATH listing for volume CSL_D
+Volume serial number is 5A48-0911
+D:\MY DOCUMENTS\PLATFORMIO\ESP32\PROJECTS\NEWTIMERS\LIB
+|   README.md
+|   
++---AudioManager20251022
+|       AudioManager.cpp
+|       AudioManager.h
+|       LEESMIJ.md
+|       PlayFragment.cpp
+|       PlayFragment.h
+|       PlaySentence.cpp
+|       PlaySentence.h
+|       README.md
+|       
++---ConductManager20251022
+|   |   BootMaster.cpp
+|   |   BootMaster.h
+|   |   ConductBoot.cpp
+|   |   ConductBoot.h
+|   |   ConductManager.cpp
+|   |   ConductManager.h
+|   |   README.txt
+|   |   
+|   +---Audio
+|   |       AudioBoot.cpp
+|   |       AudioBoot.h
+|   |       AudioConduct.cpp
+|   |       AudioConduct.h
+|   |       AudioDirector.cpp
+|   |       AudioDirector.h
+|   |       AudioPolicy.cpp
+|   |       AudioPolicy.h
+|   |       todo.txt
+|   |       
+|   +---Light
+|   |       LightBoot.cpp
+|   |       LightBoot.h
+|   |       LightConduct.cpp
+|   |       LightConduct.h
+|   |       LightDirector.cpp
+|   |       LightDirector.h
+|   |       LightPolicy.cpp
+|   |       LightPolicy.h
+|   |       
+|   +---OTA
+|   |       OTABoot.cpp
+|   |       OTABoot.h
+|   |       OTAConduct.cpp
+|   |       OTAConduct.h
+|   |       OTADirector.cpp
+|   |       OTADirector.h
+|   |       OTAPolicy.cpp
+|   |       OTAPolicy.h
+|   |       
+|   +---SD
+|   |       SDBoot.cpp
+|   |       SDBoot.h
+|   |       SDConduct.cpp
+|   |       SDConduct.h
+|   |       SDPolicy.cpp
+|   |       SDPolicy.h
+|   |       
+|   +---Sensors
+|   |       SensorDirector.cpp
+|   |       SensorDirector.h
+|   |       SensorsBoot.cpp
+|   |       SensorsBoot.h
+|   |       SensorsConduct.cpp
+|   |       SensorsConduct.h
+|   |       SensorsPolicy.cpp
+|   |       SensorsPolicy.h
+|   |       todo.txt
+|   |       
+|   +---Speak
+|   |       SpeakBoot.cpp
+|   |       SpeakBoot.h
+|   |       SpeakConduct.cpp
+|   |       SpeakConduct.h
+|   |       SpeakDirector.cpp
+|   |       SpeakDirector.h
+|   |       SpeakPolicy.cpp
+|   |       SpeakPolicy.h
+|   |       
+|   +---Status
+|   |       StatusBoot.cpp
+|   |       StatusBoot.h
+|   |       StatusConduct.cpp
+|   |       StatusConduct.h
+|   |       StatusDirector.cpp
+|   |       StatusDirector.h
+|   |       StatusPolicy.cpp
+|   |       StatusPolicy.h
+|   |       todo.txt
+|   |       
+|   +---System
+|   |       SystemBoot.cpp
+|   |       SystemBoot.h
+|   |       todo.txt
+|   |       
+|   +---Web
+|   |       todo.txt
+|   |       WebBoot.cpp
+|   |       WebBoot.h
+|   |       WebConduct.cpp
+|   |       WebConduct.h
+|   |       WebDirector.cpp
+|   |       WebDirector.h
+|   |       WebPolicy.cpp
+|   |       WebPolicy.h
+|   |       
+|   \---WiFi
+|           WiFiBoot.cpp
+|           WiFiBoot.h
+|           WiFiConduct.cpp
+|           WiFiConduct.h
+|           WiFiPolicy.cpp
+|           WiFiPolicy.h
+|           
++---ContextManager20251022
+|       Calender.cpp
+|       Calender.csv
+|       Calender.h
+|       ContextManager.cpp
+|       ContextManager.h
+|       README.md
+|       
++---Globals20251022
+|   |   Globals.cpp
+|   |   Globals.h
+|   |   HWconfig.h
+|   |   macros.inc
+|   |   README.md
+|   |   
+|   \---__delete__
+|           .placeholder
+|           
++---LightManager20251022
+|       LEDMap.cpp
+|       LEDMap.h
+|       LightManager.cpp
+|       LightManager.h
+|       README.md
+|       
++---OTAManager20251021
+|       OTAManager.cpp
+|       OTAManager.h
+|       README.md
+|       
++---PRTClock20251020
+|       PRTClock.cpp
+|       PRTClock.h
+|       
++---SDManager20251021
+|       README.md
+|       SDManager.cpp
+|       SDManager.h
+|       SDVoting.cpp
+|       SDVoting.h
+|       version.txt
+|       
++---SensorManager20251018
+|       ADC1_CH5.cpp
+|       ADC1_CH5.h
+|       BH1750.cpp
+|       BH1750.h
+|       MPU9250.cpp.off
+|       MPU9250.h
+|       README.md
+|       SensorManager.cpp
+|       SensorManager.h
+|       VL53L1X.cpp
+|       VL53L1X.h
+|       
++---SpeakManager20251020
+|       NumberSpeaker.cpp
+|       NumberSpeaker.h
+|       SayTime.cpp
+|       SayTime.h
+|       WordIDs.h
+|       
++---TimerManager20251022
+|       README.md
+|       TimerManager.cpp
+|       TimerManager.h
+|       
++---WebInterfaceManager20251009
+|       README.md
+|       WebInterfaceManager.cpp
+|       WebInterfaceManager.h
+|       
+\---WifiManager20251022
+        fetchManager.cpp
+        fetchManager.h
+        readme.txt
+        WifiManager.cpp
+        WifiManager.h
+        

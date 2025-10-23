@@ -47,3 +47,12 @@ PolicyManager: enforces priorities, resolves conflicts between conducts.
 TimerManager: centralized timing, fade scheduling, FSM ticks.
 
 Each manager has one global instance, and responsibilities are strictly separated. Dependencies flow top-down: context → conduct → policy → modules, with TimerManager as shared service
+
+Analogie:
+Context (seizoen/zaal/programma): welk concert, begintijd, akoestiek, regels van de zaal.
+Plan (programmakeuze): Beethoven 5, tempi-doelen, dynamiekband.
+Policy (chef-dirigent/artistiek leider): prioriteiten bij conflicten, wie solo krijgt, no-phones.
+Conduct (partituur→gebaar): concrete inzetten, crescendi, balansbesluiten.
+Do-requests (uitvoering): “strijkers p, hout in”, “trompet nu inzetten”.
+Modules: secties en instrumenten.
+TimerManager: maatsoort, metrum, cue-timing.

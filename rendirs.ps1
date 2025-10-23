@@ -66,7 +66,7 @@ Get-ChildItem $Target -Directory | ForEach-Object {
         Write-Host "up-to-date: `"$Name`""
     } else {
         if ($n) {
-            Write-Host "zou hernoemen: `"$Name`"  ->  `"$newName`""
+            Write-Host "zou: `"$Name`"  ->  `"$newName`""
         } else {
             $newPath = Join-Path $Target $newName
             if (Test-Path $newPath) {

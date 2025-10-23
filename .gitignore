@@ -9,7 +9,7 @@ Thumbs.db
 .env
 .idea/
 *.swp
-*.swo       
+*.swo
 *.old
 *.bak
 *.tmp
