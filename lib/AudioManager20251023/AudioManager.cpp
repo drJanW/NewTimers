@@ -3,6 +3,7 @@
 #include "PlayFragment.h"
 #include "PlaySentence.h"
 #include "SDVoting.h"
+#include "TimerManager.h"
 
 AudioManager& AudioManager::instance() {
   static AudioManager inst;
@@ -12,6 +13,55 @@ AudioManager& AudioManager::instance() {
 AudioManager::AudioManager()
   : audioOutput()
 {
+}
+
+static AudioOutputI2S_Metered* gMeterInstance = nullptr;
+
+void audioMeterTick() {
+  if (gMeterInstance) {
+    gMeterInstance->publishLevel();
+  }
+}
+
+bool AudioOutputI2S_Metered::begin()
+{
+  _acc = 0;
+  _cnt = 0;
+  _publishDue = false;
+  setAudioLevelRaw(0);
+
+  gMeterInstance = this;
+
+  auto &tm = TimerManager::instance();
+  tm.cancel(audioMeterTick);
+  if (!tm.create(50, 0, audioMeterTick)) {
+    PF("[AudioMeter] Failed to start meter timer\n");
+  }
+
+  return AudioOutputI2S::begin();
+}
+
+bool AudioOutputI2S_Metered::ConsumeSample(int16_t sample[2])
+{
+  int32_t v = sample[0];
+  _acc += static_cast<int64_t>(v) * static_cast<int64_t>(v);
+  _cnt++;
+  _publishDue = true;
+  return AudioOutputI2S::ConsumeSample(sample);
+}
+
+void AudioOutputI2S_Metered::publishLevel()
+{
+  if (!_publishDue || _cnt == 0) {
+    return;
+  }
+  _publishDue = false;
+
+  float mean = static_cast<float>(_acc) / static_cast<float>(_cnt);
+  uint16_t rms = static_cast<uint16_t>(sqrtf(mean));
+  setAudioLevelRaw(rms);
+  _acc = 0;
+  _cnt = 0;
 }
 
 void AudioManager::releaseDecoder()

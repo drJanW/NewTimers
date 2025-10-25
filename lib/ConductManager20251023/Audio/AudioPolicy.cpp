@@ -17,7 +17,7 @@ bool canPlaySentence() {
 float applyVolumeRules(float requested, bool quietHours) {
     float v = requested;
     if (v < 0.0f) v = 0.0f;
-    if (v > MAX_AUDIO_VOLUME) v = MAX_AUDIO_VOLUME;
+    if (v > 1.0f) v = 1.0f;
     if (quietHours && v > 0.3f) v = 0.3f; // cap volume at night
     return v;
 }

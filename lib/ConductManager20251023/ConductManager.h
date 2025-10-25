@@ -21,17 +21,18 @@ public:
     static void intentSetBrightness(float value);
     static void intentSetAudioLevel(float value);
     static void intentArmOTA(uint32_t window_s);
-    static void intentConfirmOTA();
+    static bool intentConfirmOTA();
     static void intentShowTimerStatus();
-    static void intentPulseStatusLed();
-    static void intentSetHeartbeatRate(uint32_t intervalMs);
     static bool intentStartClockTick(bool fallbackMode);
     static bool isClockRunning();
     static bool isClockInFallback();
+    static void intentNextLightShow();
 
     // Context profiles
     static void setChristmasMode(bool enabled);
     static void setQuietHours(bool enabled);
+
+    static bool isQuietHoursActive();
 
 private:
     // Internal helpers

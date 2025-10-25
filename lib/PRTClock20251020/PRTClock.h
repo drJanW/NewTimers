@@ -2,6 +2,12 @@
 #pragma once
 #include <Arduino.h>
 
+enum class TimeStyle {
+  FORMAL,
+  NORMAL,
+  INFORMAL
+};
+
 bool fetchCurrentTime();
 
 class PRTClock {
@@ -51,6 +57,11 @@ public:
   void     setMoonPhaseValue();
 
   void     showTimeDate() const;
+
+  static String buildTimeText(uint8_t hour24, uint8_t minute, TimeStyle style = TimeStyle::NORMAL);
+  static String buildDateText(uint8_t day, uint8_t month, uint16_t year = 0, TimeStyle style = TimeStyle::NORMAL);
+  String buildTimeSentence(TimeStyle style = TimeStyle::NORMAL) const;
+  String buildNowSentence(TimeStyle style = TimeStyle::NORMAL) const;
 
 private:
   PRTClock() = default;

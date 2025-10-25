@@ -1,5 +1,6 @@
 // HWconfig.h
 // Updated on 20250922
+// this file should not be changed by chatGPT/Copilot/DeepSeek/Claude/LeChat
 
 #ifndef HWCONFIG_H
 #define HWCONFIG_H

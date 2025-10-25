@@ -154,6 +154,313 @@ void PRTClock::showTimeDate() const {
      (unsigned)(2000 + getYear()), getMonth(), getDay());
 }
 
+namespace {
+
+String periodOfDay(uint8_t hour) {
+  if (hour < 6) return String(" snachts");
+  if (hour < 12) return String(" sochtends");
+  if (hour < 18) return String(" smiddags");
+  return String(" savonds");
+}
+
+String periodPhrase(uint16_t mins) {
+  if (mins < 330) return String(" snachts");
+  if (mins < 501) return String(" smorgens");
+  if (mins < 990) return String();
+  if (mins < 1080) return String(" smiddags");
+  return String(" savonds");
+}
+
+void appendWord(String &target, const String &fragment) {
+  if (!target.isEmpty()) target += ' ';
+  target += fragment;
+}
+
+} // namespace
+
+String PRTClock::buildTimeText(uint8_t hour24, uint8_t minute, TimeStyle style) {
+  hour24 %= 24;
+  minute %= 60;
+
+  uint8_t baseHour12 = hour24 % 12;
+  if (baseHour12 == 0) baseHour12 = 12;
+  String sBaseHour12 = String(baseHour12);
+  uint8_t nextHour12 = static_cast<uint8_t>((baseHour12 % 12) + 1);
+  String sNextHour12 = String(nextHour12);
+
+  String t;
+  switch (style) {
+    case TimeStyle::FORMAL: {
+      t.reserve(24);
+      t += String(hour24);
+      t += " uur";
+      if (minute > 0) {
+        t += ' ';
+        t += String(minute);
+      }
+      break;
+    }
+
+    case TimeStyle::NORMAL: {
+      if (minute == 0) {
+        t = sBaseHour12 + " uur";
+      } else if (minute == 15) {
+        t = String("kwart over ") + sBaseHour12;
+      } else if (minute == 30) {
+        t = String("half ") + sNextHour12;
+      } else if (minute == 45) {
+        t = String("kwart voor ") + sNextHour12;
+      } else if (minute < 30) {
+        t = String(minute) + " over " + sBaseHour12;
+      } else {
+        uint8_t diff = static_cast<uint8_t>(60 - minute);
+        t = String(diff) + " voor " + sNextHour12;
+      }
+      t += periodOfDay(hour24);
+      break;
+    }
+
+    case TimeStyle::INFORMAL: {
+      uint8_t hour12 = hour24 % 12;
+      if (hour12 == 0) hour12 = 12;
+      uint8_t nextHour = static_cast<uint8_t>((hour12 % 12) + 1);
+      uint16_t mins = static_cast<uint16_t>(hour24) * 60U + minute;
+      String prefix;
+      if ((static_cast<uint16_t>(11 + minute) % 37U) == 0U) appendWord(prefix, String("volgens mij"));
+      if ((static_cast<uint16_t>(23 + minute) % 39U) == 0U) appendWord(prefix, String("iets van"));
+      if ((static_cast<uint16_t>(37 + minute) % 43U) == 0U) appendWord(prefix, String("zo’n beetje"));
+
+      const String per = periodPhrase(mins);
+      switch (minute) {
+        case 0:
+          if (((hour12 + mins) % 3U) == 0U) {
+            t = String("exact ") + String(hour12) + " uur" + per;
+          } else {
+            t = String(hour12) + " uur" + per + " precies";
+          }
+          break;
+
+        case 1:
+          if (((hour12 + mins) % 11U) == 0U) {
+            t = String("alweer ") + String(hour12) + " uur" + per + " geweest";
+          } else {
+            t = String("iets over ") + String(hour12) + " uur" + per;
+          }
+          break;
+
+        case 2:
+          t = String("ruim ") + String(hour12) + " uur" + per + " geweest";
+          break;
+
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+          if (((hour12 + mins) % 3U) == 0U) {
+            t = String(minute) + " minuten over " + String(hour12) + per;
+          } else {
+            t = String(minute) + " over " + String(hour12) + per;
+          }
+          break;
+
+        case 13:
+          t = String("nog geen kwart over ") + String(hour12) + per;
+          break;
+
+        case 14:
+          t = String("plusminus kwart over ") + String(hour12) + per;
+          break;
+
+        case 15:
+          t = String("kwart over ") + String(hour12) + per + " precies";
+          break;
+
+        case 16:
+          t = String("zo’n kwart over ") + String(hour12) + per;
+          break;
+
+        case 17:
+          t = String("ruim kwart over ") + String(hour12) + per + " geweest";
+          break;
+
+        case 18:
+        case 19:
+          if (((hour12 + mins) % 13U) == 0U) appendWord(t, String("nu zo’n beetje"));
+          appendWord(t, String(minute) + " minuten over " + String(hour12) + per);
+          break;
+
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+        case 24:
+        case 25:
+        case 26:
+        case 27: {
+          if (((hour12 + mins) % 19U) == 0U) appendWord(t, String("nu zo’n beetje"));
+          uint8_t diff = static_cast<uint8_t>(30 - minute);
+          appendWord(t, String(diff) + " minuten voor half " + String(nextHour) + per);
+          break;
+        }
+
+        case 28:
+          t = String("nog geen half ") + String(nextHour) + per;
+          break;
+
+        case 29:
+          t = String("bijna half ") + String(nextHour) + per;
+          break;
+
+        case 30:
+          if (((hour12 + mins) % 7U) == 0U) {
+            t = String("half ") + String(nextHour) + per + " precies";
+          } else {
+            t = String("exact ") + String(nextHour) + per;
+          }
+          break;
+
+        case 31:
+          t = String("om en nabij half ") + String(nextHour) + per;
+          break;
+
+        case 32:
+          t = String("ruim half ") + String(nextHour) + per;
+          break;
+
+        case 33:
+        case 34:
+        case 35:
+        case 36:
+        case 37:
+        case 38:
+        case 39: {
+          uint8_t diff = static_cast<uint8_t>(minute - 30);
+          t = String(diff) + " over half " + String(nextHour) + per;
+          if (((hour12 + mins) % 13U) == 0U) t += " precies";
+          break;
+        }
+
+        case 40:
+        case 41:
+        case 42: {
+          if (((hour12 + mins) % 17U) == 0U) appendWord(t, String("nu zo’n beetje"));
+          uint8_t diff = static_cast<uint8_t>(minute - 30);
+          appendWord(t, String(diff) + " over half " + String(nextHour) + per);
+          break;
+        }
+
+        case 43:
+          t = String("zowat kwart voor ") + String(nextHour) + per;
+          break;
+
+        case 44:
+          t = String("net geen kwart ") + String(nextHour) + per;
+          break;
+
+        case 45:
+          t = String("kwart voor ") + String(nextHour) + " precies" + per;
+          break;
+
+        case 46:
+          t = String("zo’n beetje kwart voor ") + String(nextHour) + per + " geweest";
+          break;
+
+        case 47:
+          t = String("iets van kwart voor ") + String(nextHour) + per;
+          break;
+
+        case 48:
+        case 49:
+        case 50:
+        case 51:
+        case 52:
+        case 53:
+        case 54: {
+          if (((hour12 + mins) % 21U) == 0U) appendWord(t, String("alweer"));
+          uint8_t diff = static_cast<uint8_t>(60 - minute);
+          if (((hour12 + mins) % 3U) == 0U) {
+            appendWord(t, String(diff) + " minuten voor " + String(nextHour) + per);
+          } else {
+            appendWord(t, String(diff) + " voor " + String(nextHour) + per);
+          }
+          break;
+        }
+
+        case 55:
+          t = String("5 voor ") + String(nextHour) + per;
+          break;
+
+        case 56:
+          t = String("nog geen ") + String(nextHour) + " uur" + per;
+          break;
+
+        case 57:
+          t = String("bijna ") + String(nextHour) + " uur" + per;
+          break;
+
+        case 58:
+          t = String("plusminus ") + String(nextHour) + " uur" + per;
+          break;
+
+        case 59:
+          t = String("tegen de klok van ") + String(nextHour) + " uur" + per;
+          break;
+      }
+
+      if (!prefix.isEmpty()) {
+        String combined;
+        appendWord(combined, prefix);
+        appendWord(combined, t);
+        return combined;
+      }
+      break;
+    }
+  }
+
+  return t;
+}
+
+String PRTClock::buildDateText(uint8_t day, uint8_t month, uint16_t year, TimeStyle style) {
+  String result;
+  result.reserve(32);
+  if (day >= 1U && day <= 31U) {
+    result += String(day);
+    result += ' ';
+  }
+  result += monthName(month);
+  if (year > 0U) {
+    if (style != TimeStyle::INFORMAL) {
+      result += ' ';
+      uint16_t fullYear = year;
+      if (year < 100U) fullYear = static_cast<uint16_t>(2000U + year);
+      result += String(fullYear);
+    }
+  }
+  return result;
+}
+
+String PRTClock::buildTimeSentence(TimeStyle style) const {
+  String sentence("Het is ");
+  sentence += buildTimeText(getHour(), getMinute(), style);
+  return sentence;
+}
+
+String PRTClock::buildNowSentence(TimeStyle style) const {
+  String sentence("Het is ");
+  sentence += weekdayName(getDoW());
+  sentence += ' ';
+  sentence += buildDateText(getDay(), getMonth(), getYear(), style);
+  sentence += ", ";
+  sentence += buildTimeText(getHour(), getMinute(), style);
+  return sentence;
+}
+
 // ===================================================
 // Global instance
 // ===================================================

@@ -7,6 +7,16 @@
   #include <AsyncTCP.h>
 #endif
 
+#ifndef WEBIF_LOG_LEVEL
+#define WEBIF_LOG_LEVEL 0
+#endif
+
+#if WEBIF_LOG_LEVEL && !defined(WEBIF_LOG)
+#define WEBIF_LOG(...) PF(__VA_ARGS__)
+#elif !defined(WEBIF_LOG)
+#define WEBIF_LOG(...) do {} while (0)
+#endif
+
 uint8_t SDVoting::getRandomFile(uint8_t dir_num) {
   auto& sdMgr = SDManager::instance();
   DirEntry dir;
@@ -142,7 +152,8 @@ void SDVoting::attachVoteRoute(AsyncWebServer& server) {
       return;
     }
 
-    SDVoting::applyVote(dir, file, (int8_t)delta);
+  SDVoting::applyVote(dir, file, (int8_t)delta);
+  WEBIF_LOG("[Web][Vote] dir=%u file=%u delta=%d\n", dir, file, delta);
     char b3[64]; snprintf(b3, sizeof(b3), "OK dir=%u file=%u delta=%d", dir, file, delta);
     req->send(200, "text/plain", b3);
   });

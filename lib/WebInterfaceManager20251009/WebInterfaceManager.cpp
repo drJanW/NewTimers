@@ -2,9 +2,20 @@
 #include "Globals.h"
 #include "SDManager.h"
 #include "WiFiManager.h"
-#include "OTAManager.h"
+#include "ConductManager.h"
+#include "AudioManager.h"
 #include "SDVoting.h"
 #include <ESPAsyncWebServer.h>
+
+#ifndef WEBIF_LOG_LEVEL
+#define WEBIF_LOG_LEVEL 1
+#endif
+
+#if WEBIF_LOG_LEVEL
+#define WEBIF_LOG(...) PF(__VA_ARGS__)
+#else
+#define WEBIF_LOG(...) do {} while (0)
+#endif
 
 static AsyncWebServer server(80);
 
@@ -33,14 +44,16 @@ void handleSetBrightness(AsyncWebServerRequest *request)
   String valStr = request->getParam("value")->value();
   int val = valStr.toInt();
   val = constrain(val, 0, 255);
-  setWebBrightness(val / 255.0f);
+  const float webFactor = static_cast<float>(val) / 255.0f;
+  setWebBrightness(webFactor);
+  ConductManager::intentSetBrightness(static_cast<float>(val));
   request->send(200, "text/plain", "OK");
-  PF("[Web] Brightness ingesteld op %.2f\n", getWebBrightness());
+  WEBIF_LOG("[Web] Brightness ingesteld op %d (web %.2f)\n", val, webFactor);
 }
 
 void handleGetBrightness(AsyncWebServerRequest *request)
 {
-  int level = (int)(getWebBrightness() * 255.0f);
+  int level = static_cast<int>(getWebBrightness() * 255.0f);
   request->send(200, "text/plain", String(level));
 }
 
@@ -54,14 +67,14 @@ void handleSetWebAudioLevel(AsyncWebServerRequest *request)
   String valStr = request->getParam("value")->value();
   float val = valStr.toFloat();
   val = constrain(val, 0.0f, 1.0f);
-  setWebAudioLevel(val);
+  ConductManager::intentSetAudioLevel(val);
   request->send(200, "text/plain", "OK");
-  PF("[Web] AudioLevel ingesteld op %.2f\n", val);
+  WEBIF_LOG("[Web] AudioLevel ingesteld op %.2f\n", AudioManager::instance().getWebLevel());
 }
 
 void handleGetWebAudioLevel(AsyncWebServerRequest *request)
 {
-  float val = getWebAudioLevel();
+  float val = AudioManager::instance().getWebLevel();
   request->send(200, "text/plain", String(val, 2));
 }
 
@@ -69,13 +82,13 @@ void handleGetWebAudioLevel(AsyncWebServerRequest *request)
 
 void handleOtaArm(AsyncWebServerRequest *request)
 {
-  otaArm(300);
+  ConductManager::intentArmOTA(300);
   request->send(200, "text/plain", "OK");
 }
 
 void handleOtaConfirm(AsyncWebServerRequest *request)
 {
-  if (otaConfirmAndReboot())
+  if (ConductManager::intentConfirmOTA())
   {
     request->send(200, "text/plain", "REBOOTING");
   }
@@ -83,6 +96,12 @@ void handleOtaConfirm(AsyncWebServerRequest *request)
   {
     request->send(400, "text/plain", "EXPIRED");
   }
+}
+
+void handleLightNext(AsyncWebServerRequest *request)
+{
+  ConductManager::intentNextLightShow();
+  request->send(200, "text/plain", "LIGHT NEXT");
 }
 
 /* ----- setup/loop glue ----- */
@@ -94,6 +113,7 @@ void beginWebInterface()
   server.on("/getBrightness", HTTP_GET, handleGetBrightness);
   server.on("/setWebAudioLevel", HTTP_GET, handleSetWebAudioLevel);
   server.on("/getWebAudioLevel", HTTP_GET, handleGetWebAudioLevel);
+  server.on("/light/next", HTTP_GET, handleLightNext);
 
   // OTA routes
   server.on("/ota/arm", HTTP_GET, handleOtaArm);

@@ -124,16 +124,15 @@ bool isSDBusy() { return getMux(&_sdBusy); }
 // --- LEDStatus ---
 static std::atomic<bool> _ledStatus{false};
 void setLedStatus(bool v) { setMux(v, &_ledStatus); }
-bool isLEDon()            { return getMux(&_ledStatus); }
+// bool isLEDon()            { return getMux(&_ledStatus); }
 // --- PlayWord timing: StartMillis ---
-static std::atomic<unsigned long> _wordStartMillis{0};
-void           setWordStartMillis(unsigned long v) { setMux(v, &_wordStartMillis); }
-//TODO Github Copilot  fucked up a timer here
-unsigned long  getWordStartMillis()                { return getMux(&_wordStartMillis); }
+// static std::atomic<unsigned long> _wordStartMillis{0};
+// void           setWordStartMillis(unsigned long v) { setMux(v, &_wordStartMillis); }
+// unsigned long  getWordStartMillis()                { return getMux(&_wordStartMillis); }
 // --- PlayWord timing: DurationMs ---
-static std::atomic<unsigned long> _wordDurationMs{0};
-void           setWordDurationMs(unsigned long v) { setMux(v, &_wordDurationMs); }
-unsigned long  getWordDurationMs()                { return getMux(&_wordDurationMs); }
+// static std::atomic<unsigned long> _wordDurationMs{0};
+// void           setWordDurationMs(unsigned long v) { setMux(v, &_wordDurationMs); }
+// unsigned long  getWordDurationMs()                { return getMux(&_wordDurationMs); }
 static float arrFades[MAX_FADE_STEPS];
 static float fFadeValue = 0.0f;
 portMUX_TYPE fadeMux = portMUX_INITIALIZER_UNLOCKED;

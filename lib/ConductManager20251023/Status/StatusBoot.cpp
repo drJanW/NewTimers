@@ -26,8 +26,5 @@ void timeDisplayTick() {
 
 void StatusBoot::plan() {
     PL("[Conduct][Plan] Status boot sequencing");
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
-    PL("[Conduct][Plan] Status LED initialized");
     StatusPolicy::configure();
 }

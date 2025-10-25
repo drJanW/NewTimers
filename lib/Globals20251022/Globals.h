@@ -92,7 +92,7 @@ void setSensorValue(float value);
 bool isWiFiConnected();
 void setWiFiConnected(bool value);
 //ledje
-extern bool isLEDon(void);
+// extern bool isLEDon(void);
 extern void setLedStatus(bool value);
 // === Light Brightness Control ===
 float getWebBrightness();
@@ -127,10 +127,10 @@ void setFragmentPlaying(bool v);
 bool isSentencePlaying();
 void setSentencePlaying(bool v);
 // === Word timing ===
-unsigned long getWordStartMillis();
-void setWordStartMillis(unsigned long ms);
-unsigned long getWordDurationMs();
-void setWordDurationMs(unsigned long ms);
+// unsigned long getWordStartMillis();
+// void setWordStartMillis(unsigned long ms);
+// unsigned long getWordDurationMs();
+// void setWordDurationMs(unsigned long ms);
 bool isTimeFetched();
 void setTimeFetched(bool value);
 void showTimeDate(void);
