@@ -1,0 +1,2 @@
+use builtinLED frequency to indicate error status
+make on/off intervals independent

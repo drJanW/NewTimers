@@ -9,7 +9,7 @@
 void setup() {
     Serial.begin(115200);
      while (!Serial) { delay(10); } 
-    PL("\n[Main] Version 10.25.02A booting...");// copilot to Adjust version as needed
+    PL("\n[Main] Version 10.25.02N booting...");// copilot to Adjust version as needed
     ConductManager::begin();
     PL("[Main] Setup ready.");
 }
