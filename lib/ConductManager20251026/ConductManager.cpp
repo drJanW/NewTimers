@@ -50,6 +50,21 @@
 #include "FetchManager.h"
 #include "WiFiManager.h"
 
+#ifndef LOG_CONDUCT_VERBOSE
+#define LOG_CONDUCT_VERBOSE 0
+#endif
+
+#if LOG_CONDUCT_VERBOSE
+#define CONDUCT_LOG_INFO(...)  LOG_INFO(__VA_ARGS__)
+#define CONDUCT_LOG_DEBUG(...) LOG_DEBUG(__VA_ARGS__)
+#else
+#define CONDUCT_LOG_INFO(...)
+#define CONDUCT_LOG_DEBUG(...)
+#endif
+
+#define CONDUCT_LOG_WARN(...)  LOG_WARN(__VA_ARGS__)
+#define CONDUCT_LOG_ERROR(...) LOG_ERROR(__VA_ARGS__)
+
 namespace {
 
 TimerManager &timers() {
@@ -99,13 +114,13 @@ void ConductManager::begin() {
     bool timerStatusScheduled = timers().create(TIMER_STATUS_INTERVAL_MS, 0, [](){ intentShowTimerStatus(); });
     bool timeDisplayScheduled = timers().create(TIME_DISPLAY_INTERVAL_MS, 0, timeDisplayTick);
     bool bootMasterScheduled = bootMaster.begin();
-    PF("[Conduct] begin(): sayTime=%d fragment=%d initialFrag=%d timerStatus=%d timeDisplay=%d bootMaster=%d\n",
-       sayTimeScheduled, fragmentScheduled, initialFragmentScheduled, timerStatusScheduled, timeDisplayScheduled, bootMasterScheduled);
+    CONDUCT_LOG_INFO("[Conduct] begin(): sayTime=%d fragment=%d initialFrag=%d timerStatus=%d timeDisplay=%d bootMaster=%d\n",
+                     sayTimeScheduled, fragmentScheduled, initialFragmentScheduled, timerStatusScheduled, timeDisplayScheduled, bootMasterScheduled);
     if (!bootMasterScheduled) {
-        PL("[Conduct] clock bootstrap timer failed");
+        CONDUCT_LOG_WARN("[Conduct] clock bootstrap timer failed\n");
     }
     if (!initialFragmentScheduled) {
-        PL("[Conduct] initial fragment timer failed");
+        CONDUCT_LOG_WARN("[Conduct] initial fragment timer failed\n");
     }
 
     bootPlanner.plan();
@@ -124,29 +139,37 @@ void ConductManager::begin() {
 void ConductManager::update() {
     AudioManager::instance().update();
     applyContextOverrides();
+#if LOG_HEARTBEAT
+    static uint32_t lastHeartbeatMs = 0;
+    uint32_t now = millis();
+    if (now - lastHeartbeatMs >= 1000U) {
+        LOG_HEARTBEAT_TICK('.');
+        lastHeartbeatMs = now;
+    }
+#endif
 }
 
 void ConductManager::intentPlayFragment() {
     AudioFragment frag;
     if (!SDPolicy::getRandomFragment(frag)) {
-        PF("[Conduct] intentPlayFragment: no fragment available\n");
+        CONDUCT_LOG_INFO("[Conduct] intentPlayFragment: no fragment available\n");
         return;
     }
     if (!AudioPolicy::requestFragment(frag)) {
-        PF("[Conduct] intentPlayFragment: request rejected\n");
+        CONDUCT_LOG_INFO("[Conduct] intentPlayFragment: request rejected\n");
         return;
     }
-    PF("[Conduct] intentPlayFragment: dir=%u file=%u\n", frag.dirIndex, frag.fileIndex);
+    CONDUCT_LOG_DEBUG("[Conduct] intentPlayFragment: dir=%u file=%u\n", frag.dirIndex, frag.fileIndex);
 }
 
 void ConductManager::intentSayTime() {
     String phrase = PRTClock::instance().buildTimeSentence();
     if (!AudioPolicy::canPlaySentence()) {
-        PF("[Conduct] intentSayTime blocked by policy\n");
+        CONDUCT_LOG_INFO("[Conduct] intentSayTime blocked by policy\n");
         return;
     }
 
-    PF("[Conduct] intentSayTime: %s\n", phrase.c_str());
+    CONDUCT_LOG_DEBUG("[Conduct] intentSayTime: %s\n", phrase.c_str());
     AudioManager::instance().startTTS(phrase);
 }
 
@@ -154,11 +177,11 @@ void ConductManager::intentSayNow() {
     String phrase = PRTClock::instance().buildNowSentence();
     if (christmasMode) phrase = "Vrolijk Kerstfeest! " + phrase;
     if (!AudioPolicy::canPlaySentence()) {
-        PF("[Conduct] intentSayNow blocked by policy\n");
+        CONDUCT_LOG_INFO("[Conduct] intentSayNow blocked by policy\n");
         return;
     }
 
-    PF("[Conduct] intentSayNow: %s\n", phrase.c_str());
+    CONDUCT_LOG_DEBUG("[Conduct] intentSayNow: %s\n", phrase.c_str());
     AudioManager::instance().startTTS(phrase);
 }
 
@@ -173,14 +196,14 @@ void ConductManager::intentSetAudioLevel(float value) {
 }
 
 void ConductManager::intentArmOTA(uint32_t window_s) {
-    PF("[Conduct] intentArmOTA: window=%us\n", (unsigned)window_s);
+    CONDUCT_LOG_INFO("[Conduct] intentArmOTA: window=%us\n", (unsigned)window_s);
     otaArm(window_s);
     AudioManager::instance().stop();
     LightManager::instance().showOtaPattern();
 }
 
 bool ConductManager::intentConfirmOTA() {
-    PF("[Conduct] intentConfirmOTA\n");
+    CONDUCT_LOG_INFO("[Conduct] intentConfirmOTA\n");
     return otaConfirmAndReboot();
 }
 
@@ -206,11 +229,11 @@ void ConductManager::applyContextOverrides() {
         LightManager::instance().capBrightness(50);
         AudioManager::instance().capVolume(0.3f);
         if (!quietLogged) {
-            PF("[Conduct] applyContextOverrides: quiet hours active\n");
+            CONDUCT_LOG_INFO("[Conduct] applyContextOverrides: quiet hours active\n");
             quietLogged = true;
         }
     } else if (quietLogged) {
-        PF("[Conduct] applyContextOverrides: quiet hours cleared\n");
+        CONDUCT_LOG_INFO("[Conduct] applyContextOverrides: quiet hours cleared\n");
         quietLogged = false;
     }
 }
@@ -224,7 +247,7 @@ bool ConductManager::intentStartClockTick(bool fallbackMode) {
 
     bool wasRunning = clockRunning;
     if (!tm.restart(SECONDS_TICK, 0, clockCb)) {
-        PF("[Conduct] Failed to start clock tick (%s)\n", fallbackMode ? "fallback" : "normal");
+        CONDUCT_LOG_ERROR("[Conduct] Failed to start clock tick (%s)\n", fallbackMode ? "fallback" : "normal");
         if (wasRunning) {
             clockRunning = false;
         }
@@ -233,7 +256,7 @@ bool ConductManager::intentStartClockTick(bool fallbackMode) {
 
     clockRunning = true;
     clockInFallback = fallbackMode;
-    PF("[Conduct] Clock tick running (%s)\n", fallbackMode ? "fallback" : "normal");
+    CONDUCT_LOG_INFO("[Conduct] Clock tick running (%s)\n", fallbackMode ? "fallback" : "normal");
     return true;
 }
 
@@ -246,7 +269,7 @@ bool ConductManager::isClockInFallback() {
 }
 
 void ConductManager::intentNextLightShow() {
-    PF("[Conduct] intentNextLightShow\n");
+    CONDUCT_LOG_DEBUG("[Conduct] intentNextLightShow\n");
     nextImmediate();
     intentPlayFragment();
 }

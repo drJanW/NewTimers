@@ -146,13 +146,11 @@ Resultaat: snelle boot. WiFi/NTP mogen later aansluiten zonder alles te blokkere
 ---
 
 ## 7) Logging
-- Zet spammy debug achter noop-macro:
-```cpp
-#ifndef DBG_AUDIO
-#define DBG_AUDIO(...)  /* noop */
-#endif
-```
-- Laat alleen kernlogs staan: bootstappen, NTP-result, “definitief”-slider, bevestiging van “next”, SD-keuze.
+- Centrale macros staan in `lib/Globals20251027/macros.inc` (`LOG_ERROR`, `LOG_WARN`, `LOG_INFO`, `LOG_DEBUG`).
+- Standaard build gebruikt `LOG_LEVEL_ERROR`; zet `-DLOG_LEVEL=LOG_LEVEL_DEBUG` in `platformio.ini` voor volledige trace.
+- Domeinspecifieke switches (`LOG_AUDIO_VERBOSE`, `LOG_PCM_VERBOSE`, `LOG_CONDUCT_VERBOSE`, `LOG_TIMER_VERBOSE`) houden drukke subsystems stil zolang ze op `0` blijven.
+- Enable `LOG_HEARTBEAT=1` voor een één-karakter heartbeat (punt) via `ConductManager::update()` zonder extra spam.
+- Direct gebruik van `Serial.printf/println` vermijden; kies het juiste macro-niveau en voeg alleen contextrijke foutmeldingen toe.
 
 ---
 

@@ -7,6 +7,19 @@
 #include <cstring>
 #include <new>
 
+#ifndef LOG_PCM_VERBOSE
+#define LOG_PCM_VERBOSE 0
+#endif
+
+#if LOG_PCM_VERBOSE
+#define PCM_LOG_INFO(...) LOG_INFO(__VA_ARGS__)
+#else
+#define PCM_LOG_INFO(...)
+#endif
+
+#define PCM_LOG_WARN(...)  LOG_WARN(__VA_ARGS__)
+#define PCM_LOG_ERROR(...) LOG_ERROR(__VA_ARGS__)
+
 namespace PlayPCM {
 
 namespace {
@@ -44,17 +57,17 @@ bool isValidClip(const PCM* clip) {
 
 bool playInternal(const PCM* clip, float volume) {
   if (!isValidClip(clip)) {
-    PF("[PlayPCM] playInternal: invalid clip pointer\n");
+    PCM_LOG_ERROR("[PlayPCM] playInternal: invalid clip pointer\n");
     return false;
   }
 
   const float clamped = clamp01(volume);
   const bool started = AudioManager::instance().playPCMClip(*clip, clamped);
   if (!started) {
-    PF("[PlayPCM] playInternal failed (vol=%.2f samples=%lu sr=%lu)\n",
-       static_cast<double>(clamped),
-       static_cast<unsigned long>(clip->sampleCount),
-       static_cast<unsigned long>(clip->sampleRate));
+    PCM_LOG_WARN("[PlayPCM] playInternal failed (vol=%.2f samples=%lu sr=%lu)\n",
+                 static_cast<double>(clamped),
+                 static_cast<unsigned long>(clip->sampleCount),
+                 static_cast<unsigned long>(clip->sampleRate));
   }
   return started;
 }
@@ -64,17 +77,17 @@ bool loadClip(const char* path, PCM& outClip, std::unique_ptr<int16_t[]>& storag
   storage.reset();
 
   if (!isSDReady()) {
-    PF("[PlayPCM] SD not ready, skipping %s\n", path);
+    PCM_LOG_WARN("[PlayPCM] SD not ready, skipping %s\n", path);
     return false;
   }
   if (!path) {
-    PF("[PlayPCM] Invalid path (null)\n");
+    PCM_LOG_WARN("[PlayPCM] Invalid path (null)\n");
     return false;
   }
 
   File file = SD.open(path, FILE_READ);
   if (!file) {
-    PF("[PlayPCM] Failed to open %s\n", path);
+    PCM_LOG_WARN("[PlayPCM] Failed to open %s\n", path);
     return false;
   }
 
@@ -84,7 +97,7 @@ bool loadClip(const char* path, PCM& outClip, std::unique_ptr<int16_t[]>& storag
       std::memcmp(header + 8, "WAVE", 4) != 0 ||
       std::memcmp(header + 12, "fmt ", 4) != 0 ||
       std::memcmp(header + 36, "data", 4) != 0) {
-    PF("[PlayPCM] %s has unexpected WAV header\n", path);
+    PCM_LOG_WARN("[PlayPCM] %s has unexpected WAV header\n", path);
     file.close();
     return false;
   }
@@ -100,34 +113,34 @@ bool loadClip(const char* path, PCM& outClip, std::unique_ptr<int16_t[]>& storag
       bitsPerSample != kExpectedBitsPerSample ||
       sampleRate != kExpectedSampleRate ||
       dataSize == 0) {
-    PF("[PlayPCM] %s violates ping.wav policy (fmt=%u ch=%u bits=%u sr=%lu size=%lu)\n",
-       path,
-       static_cast<unsigned>(audioFormat),
-       static_cast<unsigned>(numChannels),
-       static_cast<unsigned>(bitsPerSample),
-       static_cast<unsigned long>(sampleRate),
-       static_cast<unsigned long>(dataSize));
+    PCM_LOG_WARN("[PlayPCM] %s violates ping.wav policy (fmt=%u ch=%u bits=%u sr=%lu size=%lu)\n",
+                 path,
+                 static_cast<unsigned>(audioFormat),
+                 static_cast<unsigned>(numChannels),
+                 static_cast<unsigned>(bitsPerSample),
+                 static_cast<unsigned long>(sampleRate),
+                 static_cast<unsigned long>(dataSize));
     file.close();
     return false;
   }
 
   const uint32_t sampleCount = dataSize / (kExpectedBitsPerSample / 8U);
   if (sampleCount == 0) {
-    PF("[PlayPCM] %s contains no samples\n", path);
+    PCM_LOG_WARN("[PlayPCM] %s contains no samples\n", path);
     file.close();
     return false;
   }
 
   std::unique_ptr<int16_t[]> buffer(new (std::nothrow) int16_t[sampleCount]);
   if (!buffer) {
-    PF("[PlayPCM] Out of memory loading %s\n", path);
+    PCM_LOG_ERROR("[PlayPCM] Out of memory loading %s\n", path);
     file.close();
     return false;
   }
 
   const size_t bytesToRead = static_cast<size_t>(dataSize);
   if (file.read(reinterpret_cast<uint8_t*>(buffer.get()), bytesToRead) != bytesToRead) {
-    PF("[PlayPCM] Short read while loading %s\n", path);
+    PCM_LOG_WARN("[PlayPCM] Short read while loading %s\n", path);
     file.close();
     return false;
   }
@@ -140,11 +153,11 @@ bool loadClip(const char* path, PCM& outClip, std::unique_ptr<int16_t[]>& storag
   outClip.sampleRate = sampleRate;
   outClip.durationMs = static_cast<uint32_t>((static_cast<uint64_t>(sampleCount) * 1000ULL + sampleRate / 2ULL) / sampleRate);
 
-  PF("[PlayPCM] Loaded %s: %lu samples @ %lu Hz (%lu ms)\n",
-     path,
-     static_cast<unsigned long>(outClip.sampleCount),
-     static_cast<unsigned long>(outClip.sampleRate),
-     static_cast<unsigned long>(outClip.durationMs));
+  PCM_LOG_INFO("[PlayPCM] Loaded %s: %lu samples @ %lu Hz (%lu ms)\n",
+               path,
+               static_cast<unsigned long>(outClip.sampleCount),
+               static_cast<unsigned long>(outClip.sampleRate),
+               static_cast<unsigned long>(outClip.durationMs));
   return true;
 }
 
@@ -165,7 +178,7 @@ void stopAfter(uint32_t durationMs) {
   }
 
   if (!tm.create(durationMs, 1, cb_stopPCMPlayback)) {
-    PF("[PlayPCM] Failed to arm stop timer (%lu ms)\n", static_cast<unsigned long>(durationMs));
+    PCM_LOG_WARN("[PlayPCM] Failed to arm stop timer (%lu ms)\n", static_cast<unsigned long>(durationMs));
     return;
   }
 }

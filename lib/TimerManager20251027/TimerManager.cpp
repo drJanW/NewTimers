@@ -2,7 +2,21 @@
 // TimerManager.cpp
 // =============================================
 #include "TimerManager.h"
-#include "Globals.h"   // for PF/PL macros
+#include "Globals.h"   // for logging macros
+
+#ifndef LOG_TIMER_VERBOSE
+#define LOG_TIMER_VERBOSE 0
+#endif
+
+#if LOG_TIMER_VERBOSE
+#define TIMER_LOG_INFO(...)  LOG_INFO(__VA_ARGS__)
+#define TIMER_LOG_DEBUG(...) LOG_DEBUG(__VA_ARGS__)
+#else
+#define TIMER_LOG_INFO(...)
+#define TIMER_LOG_DEBUG(...)
+#endif
+
+#define TIMER_LOG_WARN(...) LOG_WARN(__VA_ARGS__)
 
 TimerManager& TimerManager::instance() {
     static TimerManager inst;
@@ -107,11 +121,11 @@ void TimerManager::showAvailableTimers(bool showAlways) {
 
     if (freeCount < minFree) {
         minFree = freeCount;
-        PF("[TimerManager] New minimum: only %d free timers available\n", freeCount);
+        TIMER_LOG_WARN("[TimerManager] New minimum: only %d free timers available\n", freeCount);
     }
 
     if (showAlways) {
-        PF("[TimerManager] Free timers now %d (historical min %d)\n", freeCount, minFree);
+        TIMER_LOG_INFO("[TimerManager] Free timers now %d (historical min %d)\n", freeCount, minFree);
     }
 }
 
@@ -120,16 +134,16 @@ void TimerManager::showTimerCountStatus(bool showAlways) {
 }
 
 void TimerManager::dump() {//TODO: get rid of this unwanted shit
-    PL("[TimerManager] Active timers:");
+    TIMER_LOG_INFO("[TimerManager] Active timers:\n");
     uint32_t now = millis();
     for (uint8_t i = 0; i < MAX_TIMERS; i++) {
         if (slots[i].active) {
-            PF("  Slot %d: cb=%p interval=%lu ms nextFire in %ld ms repeat=%ld\n",
-               i,
-               (void*)slots[i].cb,
-               (unsigned long)slots[i].interval,
-               (long)(slots[i].nextFire - now),
-               (long)slots[i].repeat);
+            TIMER_LOG_INFO("  Slot %d: cb=%p interval=%lu ms nextFire in %ld ms repeat=%ld\n",
+                           i,
+                           (void*)slots[i].cb,
+                           (unsigned long)slots[i].interval,
+                           (long)(slots[i].nextFire - now),
+                           (long)slots[i].repeat);
         }
     }
 }

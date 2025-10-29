@@ -5,6 +5,21 @@
 #include "TimerManager.h"
 #include <math.h>
 
+#ifndef LOG_AUDIO_VERBOSE
+#define LOG_AUDIO_VERBOSE 0
+#endif
+
+#if LOG_AUDIO_VERBOSE
+#define AUDIO_LOG_INFO(...)  LOG_INFO(__VA_ARGS__)
+#define AUDIO_LOG_DEBUG(...) LOG_DEBUG(__VA_ARGS__)
+#else
+#define AUDIO_LOG_INFO(...)
+#define AUDIO_LOG_DEBUG(...)
+#endif
+
+#define AUDIO_LOG_WARN(...)  LOG_WARN(__VA_ARGS__)
+#define AUDIO_LOG_ERROR(...) LOG_ERROR(__VA_ARGS__)
+
 namespace {
 AudioOutputI2S_Metered* gMeterInstance = nullptr;
 constexpr uint32_t kAudioMeterIntervalMs = 50;
@@ -35,7 +50,7 @@ bool AudioOutputI2S_Metered::begin()
 	auto &tm = TimerManager::instance();
 	tm.cancel(audioMeterTick);
 	if (!tm.create(kAudioMeterIntervalMs, 0, audioMeterTick)) {
-		PF("[AudioMeter] Failed to start meter timer\n");
+		AUDIO_LOG_ERROR("[AudioMeter] Failed to start meter timer\n");
 	}
 
 	return AudioOutputI2S::begin();
@@ -114,7 +129,7 @@ bool AudioManager::playPCMClip(const PCMClipDesc& clip, float amplitude)
 	finalizePlayback();
 
 	if (!clip.samples || clip.sampleCount == 0 || clip.sampleRate == 0) {
-		PF("[Audio] playPCMClip: invalid clip\n");
+		AUDIO_LOG_ERROR("[Audio] playPCMClip: invalid clip\n");
 		return false;
 	}
 
@@ -134,7 +149,7 @@ bool AudioManager::playPCMClip(const PCMClipDesc& clip, float amplitude)
 	audioOutput.begin();
 	audioOutput.SetGain(getBaseGain() * getWebAudioLevel());
 
-	PF("[Audio] PCM playback start: samples=%lu sr=%lu amp=%.2f\n",
+	AUDIO_LOG_DEBUG("[Audio] PCM playback start: samples=%lu sr=%lu amp=%.2f\n",
 		static_cast<unsigned long>(pcmPlayback_.totalSamples),
 		static_cast<unsigned long>(clip.sampleRate),
 		static_cast<double>(pcmPlayback_.amplitude));
@@ -218,7 +233,7 @@ bool AudioManager::isSentencePlaying() const {
 
 bool AudioManager::startFragment(const AudioFragment& frag) {
 	if (!PlayAudioFragment::start(frag)) {
-		PF("[Audio] startFragment failed for %03u/%03u\n", frag.dirIndex, frag.fileIndex);
+		AUDIO_LOG_WARN("[Audio] startFragment failed for %03u/%03u\n", frag.dirIndex, frag.fileIndex);
 		return false;
 	}
 	return true;
@@ -266,7 +281,7 @@ void AudioManager::resetPCMPlayback()
 		return;
 	}
 
-	PF("[Audio] PCM playback finished (samples=%lu)\n",
+	AUDIO_LOG_DEBUG("[Audio] PCM playback finished (samples=%lu)\n",
 		static_cast<unsigned long>(pcmPlayback_.totalSamples));
 
 	pcmPlayback_.active = false;

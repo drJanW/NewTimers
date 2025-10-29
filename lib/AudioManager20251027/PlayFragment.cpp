@@ -10,11 +10,7 @@
 #define LOG_FADE 0
 #endif
 #if LOG_FADE
-  #ifdef PF
-    #define FADE_LOG(...) PF(__VA_ARGS__)
-  #else
-    #define FADE_LOG(...) do { Serial.printf(__VA_ARGS__); } while (0)
-  #endif
+    #define FADE_LOG(...) LOG_DEBUG(__VA_ARGS__)
 #else
   #define FADE_LOG(...) do {} while (0)
 #endif
@@ -111,7 +107,7 @@ namespace PlayAudioFragment {
 
 bool start(const AudioFragment& fragment) {
     if (isAudioBusy()) {
-        PF("[Fade] Start ignored: audio busy\n");
+        LOG_WARN("[Audio] startFragment ignored: audio busy\n");
         return false;
     }
 
@@ -151,20 +147,20 @@ bool start(const AudioFragment& fragment) {
     const char* path = getMP3Path(fragment.dirIndex, fragment.fileIndex);
     audio().audioFile = new AudioFileSourceSD(path);
     if (!audio().audioFile) {
-        PF("[Audio] Failed to allocate source for %03u/%03u\n", fragment.dirIndex, fragment.fileIndex);
+        LOG_ERROR("[Audio] Failed to allocate source for %03u/%03u\n", fragment.dirIndex, fragment.fileIndex);
         stopPlayback();
         return false;
     }
 
     audio().audioMp3Decoder = new AudioGeneratorMP3();
     if (!audio().audioMp3Decoder) {
-        PF("[Audio] Failed to allocate MP3 decoder\n");
+        LOG_ERROR("[Audio] Failed to allocate MP3 decoder\n");
         stopPlayback();
         return false;
     }
 
     if (!audio().audioMp3Decoder->begin(audio().audioFile, &audio().audioOutput)) {
-        PF("[Audio] Decoder begin failed for %03u/%03u\n", fragment.dirIndex, fragment.fileIndex);
+        LOG_ERROR("[Audio] Decoder begin failed for %03u/%03u\n", fragment.dirIndex, fragment.fileIndex);
         stopPlayback();
         return false;
     }
@@ -174,16 +170,16 @@ bool start(const AudioFragment& fragment) {
     timers().cancel(handleFadeOut);
 
     if (!timers().create(state.stepMs, kFadeSteps, handleFadeIn)) {
-        PF("[Fade] Failed to start fade-in timer\n");
+        LOG_WARN("[Fade] Failed to start fade-in timer\n");
     }
 
     if (state.fadeOutDelayMs == 0) {
         if (!timers().create(state.stepMs, kFadeSteps, handleFadeOut)) {
-            PF("[Fade] Failed to start fade-out timer\n");
+            LOG_WARN("[Fade] Failed to start fade-out timer\n");
         }
     } else {
         if (!timers().create(state.fadeOutDelayMs, 1, beginFadeOut)) {
-        PF("[Fade] Failed to schedule fade-out delay (%lu ms)\n", static_cast<unsigned long>(state.fadeOutDelayMs));
+            LOG_WARN("[Fade] Failed to schedule fade-out delay (%lu ms)\n", static_cast<unsigned long>(state.fadeOutDelayMs));
         }
     }
 
@@ -215,10 +211,10 @@ void stop() {
         step = 1;
     }
     if (!timers().create(step, kFadeSteps, handleFadeOut)) {
-        PF("[Fade] Failed to start stop() fade-out timer\n");
+        LOG_WARN("[Fade] Failed to start stop() fade-out timer\n");
         stopPlayback();
     } else {
-    FADE_LOG("[Fade] stop() -> fadeOut stepMs=%u\n", static_cast<unsigned>(step));
+        FADE_LOG("[Fade] stop() -> fadeOut stepMs=%u\n", static_cast<unsigned>(step));
     }
 }
 
@@ -318,10 +314,10 @@ void beginFadeOut() {
         step = 1;
     }
     if (!timers().create(step, kFadeSteps, handleFadeOut)) {
-        PF("[Fade] Failed to launch delayed fade-out timer\n");
+        LOG_WARN("[Fade] Failed to launch delayed fade-out timer\n");
         stopPlayback();
     } else {
-    FADE_LOG("[Fade] delayed fade-out started (step=%u)\n", static_cast<unsigned>(step));
+        FADE_LOG("[Fade] delayed fade-out started (step=%u)\n", static_cast<unsigned>(step));
     }
 }
 
