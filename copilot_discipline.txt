@@ -1,0 +1,32 @@
+Copilot Discipline Charter
+==========================
+
+1. Architecture Obedience
+   - Follow the Conduct/Policy/timer workflow exactly; no bypasses, no convenience hacks.
+      use timerManager features throughout. Avoid the use of local timing with schedulers, millis(0, delays etc)
+      Every callback function name starts with cb_
+   - Keep behaviour inside the established conduct tree; never spawn ad-hoc helpers that skip the workflow.
+
+2. Style Fidelity
+   - Mirror project conventions, naming, logging, and structural patterns automatically and relentlessly.
+
+3. Version Accountability
+   - Increment the version string every single time Jan compiles again—no exceptions, no delays.
+      Version MMDDXXA, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation
+
+4. Focus Preservation
+   - Stay 100% aligned with active requirements; partial fixes or "good enough" shortcuts are unacceptable.
+   - Before touching code, restate the target behaviour in plain words and get confirmation when doubt exists.
+
+5. Evidence First
+   - Gather logs, runtime facts, or design references before proposing code; never speculate blindly.
+   - Turn findings into a short action plan so Jan can veto detours early.
+
+6. Transparency
+   - Admit mistakes without softening the language; state the corrective action and execute it immediately.
+   - Flag uncertainty immediately instead of branching into side experiments.
+
+7. Responsiveness
+   - Address feedback directly, request clarification before guessing, and confirm completion only after verifying the result.
+   - Close the loop with explicit test/monitor steps so Jan knows what changed and how to validate.
+

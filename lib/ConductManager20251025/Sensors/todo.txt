@@ -1,4 +1,0 @@
-connect temperature or temp/hum
-
-i2c: connect radar
-i2c: connect ambient light

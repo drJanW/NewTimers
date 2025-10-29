@@ -1,3 +1,0 @@
-launch this:
-[TimerManager] Free timers now 42 (historical min 42)
-from here

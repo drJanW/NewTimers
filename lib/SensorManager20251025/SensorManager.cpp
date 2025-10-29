@@ -62,14 +62,13 @@ bool SensorManager::schedulePolling(uint32_t intervalMs)
 
   auto &tm = TimerManager::instance();
   uint32_t previous = s_ivUpdateMs;
-  if (previous != 0) {
-    tm.cancel(SensorManager::trampoline);
-  }
 
-  if (!tm.create(intervalMs, 0, SensorManager::trampoline)) {
+  if (!tm.restart(intervalMs, 0, SensorManager::trampoline)) {
     PF("[SensorManager] Failed to schedule poll interval %ums\n", (unsigned)intervalMs);
     if (previous != 0 && previous != intervalMs) {
-      tm.create(previous, 0, SensorManager::trampoline);
+      if (tm.restart(previous, 0, SensorManager::trampoline)) {
+        s_ivUpdateMs = previous;
+      }
     }
     return false;
   }

@@ -36,20 +36,18 @@ static void yPhaseTick() { yPhase++; }
 // === Timers helpers ===
 static void startColorCycleTimer(uint8_t sec) {
   auto &tm = TimerManager::instance();
-  tm.cancel(colorCycleTick);
   uint32_t interval = (sec * 1000UL) / 255UL;
   if (interval == 0) interval = 1;
-  if (!tm.create(interval, 0, colorCycleTick)) {
+  if (!tm.restart(interval, 0, colorCycleTick)) {
     PF("[LightManager] Failed to start color cycle timer\n");
   }
 }
 
 static void startBrightCycleTimer(uint8_t sec) {
   auto &tm = TimerManager::instance();
-  tm.cancel(brightCycleTick);
   uint32_t interval = (sec * 1000UL) / 255UL;
   if (interval == 0) interval = 1;
-  if (!tm.create(interval, 0, brightCycleTick)) {
+  if (!tm.restart(interval, 0, brightCycleTick)) {
     PF("[LightManager] Failed to start brightness cycle timer\n");
   }
 }
@@ -58,8 +56,7 @@ static void startXPhaseTimer(uint8_t sec) {
   uint32_t interval = (sec * 1000UL) / 255UL;
   if (interval == 0) interval = 1;
   auto &tm = TimerManager::instance();
-  tm.cancel(xPhaseTick);
-  if (!tm.create(interval, 0, xPhaseTick)) {
+  if (!tm.restart(interval, 0, xPhaseTick)) {
     PF("[LightManager] Failed to start X phase timer\n");
   }
 }
@@ -68,8 +65,7 @@ static void startYPhaseTimer(uint8_t sec) {
   uint32_t interval = (sec * 1000UL) / 255UL;
   if (interval == 0) interval = 1;
   auto &tm = TimerManager::instance();
-  tm.cancel(yPhaseTick);
-  if (!tm.create(interval, 0, yPhaseTick)) {
+  if (!tm.restart(interval, 0, yPhaseTick)) {
     PF("[LightManager] Failed to start Y phase timer\n");
   }
 }
@@ -77,8 +73,7 @@ static void startYPhaseTimer(uint8_t sec) {
 static void startUpdateTimer(uint32_t intervalMs) {
   if (intervalMs == 0) intervalMs = 1;
   auto &tm = TimerManager::instance();
-  tm.cancel(cb_updateLightManager);
-  if (!tm.create(intervalMs, 0, cb_updateLightManager)) {
+  if (!tm.restart(intervalMs, 0, cb_updateLightManager)) {
     PF("[LightManager] Failed to start update timer\n");
   }
 }
@@ -100,8 +95,7 @@ void bootLightManager() {
 
   // render-cadans 50 ms
   auto &tm = TimerManager::instance();
-  tm.cancel(showTick);
-  if (!tm.create(50, 0, showTick)) {
+  if (!tm.restart(50, 0, showTick)) {
     PF("[LightManager] Failed to start show timer\n");
   }
   showDue = true;
