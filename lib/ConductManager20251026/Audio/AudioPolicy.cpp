@@ -3,10 +3,10 @@
 
 namespace {
 
-constexpr float kDistanceMinMm = 120.0f;
-constexpr float kDistanceMaxMm = 1100.0f;
-constexpr uint32_t kIntervalMinMs = 200;
-constexpr uint32_t kIntervalMaxMs = 3000;
+constexpr float kDistanceMinMm = 40.0f;
+constexpr float kDistanceMaxMm = 1000.0f;
+constexpr uint32_t kIntervalMinMs = 160;
+constexpr uint32_t kIntervalMaxMs = 2400;
 constexpr float kIntervalMinMsF = static_cast<float>(kIntervalMinMs);
 constexpr float kIntervalMaxMsF = static_cast<float>(kIntervalMaxMs);
 

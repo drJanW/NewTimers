@@ -12,7 +12,9 @@
 #include "Globals.h"
 
 // --------- forward declarations om link-/scope-fouten te voorkomen ----------
-namespace PlayAudioFragment { void stop(); } // bestaand in jouw project
+namespace PlayAudioFragment {
+    void stop(uint16_t fadeOutMs = 0xFFFF);
+} // bestaand in jouw project
 
 // Deze drie bleken undeclared in jouw buildlog:
 extern bool ttsActive;

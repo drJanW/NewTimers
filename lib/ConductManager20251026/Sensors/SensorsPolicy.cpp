@@ -17,24 +17,11 @@ namespace {
 
 constexpr float kMinValidMm = 40.0f;
 constexpr float kMaxValidMm = 3600.0f;
-constexpr float kBlendAlpha = 0.35f;      // Low-pass filter weight on new samples
-constexpr float kMaxStepMm  = 200.0f;     // Clamp residual spikes per sample
 constexpr uint32_t kFreshWindowMs = 1500; // Distance sample considered fresh
 
 bool s_haveDistance = false;
 float s_lastDistanceMm = 0.0f;
 uint32_t s_lastTsMs = 0;
-
-inline float clampDelta(float base, float target, float maxDelta) {
-    const float delta = target - base;
-    if (delta > maxDelta) {
-        return base + maxDelta;
-    }
-    if (delta < -maxDelta) {
-        return base - maxDelta;
-    }
-    return target;
-}
 
 } // namespace
 
@@ -56,11 +43,7 @@ bool normaliseDistance(float rawMm, uint32_t sampleTsMs, float& filteredOut) {
         return false;
     }
 
-    float filtered = rawMm;
-    if (s_haveDistance) {
-        const float blended = s_lastDistanceMm + (rawMm - s_lastDistanceMm) * kBlendAlpha;
-        filtered = clampDelta(s_lastDistanceMm, blended, kMaxStepMm);
-    }
+    const float filtered = rawMm;
 
     s_lastDistanceMm = filtered;
     s_lastTsMs = sampleTsMs;

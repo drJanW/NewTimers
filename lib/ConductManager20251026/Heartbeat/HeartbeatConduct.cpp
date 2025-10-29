@@ -51,6 +51,7 @@ void HeartbeatConduct::setRate(uint32_t intervalMs) {
 	}
 
 	TimerManager &tm = TimerManager::instance();
+    const bool speedingUp = (heartbeatIntervalMs == 0) ? false : (intervalMs < heartbeatIntervalMs);
     if (!tm.restart(intervalMs, 0, heartbeatTick)) {
         PF("[HeartbeatConduct] Failed to adjust heartbeat interval to %lu ms\n",
            static_cast<unsigned long>(intervalMs));
@@ -59,6 +60,9 @@ void HeartbeatConduct::setRate(uint32_t intervalMs) {
         heartbeatIntervalMs = intervalMs;
         HB_LOG("[HeartbeatConduct] Interval set to %lums\n",
                static_cast<unsigned long>(heartbeatIntervalMs));
+        if (speedingUp) {
+            heartbeatTick(); // reflect the higher tempo immediately on the LED
+        }
     }
 }
 

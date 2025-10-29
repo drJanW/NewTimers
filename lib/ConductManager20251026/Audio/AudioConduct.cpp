@@ -1,6 +1,7 @@
 #include "AudioConduct.h"
 
 #include <Arduino.h>
+#include <atomic>
 
 #include "AudioManager.h"
 #include "PlayPCM.h"
@@ -17,32 +18,55 @@
 #if AUDIO_CONDUCT_DEBUG
 #define AC_LOG(...) PF(__VA_ARGS__)
 #else
-#define AC_LOG(...) do {} while (0)
+#define AC_LOG(...) \
+    do              \
+    {               \
+    } while (0)
 #endif
 
-const char* const AudioConduct::kDistanceClipId = "distance_ping";
+const char *const AudioConduct::kDistanceClipId = "distance_ping";
 
-namespace {
+namespace
+{
 
-constexpr float kPlaybackVolume = 0.6f;
-constexpr uint32_t kBusyRetryMs = 120;
+    constexpr float kPlaybackVolume = 0.6f;
+    constexpr uint32_t kBusyRetryMs = 120;
 
-const AudioManager::PCMClipDesc* s_distanceClip = nullptr;
+    std::atomic<const AudioManager::PCMClipDesc *> s_distanceClip{nullptr};
 
-AudioManager& audio() {
-    return AudioManager::instance();
+    AudioManager &audio()
+    {
+        return AudioManager::instance();
+    }
+
+    TimerManager &timers()
+    {
+        return TimerManager::instance();
+    }
+
+} // namespace
+
+// boot registers the clip once; later calls simply overwrite the atomic pointer
+void setDistanceClipPointer(const AudioManager::PCMClipDesc *clip)
+{
+    setMux(clip, &s_distanceClip);
 }
 
-TimerManager& timers() {
-    return TimerManager::instance();
+// call sites expect a valid clip because startDistanceResponse refuses to arm otherwise
+const AudioManager::PCMClipDesc *getDistanceClipPointer()
+{
+    return getMux(&s_distanceClip);
 }
 
-void cb_playPCM() {
-    auto& mgr = audio();
-    if (mgr.isFragmentPlaying() || mgr.isSentencePlaying()) {
-        AC_LOG("[AudioConduct] Playback deferred (audio busy), retry in %lu ms\n",
-               static_cast<unsigned long>(kBusyRetryMs));
-        timers().restart(kBusyRetryMs, 1, cb_playPCM);
+void AudioConduct::cb_playPCM()
+{
+
+    // timer only fires after boot set the clip; we bail early if audio stack is busy
+
+    auto &mgr = audio();
+    if (mgr.isFragmentPlaying() || mgr.isSentencePlaying())
+    {
+        timers().restart(kBusyRetryMs, 1, AudioConduct::cb_playPCM);
         return;
     }
 
@@ -50,81 +74,58 @@ void cb_playPCM() {
 
     AudioPolicy::updateDistancePlaybackVolume(distanceMm);
 
-    if (!s_distanceClip || !s_distanceClip->samples) {
-        PF("[AudioConduct] Distance clip missing at playback time\n");
+    // playback failure just logs; policy cadence will try again on the next timer tick
+    AC_LOG("[AudioConduct] Triggering distance PCM (distance=%.1fmm)\n",
+           static_cast<double>(distanceMm));
+    if (!PlayPCM::play(getDistanceClipPointer(), kPlaybackVolume))
+    {
+        PF("[AudioConduct] Failed to start distance PCM playback\n");
+    }
+
+    startDistanceResponse();
+}
+
+void AudioConduct::plan()
+{
+    timers().cancel(AudioConduct::cb_playPCM);
+    PF("[Conduct][Plan] Distance playback ready with clip %s\n", kDistanceClipId);
+}
+
+void AudioConduct::startDistanceResponse()
+{
+    // if boot never set the clip we skip scheduling entirely
+    if (!getDistanceClipPointer())
+    {
         return;
     }
 
-    AC_LOG("[AudioConduct] Triggering distance PCM (distance=%.1fmm)\n",
-           static_cast<double>(distanceMm));
-    if (!PlayPCM::play(s_distanceClip, kPlaybackVolume)) {
-        PF("[AudioConduct] Failed to start distance PCM playback\n");
-    }
-}
-
-} // namespace
-
-void AudioConduct::plan() {
-    timers().cancel(cb_playPCM);
-
-    if (!s_distanceClip || !s_distanceClip->samples) {
-        PF("[Conduct][Plan] Distance clip '%s' not available\n", kDistanceClipId);
-    } else {
-        PF("[Conduct][Plan] Distance playback ready with clip %s\n", kDistanceClipId);
-    }
-}
-
-void AudioConduct::startDistanceResponse() {
-    auto& tm = timers();
-
-    auto& mgr = audio();
-    if (mgr.isFragmentPlaying()) {
-        PlayAudioFragment::stop();
-    }
-
-    uint32_t intervalMs = 1;
-    if (s_distanceClip && s_distanceClip->durationMs > 0) {
-        intervalMs = s_distanceClip->durationMs;
-    }
-
     const float distanceMm = SensorsPolicy::currentDistance();
+
+    uint32_t intervalMs = 0;
+    const bool policyAllowsPlayback = AudioPolicy::distancePlaybackInterval(distanceMm, intervalMs);
+    if (!policyAllowsPlayback)
+    {
+        intervalMs = 1000 * 60 * 60 * 1000U; // park the timer far in the future when policy declines
+    }
+
+    auto &tm = timers();
+
+    auto &mgr = audio();
+    // fragments fade out before distance pings; stop using existing fade behaviour
+    if (mgr.isFragmentPlaying())
+    {
+        const uint16_t fadeMs = static_cast<uint16_t>(clamp(intervalMs, 100U, 5000U));
+        PlayAudioFragment::stop(fadeMs);
+    }
     AC_LOG("[AudioConduct] Distance response scheduled (distance=%.1fmm, interval=%lu ms)\n",
            static_cast<double>(distanceMm),
            static_cast<unsigned long>(intervalMs));
 
-    if (!tm.restart(intervalMs, 1, cb_playPCM)) {
+    if (!tm.restart(intervalMs, 1, AudioConduct::cb_playPCM))
+    {
         PF("[AudioConduct] Failed to schedule distance playback (%lu ms)\n",
            static_cast<unsigned long>(intervalMs));
     }
 }
 
-
-void AudioConduct::setDistanceClip(const AudioManager::PCMClipDesc* clip) {
-    if (!clip || !clip->samples || clip->sampleRate == 0) {
-        PF("[AudioConduct] Rejected invalid distance clip registration\n");
-        return;
-    }
-
-    s_distanceClip = clip;
-
-    PF("[AudioConduct] Distance clip registered (%lu Hz, %lu ms)\n",
-       static_cast<unsigned long>(s_distanceClip->sampleRate),
-       static_cast<unsigned long>(s_distanceClip->durationMs));
-
-    const float distanceMm = SensorsPolicy::currentDistance();
-    uint32_t dummyInterval = 0;
-    if (AudioPolicy::distancePlaybackInterval(distanceMm, dummyInterval)) {
-        if (!timers().isActive(cb_playPCM)) {
-            startDistanceResponse();
-        }
-    }
-}
-
-void AudioConduct::silenceDistance() {
-    timers().cancel(cb_playPCM);
-}
-
-bool AudioConduct::isDistancePlaybackScheduled() {
-    return timers().isActive(cb_playPCM);
-}
-
+// no need for additional helpers; pointer is wired once during boot

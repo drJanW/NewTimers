@@ -192,7 +192,10 @@ bool start(const AudioFragment& fragment) {
     return true;
 }
 
-void stop() {
+constexpr uint16_t kFadeUseCurrent = 0xFFFF;
+constexpr uint16_t kFadeMinMs = 40;
+
+void stop(uint16_t fadeOutMs) {
     if (!isAudioBusy()) return;
 
     auto& state = fade();
@@ -201,20 +204,36 @@ void stop() {
     timers().cancel(handleFadeOut);
     timers().cancel(handleFadeIn);
 
+    uint16_t effective = fadeOutMs;
+    if (effective == kFadeUseCurrent) {
+        effective = state.effectiveMs;
+    }
+
+    if (effective <= kFadeMinMs || kFadeSteps == 0U) {
+        stopPlayback();
+        return;
+    }
+
+    state.effectiveMs = effective;
+    state.fadeOutDelayMs = 0;
+    state.stepMs = static_cast<uint16_t>(effective / kFadeSteps);
+    if (state.stepMs == 0) {
+        state.stepMs = 1;
+    }
+
     uint8_t startOffset = 0;
     if (kFadeSteps > 0U) {
         startOffset = static_cast<uint8_t>((kFadeSteps - 1U) - state.lastCurveIndex);
     }
     state.outIndex = startOffset;
-    uint16_t step = state.stepMs;
-    if (step == 0) {
-        step = 1;
-    }
-    if (!timers().create(step, kFadeSteps, handleFadeOut)) {
-        LOG_WARN("[Fade] Failed to start stop() fade-out timer\n");
+
+    if (!timers().restart(state.stepMs, kFadeSteps, handleFadeOut)) {
+        LOG_WARN("[Fade] Failed to restart stop() fade-out timer\n");
         stopPlayback();
     } else {
-        FADE_LOG("[Fade] stop() -> fadeOut stepMs=%u\n", static_cast<unsigned>(step));
+        FADE_LOG("[Fade] stop() -> fadeOut stepMs=%u overrideMs=%u\n",
+                 static_cast<unsigned>(state.stepMs),
+                 static_cast<unsigned>(effective));
     }
 }
 

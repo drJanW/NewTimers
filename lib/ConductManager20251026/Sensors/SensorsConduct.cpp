@@ -50,12 +50,10 @@ void processSensorEvents() {
             if (!s_distancePlaybackEligible) {
                 s_distancePlaybackEligible = true;
                 AudioConduct::startDistanceResponse();
-            } else if (!AudioConduct::isDistancePlaybackScheduled()) {
-                AudioConduct::startDistanceResponse();
             }
         } else if (s_distancePlaybackEligible) {
             s_distancePlaybackEligible = false;
-            AudioConduct::silenceDistance();
+            TimerManager::instance().cancel(AudioConduct::cb_playPCM);
         }
 
         LightConduct::handleDistanceReading(distanceMm);

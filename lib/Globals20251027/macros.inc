@@ -4,7 +4,7 @@
 #define LOG_LEVEL_DEBUG 3
 
 #ifndef LOG_LEVEL
-#define LOG_LEVEL LOG_LEVEL_ERROR
+#define LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
 #ifndef LOG_HEARTBEAT

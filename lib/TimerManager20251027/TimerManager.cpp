@@ -95,10 +95,27 @@ void TimerManager::update() {
         if ((int32_t)(now - slots[i].nextFire) >= 0) {
             // fire callback
             TimerCallback cb = slots[i].cb;
+            const int32_t originalRepeat = slots[i].repeat;
+            const uint32_t originalInterval = slots[i].interval;
+            const uint32_t originalNextFire = slots[i].nextFire;
+
             if (cb) cb();
 
-            // reschedule or finish
-            if (slots[i].repeat == 1) {
+            // if callback cancelled or altered this slot, leave it alone
+            if (!slots[i].active) {
+                continue;
+            }
+            if (slots[i].cb != cb) {
+                continue;
+            }
+            if (slots[i].interval != originalInterval ||
+                slots[i].nextFire != originalNextFire ||
+                slots[i].repeat != originalRepeat) {
+                continue;
+            }
+
+            // reschedule or finish using original parameters
+            if (originalRepeat == 1) {
                 slots[i].active = false;
                 slots[i].cb = nullptr;
             } else {

@@ -15,7 +15,8 @@ void AudioBoot::plan() {
     AudioManager::instance().begin();
 
     if (auto* clip = PlayPCM::loadFromSD("/ping.wav")) {
-        AudioConduct::setDistanceClip(clip);
+        setDistanceClipPointer(clip);
+        AudioConduct::startDistanceResponse();
     } else {
         PL("[Conduct][Plan] Distance ping clip unavailable");
     }

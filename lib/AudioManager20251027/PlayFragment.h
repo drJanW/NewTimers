@@ -12,7 +12,7 @@ struct AudioFragment {
 
 namespace PlayAudioFragment {
   bool start(const AudioFragment& fragment);
-  void stop();
+  void stop(uint16_t fadeOutMs = 0xFFFF); // default uses current fade; <=40ms treated as immediate
   void abortImmediate();
   void updateGain();
 }
