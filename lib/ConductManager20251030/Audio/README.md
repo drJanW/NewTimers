@@ -4,7 +4,7 @@ This file captures the current understanding of how distance driven PCM playback
 
 ## Roles
 - **AudioPolicy** decides if a distance reading should produce audio at all and exposes any ancillary knobs (volume shaping, etc.).
-- **AudioConduct** interprets policy results, keeps the most recent distance measurement, and schedules PCM playback attempts through the timer layer using the policy-derived cadence (when policy declines we park the timer far in the future). The distance clip pointer is registered once during boot via `setDistanceClipPointer()` and read with `getDistanceClipPointer()` wherever needed.
+- **AudioConduct** interprets policy results, keeps the most recent distance measurement, and schedules PCM playback attempts through the timer layer using the policy-defined interval (when policy declines we park the timer far in the future). The distance clip pointer is registered once during boot via `setDistanceClipPointer()` and read with `getDistanceClipPointer()` wherever needed.
 - **AudioManager** exposes the live playback state (fragments, sentences, PCM clips) and executes stop/start requests.
 - **TimerManager** owns the actual timers; `AudioConduct` never runs its own scheduler, it only asks `TimerManager::restart` to re-arm the single callback.
 
@@ -17,9 +17,14 @@ This file captures the current understanding of how distance driven PCM playback
 - We do not keep side-band timer state; the manager remains the single source of truth.
 
 ## Policy requirements
-- `AudioPolicy::distancePlaybackInterval` provides both the eligibility decision and the cadence. If the policy rejects the reading we park the timer at one million milliseconds and wait for a fresh distance to re-arm it.
+- `AudioPolicy::distancePlaybackInterval` provides both the eligibility decision and the interval. If the policy rejects the reading we park the timer at one million milliseconds and wait for a fresh distance to re-arm it.
 - If a fragment is still winding down the first PCM request is refused; the timer-driven retries are the sanctioned way to wait until audio is free.
 - After a fragment stop is issued the next distance playback always restarts from the top; there is no attempt to resume an old clip.
+
+## Theme box coordination
+- `AudioPolicy::setThemeBox` stores the active theme identifier plus up to sixteen fragment directories supplied by the calendar conductor. When the calendar clears the theme we call `AudioPolicy::clearThemeBox` to remove the allow-list.
+- `AudioDirector::chooseFragmentDirectory` checks the allow-list first; if no candidate files exist inside any theme directory we fall back to the global fragment pool so the system never wedges.
+- Calendar updates arrive on the hourly interval; the policy swap happens synchronously so the next fragment pick honours the new theme without needing an explicit audio reset.
 
 ## Callback behaviour
 - `cb_playPCM()` checks whether other audio is still busy. If fragments or sentences are active it re-arms itself with the busy retry window; otherwise it fetches the latest cached distance via `SensorsPolicy::currentDistance`, refreshes volume through `AudioPolicy::updateDistancePlaybackVolume`, and starts PCM playback.

@@ -2,7 +2,7 @@
 
 1. The context manager reads calendar metadata from CSV files stored in `sdroot/` on boot and then once per hour via `cb_loadCalendar()`. If the clock is not seeded yet (no valid date), the loader retries after one minute until time is available. The files are never modified on-device; they are maintained offline (Excel generator to follow).
 2. `cb_loadCalendar()` scans only for today’s entry, caches the matching data, and fires the actions on every pass. Duplicate triggers within the same day are acceptable for now.
-3. No dedicated `cb_calendarDaily()` timer remains. The hourly loader handles both detection and triggering, offering a safer recovery path if the SD content changes or the device reboots mid-day.
+
 
 ### CSV layout
 
@@ -13,9 +13,9 @@
 
 ### Runtime flow
 
-1. Boot sequence schedules `cb_loadCalendar()` immediately; success re-arms the hourly cadence, while missing clock data causes one-minute retries until the date resolves.
+1. Boot sequence schedules `cb_loadCalendar()` immediately; success re-arms the hourly interval, while missing clock data causes one-minute retries until the date resolves.
 2. When the callback finds today’s row, it caches the parsed calendar data and resolves referenced IDs by scanning their respective CSVs for a single matching entry.
-3. The callback then cues the TTS sentence with the specified interval and forwards the resolved theme box, light show, and color range identifiers to the appropriate managers. Actual light-show rendering remains to be implemented; current focus is on defining the data contract.
+3. The callback then cues the TTS sentence with the specified interval, hands the theme box directories to AudioPolicy so fragment selection stays within that set, and forwards the light show plus color identifiers to LightPolicy. LightPolicy now translates the calendar values into `LightShowParams` and re-arms LightManager immediately, so palette updates go live as soon as the hourly load runs.
 
 ### Maintenance notes
 

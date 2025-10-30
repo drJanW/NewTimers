@@ -11,8 +11,8 @@ namespace {
 #define HB_LOG(...) do {} while (0)
 #endif
 
-constexpr uint32_t HEARTBEAT_MIN_MS = 90;       // very close -> rapid flash cadence
-constexpr uint32_t HEARTBEAT_MAX_MS = 2000;     // far away -> gentle flash cadence
+constexpr uint32_t HEARTBEAT_MIN_MS = 90;       // very close -> rapid flash interval
+constexpr uint32_t HEARTBEAT_MAX_MS = 2000;     // far away -> gentle flash interval
 constexpr float DIST_NEAR_MM = 10.0f;
 constexpr float DIST_FAR_MM  = 1600.0f;
 constexpr uint32_t HEARTBEAT_DEFAULT_MS = 500;

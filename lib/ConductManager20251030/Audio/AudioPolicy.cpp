@@ -10,6 +10,13 @@ constexpr uint32_t kIntervalMaxMs = 2400;
 constexpr float kIntervalMinMsF = static_cast<float>(kIntervalMinMs);
 constexpr float kIntervalMaxMsF = static_cast<float>(kIntervalMaxMs);
 
+constexpr size_t kMaxThemeDirs = 16;
+
+bool    s_themeActive = false;
+uint8_t s_themeDirs[kMaxThemeDirs];
+size_t  s_themeDirCount = 0;
+String  s_themeId;
+
 } // namespace
 
 namespace AudioPolicy {
@@ -49,6 +56,47 @@ void requestSentence(const String& phrase) {
     if (canPlaySentence()) {
         AudioManager::instance().startTTS(phrase);
     }
+}
+
+void clearThemeBox() {
+    if (!s_themeActive && s_themeDirCount == 0 && s_themeId.isEmpty()) {
+        return;
+    }
+    s_themeActive = false;
+    s_themeDirCount = 0;
+    s_themeId = "";
+    PF("[AudioPolicy] Theme box cleared\n");
+}
+
+void setThemeBox(const uint8_t* dirs, size_t count, const String& id) {
+    if (!dirs || count == 0) {
+        clearThemeBox();
+        return;
+    }
+
+    const size_t limit = count > kMaxThemeDirs ? kMaxThemeDirs : count;
+    for (size_t i = 0; i < limit; ++i) {
+        s_themeDirs[i] = dirs[i];
+    }
+    s_themeDirCount = limit;
+    s_themeActive = s_themeDirCount > 0;
+    s_themeId = id;
+
+    PF("[AudioPolicy] Theme box %s set with %u directories\n",
+       s_themeId.c_str(), static_cast<unsigned>(s_themeDirCount));
+}
+
+bool themeBoxActive() {
+    return s_themeActive && s_themeDirCount > 0;
+}
+
+const uint8_t* themeBoxDirs(size_t& count) {
+    count = s_themeDirCount;
+    return themeBoxActive() ? s_themeDirs : nullptr;
+}
+
+const String& themeBoxId() {
+    return s_themeId;
 }
 
 bool distancePlaybackInterval(float distanceMm, uint32_t& intervalMs) {

@@ -19,4 +19,11 @@ namespace AudioPolicy {
     // Optional: queueing strategy
     bool requestFragment(const AudioFragment& frag);
     void requestSentence(const String& phrase);
+
+    // Calendar-driven theme box support
+    void setThemeBox(const uint8_t* dirs, size_t count, const String& id);
+    void clearThemeBox();
+    bool themeBoxActive();
+    const uint8_t* themeBoxDirs(size_t& count);
+    const String& themeBoxId();
 }

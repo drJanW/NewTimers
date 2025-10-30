@@ -2,6 +2,7 @@
 
 #include "Globals.h"
 #include "SDManager.h"
+#include "AudioPolicy.h"
 #include <SD.h>
 
 namespace {
@@ -9,7 +10,19 @@ namespace {
 using DirScore   = uint32_t;
 using FileScore  = uint32_t;
 
-bool pickDirectory(uint8_t& outDir, DirScore& totalScore) {
+bool isAllowed(uint8_t dir, const uint8_t* allowList, size_t allowCount) {
+    if (!allowList || allowCount == 0) {
+        return true;
+    }
+    for (size_t i = 0; i < allowCount; ++i) {
+        if (allowList[i] == dir) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool pickDirectory(uint8_t& outDir, DirScore& totalScore, const uint8_t* allowList = nullptr, size_t allowCount = 0) {
     DirEntry entry{};
     uint8_t  dirCount = 0;
     uint8_t  validDirs[SD_MAX_DIRS];
@@ -31,6 +44,10 @@ bool pickDirectory(uint8_t& outDir, DirScore& totalScore) {
         if (!rootFile.seek(offset)) continue;
         if (rootFile.read(reinterpret_cast<uint8_t*>(&entry), sizeof(DirEntry)) != sizeof(DirEntry)) continue;
 
+        if (!isAllowed(static_cast<uint8_t>(dirNum), allowList, allowCount)) {
+            continue;
+        }
+
         if (entry.file_count > 0) {
             if (fallbackCount < SD_MAX_DIRS) {
                 fallbackDirs[fallbackCount++] = static_cast<uint8_t>(dirNum);
@@ -49,7 +66,11 @@ bool pickDirectory(uint8_t& outDir, DirScore& totalScore) {
 
     if (dirCount == 0 || totalScore == 0) {
         if (fallbackCount == 0) {
-            PF("[AudioDirector] No directories available\n");
+            if (allowList && allowCount > 0) {
+                PF("[AudioDirector] No directories available for active theme filter\n");
+            } else {
+                PF("[AudioDirector] No directories available\n");
+            }
             return false;
         }
 
@@ -137,8 +158,21 @@ void AudioDirector::plan() {
 bool AudioDirector::selectRandomFragment(AudioFragment& outFrag) {
     uint8_t dir = 0;
     DirScore totalDirScore = 0;
-    if (!pickDirectory(dir, totalDirScore)) {
-        return false;
+
+    size_t themeCount = 0;
+    const uint8_t* themeDirs = AudioPolicy::themeBoxDirs(themeCount);
+    if (themeDirs && themeCount > 0) {
+        if (!pickDirectory(dir, totalDirScore, themeDirs, themeCount)) {
+            PF("[AudioDirector] Theme box %s unavailable, falling back to full directory pool\n",
+               AudioPolicy::themeBoxId().c_str());
+            if (!pickDirectory(dir, totalDirScore)) {
+                return false;
+            }
+        }
+    } else {
+        if (!pickDirectory(dir, totalDirScore)) {
+            return false;
+        }
     }
 
     uint8_t file = 0;

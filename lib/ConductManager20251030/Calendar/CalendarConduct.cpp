@@ -115,9 +115,13 @@ void CalendarConduct::cb_loadCalendar() {
 
   if (decision.hasThemeBox) {
     CalendarPolicy::handleThemeBox(snapshot.theme);
+  } else {
+    CalendarPolicy::handleThemeBox(CalendarThemeBox{});
   }
   if (decision.hasLightShow || decision.hasColorRange) {
     CalendarPolicy::handleLightShow(snapshot.light, snapshot.color);
+  } else {
+    CalendarPolicy::handleLightShow(CalendarLightShow{}, CalendarColorRange{});
   }
 
   reschedule(kCalendarRefreshIntervalMs, 0);

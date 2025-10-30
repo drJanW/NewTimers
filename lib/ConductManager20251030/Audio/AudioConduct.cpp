@@ -74,7 +74,7 @@ void AudioConduct::cb_playPCM()
 
     AudioPolicy::updateDistancePlaybackVolume(distanceMm);
 
-    // playback failure just logs; policy cadence will try again on the next timer tick
+    // playback failure just logs; policy interval logic will try again on the next timer pass
     AC_LOG("[AudioConduct] Triggering distance PCM (distance=%.1fmm)\n",
            static_cast<double>(distanceMm));
     if (!PlayPCM::play(getDistanceClipPointer(), kPlaybackVolume))

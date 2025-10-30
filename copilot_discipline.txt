@@ -8,7 +8,9 @@ Copilot Discipline Charter
    - Keep behaviour inside the established conduct tree; never spawn ad-hoc helpers that skip the workflow.
 
 2. Style Fidelity
-   - Mirror project conventions, naming, logging, and structural patterns automatically and relentlessly.
+   1. Mirror project conventions, naming, logging, and structural patterns automatically and relentlessly.
+   2. Avoid introducing terminology drift; pick a single term (e.g. "interval") and stick with it across code, comments, and docs.
+   3. Prefer "handle" (or similarly project-native verbs) when describing intent routing; do not introduce "dispatch" into names or docs.
 
 3. Version Accountability
    - Increment the version string every single time Jan compiles again—no exceptions, no delays.

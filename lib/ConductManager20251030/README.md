@@ -4,7 +4,7 @@ This module wires together end-to-end input→output chains. To keep responsibil
 
 - **Sensor side** modules (e.g. `SensorManager`, `SensorsPolicy`) acquire and normalise raw values only. They must not decide how the system reacts.
 - **Conduct** modules schedule work and pass normalised signals onward. They coordinate modules but avoid embedding behavioural rules.
-- **Output policies** (e.g. `HeartbeatPolicy`) own the response logic for a specific actuator. They translate high-level cues into concrete actions such as LED cadence or brightness profiles.
+- **Output policies** (e.g. `HeartbeatPolicy`) own the response logic for a specific actuator. They translate high-level cues into concrete actions such as LED interval or brightness profiles.
 
 For any new chain:
 
