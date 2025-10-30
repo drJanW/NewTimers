@@ -12,6 +12,11 @@ constexpr float kIntervalMaxMsF = static_cast<float>(kIntervalMaxMs);
 
 constexpr size_t kMaxThemeDirs = 16;
 
+constexpr float kDistanceVolumeNear = 1.0f;   // multiplier when visitor is right in front of the dome
+constexpr float kDistanceVolumeFar  = 0.35f;  // multiplier when the visitor is at the edge of sensing range
+
+float s_distanceVolume = kDistanceVolumeNear;
+
 bool    s_themeActive = false;
 uint8_t s_themeDirs[kMaxThemeDirs];
 size_t  s_themeDirCount = 0;
@@ -116,9 +121,20 @@ bool distancePlaybackInterval(float distanceMm, uint32_t& intervalMs) {
     return true;
 }
 
-void updateDistancePlaybackVolume(float distanceMm) {
-    (void)distanceMm;
-    // TODO: Implement distance-proportional volume shaping.
+float updateDistancePlaybackVolume(float distanceMm) {
+    if (distanceMm <= 0.0f) {
+        return s_distanceVolume;
+    }
+
+    const float clampedDistance = clamp(distanceMm, kDistanceMinMm, kDistanceMaxMm);
+    const float mapped = map(clampedDistance,
+                             kDistanceMinMm,
+                             kDistanceMaxMm,
+                             kDistanceVolumeNear,
+                             kDistanceVolumeFar);
+
+    s_distanceVolume = clamp(mapped, kDistanceVolumeFar, kDistanceVolumeNear);
+    return s_distanceVolume;
 }
 
 }

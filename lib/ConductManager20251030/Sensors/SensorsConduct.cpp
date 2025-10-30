@@ -49,7 +49,7 @@ void processSensorEvents() {
         if (audioEligible) {
             if (!s_distancePlaybackEligible) {
                 s_distancePlaybackEligible = true;
-                AudioConduct::startDistanceResponse();
+                AudioConduct::startDistanceResponse(true);
             }
         } else if (s_distancePlaybackEligible) {
             s_distancePlaybackEligible = false;

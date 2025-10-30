@@ -24,7 +24,6 @@ void heartbeatTick() {
     }
 
     digitalWrite(LED_PIN, ledState ? HIGH : LOW);
-    setLedStatus(ledState);
 }
 
 } // namespace

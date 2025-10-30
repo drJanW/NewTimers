@@ -1,5 +1,6 @@
 #include "SensorsPolicy.h"
 #include "Globals.h"
+#include "SensorManager.h"
 
 #include <cmath>
 
@@ -31,7 +32,7 @@ void configure() {
     s_haveDistance = true;
     s_lastDistanceMm = 0.0f;
     s_lastTsMs = millis();
-    setSensorValue(s_lastDistanceMm);
+    SensorManager::setDistanceMillimeters(s_lastDistanceMm);
     SP_LOG("[SensorsPolicy] Reset distance filter state\n");
 }
 
@@ -48,7 +49,7 @@ bool normaliseDistance(float rawMm, uint32_t sampleTsMs, float& filteredOut) {
     s_lastDistanceMm = filtered;
     s_lastTsMs = sampleTsMs;
     s_haveDistance = true;
-    setSensorValue(filtered);
+    SensorManager::setDistanceMillimeters(filtered);
     filteredOut = filtered;
 
     SP_LOG("[SensorsPolicy] raw=%.1f filtered=%.1f ts=%lu\n",

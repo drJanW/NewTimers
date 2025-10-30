@@ -1,5 +1,4 @@
 #include "LightBoot.h"
-#include "Globals.h"
 #include "LightManager.h"
 
 void LightBoot::plan() {

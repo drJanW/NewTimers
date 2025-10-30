@@ -43,7 +43,7 @@ void BootMaster::timerThunk() {
 void BootMaster::bootstrapTick() {
     auto &clock = PRTClock::instance();
 
-    if (isTimeFetched()) {
+    if (PRTClock::instance().isTimeFetched()) {
         cancelFallbackTimer();
         fallback.resetFlags();
 
@@ -104,7 +104,7 @@ void BootMaster::cancelFallbackTimer() {
 void BootMaster::fallbackTimeout() {
     fallback.timerArmed = false;
 
-    if (isTimeFetched()) {
+    if (PRTClock::instance().isTimeFetched()) {
         fallback.resetFlags();
         return;
     }

@@ -29,7 +29,8 @@ const char *const AudioConduct::kDistanceClipId = "distance_ping";
 namespace
 {
 
-    constexpr float kPlaybackVolume = 0.6f;
+    constexpr float kBasePlaybackVolume = 0.6f;
+    constexpr float kMinDistanceVolume = 0.2f;
     constexpr uint32_t kBusyRetryMs = 120;
 
     std::atomic<const AudioManager::PCMClipDesc *> s_distanceClip{nullptr};
@@ -42,6 +43,39 @@ namespace
     TimerManager &timers()
     {
         return TimerManager::instance();
+    }
+
+    bool attemptDistancePlayback()
+    {
+        auto &mgr = audio();
+        if (mgr.isFragmentPlaying() || mgr.isSentencePlaying())
+        {
+            timers().restart(kBusyRetryMs, 1, AudioConduct::cb_playPCM);
+            return false;
+        }
+
+        const auto *clip = getDistanceClipPointer();
+        if (!clip)
+        {
+            PF("[AudioConduct] Distance PCM clip missing, cancel playback attempt\n");
+            return false;
+        }
+
+        const float distanceMm = SensorsPolicy::currentDistance();
+        const float volumeMultiplier = AudioPolicy::updateDistancePlaybackVolume(distanceMm);
+        const float pcmVolume = clamp(kBasePlaybackVolume * volumeMultiplier,
+                                      kMinDistanceVolume,
+                                      1.0f);
+
+        AC_LOG("[AudioConduct] Triggering distance PCM (distance=%.1fmm, volume=%.2f)\n",
+               static_cast<double>(distanceMm),
+               static_cast<double>(pcmVolume));
+        if (!PlayPCM::play(clip, pcmVolume))
+        {
+            PF("[AudioConduct] Failed to start distance PCM playback\n");
+        }
+
+        return true;
     }
 
 } // namespace
@@ -60,26 +94,9 @@ const AudioManager::PCMClipDesc *getDistanceClipPointer()
 
 void AudioConduct::cb_playPCM()
 {
-
-    // timer only fires after boot set the clip; we bail early if audio stack is busy
-
-    auto &mgr = audio();
-    if (mgr.isFragmentPlaying() || mgr.isSentencePlaying())
+    if (!attemptDistancePlayback())
     {
-        timers().restart(kBusyRetryMs, 1, AudioConduct::cb_playPCM);
         return;
-    }
-
-    const float distanceMm = SensorsPolicy::currentDistance();
-
-    AudioPolicy::updateDistancePlaybackVolume(distanceMm);
-
-    // playback failure just logs; policy interval logic will try again on the next timer pass
-    AC_LOG("[AudioConduct] Triggering distance PCM (distance=%.1fmm)\n",
-           static_cast<double>(distanceMm));
-    if (!PlayPCM::play(getDistanceClipPointer(), kPlaybackVolume))
-    {
-        PF("[AudioConduct] Failed to start distance PCM playback\n");
     }
 
     startDistanceResponse();
@@ -91,7 +108,7 @@ void AudioConduct::plan()
     PF("[Conduct][Plan] Distance playback ready with clip %s\n", kDistanceClipId);
 }
 
-void AudioConduct::startDistanceResponse()
+void AudioConduct::startDistanceResponse(bool playImmediately)
 {
     // if boot never set the clip we skip scheduling entirely
     if (!getDistanceClipPointer())
@@ -117,6 +134,15 @@ void AudioConduct::startDistanceResponse()
         const uint16_t fadeMs = static_cast<uint16_t>(clamp(intervalMs, 100U, 5000U));
         PlayAudioFragment::stop(fadeMs);
     }
+
+    if (policyAllowsPlayback && playImmediately)
+    {
+        if (!attemptDistancePlayback())
+        {
+            return;
+        }
+    }
+
     AC_LOG("[AudioConduct] Distance response scheduled (distance=%.1fmm, interval=%lu ms)\n",
            static_cast<double>(distanceMm),
            static_cast<unsigned long>(intervalMs));

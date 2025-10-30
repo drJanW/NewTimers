@@ -1,0 +1,515 @@
+'=== modCalendarPro.bas ===
+Option Explicit
+
+'================ PUBLIC SETUP ================
+Public Sub BuildCalendarWorkbook()
+    Dim wsCal As Worksheet, wsTB As Worksheet, wsLS As Worksheet, wsCR As Worksheet, wsAu As Worksheet, wsTools As Worksheet
+    Set wsCal = EnsureSheet("calendar")
+    Set wsTB = EnsureSheet("theme_boxes")
+    Set wsLS = EnsureSheet("light_shows")
+    Set wsCR = EnsureSheet("color_ranges")
+    Set wsAu = EnsureSheet("audit_today")
+    Set wsTools = EnsureSheet("tools")
+
+    EnsureTable wsCal, "tblCalendar", Array("year","month","day","tts_sentence","tts_interval_min","theme_box_id","light_show_id","color_range_id","note")
+    EnsureTable wsTB,  "tblThemeBoxes", Array("theme_box_id","entries","note")
+    EnsureTable wsLS,  "tblLightShows", Array("light_show_id","rgb1_hex","rgb2_hex","color_cycle_sec","bright_cycle_sec","fade_width","min_brightness","gradient_speed","center_x","center_y","radius","window_width","radius_osc","x_amp","y_amp","x_cycle_sec","y_cycle_sec","note")
+    EnsureTable wsCR,  "tblColorRanges", Array("color_range_id","start_hex","end_hex","note")
+
+    ' dropdowns
+    SetListValidation wsCal.Range("F2:F1048576"), "=tblThemeBoxes[theme_box_id]"
+    SetListValidation wsCal.Range("G2:G1048576"), "=tblLightShows[light_show_id]"
+    SetListValidation wsCal.Range("H2:H1048576"), "=tblColorRanges[color_range_id]"
+
+    ' CF ontbrekende verwijzingen
+    ApplyMissingRefCF wsCal.Range("A2:I1000"), "=AND($F2<>"""",COUNTIF(tblThemeBoxes[theme_box_id],$F2)=0)"
+    ApplyMissingRefCF wsCal.Range("A2:I1000"), "=AND($G2<>"""",COUNTIF(tblLightShows[light_show_id],$G2)=0)"
+    ApplyMissingRefCF wsCal.Range("A2:I1000"), "=AND($H2<>"""",COUNTIF(tblColorRanges[color_range_id],$H2)=0)"
+
+    SetupAudit wsAu
+    SetupTools wsTools
+End Sub
+
+'================ RULES → CALENDAR =================
+Public Sub MaterializeRules()
+    Dim rules As ListObject, cal As ListObject
+    Set rules = FindListObjectByNameGuess(Array("tblRules","rules","Rules","tbl_Rules"))
+    Set cal = FindListObjectByName("tblCalendar")
+    If rules Is Nothing Then Err.Raise 5, , "Rules-tabel niet gevonden."
+    If cal Is Nothing Then Err.Raise 5, , "tblCalendar ontbreekt."
+
+    Dim yrFrom As Long, yrTo As Long, t As Long
+    yrFrom = NzLng(GetCellValue("rules", "B1"), Year(Date))
+    yrTo   = NzLng(GetCellValue("rules", "B2"), yrFrom)
+    If yrFrom > yrTo Then t = yrFrom: yrFrom = yrTo: yrTo = t
+
+    PurgeCalendarYears cal, yrFrom, yrTo
+
+    Dim r As ListRow, y As Long, arr As Variant
+    Dim expr As String, sent As String, box As String, show As String, cr As String, note As String
+    Dim ival As Long, d As Variant, k As Long
+
+    For Each r In rules.ListRows
+        arr = r.Range.Value2
+        expr = NzStr(arr(1, 1))
+        sent = NzStr(arr(1, 2))
+        ival = NzLng(arr(1, 3), 0)
+        box  = NzStr(arr(1, 4))
+        show = NzStr(arr(1, 5))
+        cr   = NzStr(arr(1, 6))
+        note = NzStr(arr(1, 7))
+
+        For y = yrFrom To yrTo
+            Dim dates As Collection: Set dates = EvalWhen(expr, y)
+            For Each d In dates
+                ' deterministische randoms per datum
+                k = CLng(Format$(CDate(d), "yyyymmdd"))
+                Dim s2 As String, b2 As String, sh2 As String, cr2 As String, n2 As String, iv2 As Long
+                s2 = ResolveRandoms(sent, k, 1)
+                b2 = ResolveRandoms(box,  k, 2)
+                sh2 = ResolveRandoms(show, k, 3)
+                cr2 = ResolveRandoms(cr,  k, 4)
+                n2 = ResolveRandoms(note, k, 5)
+                iv2 = ResolveRange(ival, k, 6)
+
+                AddCalendarRow cal, Year(CDate(d)), Month(CDate(d)), Day(CDate(d)), s2, iv2, b2, sh2, cr2, n2
+            Next d
+        Next y
+    Next r
+
+    MsgBox "Rules → calendar klaar voor " & yrFrom & "–" & yrTo, vbInformation
+End Sub
+
+'============= WHEN parser =================
+Private Function EvalWhen(ByVal expr As String, ByVal yr As Long) As Collection
+    Dim c As New Collection, s As String: s = Trim$(expr)
+    If Len(s) = 0 Then Set EvalWhen = c: Exit Function
+
+    If UCase$(Left$(s, 5)) = "DATE=" Then
+        c.Add CDate(Mid$(s, 6)): Set EvalWhen = c: Exit Function
+    End If
+
+    If UCase$(Left$(s, 7)) = "ANNUAL=" Then
+        Dim rest As String: rest = Mid$(s, 8)
+        If InStr(rest, "..") > 0 Then
+            Dim ab As Variant: ab = Splt(rest, "..")
+            Dim a As Variant: a = Splt(CStr(ab(0)), "-")
+            Dim b As Variant: b = Splt(CStr(ab(1)), "-")
+            Dim d0 As Date, d1 As Date, d As Date
+            d0 = DateSerial(yr, CLng(a(0)), CLng(a(1)))
+            d1 = DateSerial(yr, CLng(b(0)), CLng(b(1)))
+            For d = d0 To d1: c.Add d: Next d
+        Else
+            Dim mm As Long, dd As Long, parts As Variant
+            parts = Splt(rest, "-"): mm = CLng(parts(0)): dd = CLng(parts(1))
+            c.Add DateSerial(yr, mm, dd)
+        End If
+        Set EvalWhen = c: Exit Function
+    End If
+
+    If UCase$(Left$(s, 6)) = "EASTER" Or s = "ASCENSION" Or s = "PENTECOST" _
+       Or s = "GOOD_FRIDAY" Or s = "ASH_WEDNESDAY" _
+       Or s = "CARNIVAL_SUN" Or s = "CARNIVAL_MON" Or s = "CARNIVAL_TUE" Then
+        Dim off As Long: off = 0
+        If UCase$(Left$(s,6)) = "EASTER" Then
+            If InStr(s, "+") > 0 Then off = CLng(Mid$(s, InStr(s, "+") + 1))
+            If InStr(s, "-") > 0 Then off = -CLng(Mid$(s, InStr(s, "-") + 1))
+        ElseIf s = "ASCENSION" Then
+            off = 39
+        ElseIf s = "PENTECOST" Then
+            off = 49
+        ElseIf s = "GOOD_FRIDAY" Then
+            off = -2
+        ElseIf s = "ASH_WEDNESDAY" Then
+            off = -46
+        ElseIf s = "CARNIVAL_SUN" Then
+            off = -49
+        ElseIf s = "CARNIVAL_MON" Then
+            off = -48
+        ElseIf s = "CARNIVAL_TUE" Then
+            off = -47
+        End If
+        c.Add DateAdd("d", off, WesternEasterDate(yr))
+        Set EvalWhen = c: Exit Function
+    End If
+
+    If UCase$(Left$(s, 8)) = "FULLMOON" Then
+        ' FULLMOON of FULLMOON(MM)
+        Dim m As Long: m = 0
+        If InStr(s, "(") > 0 Then
+            m = CLng(Replace(Replace(Mid$(s, InStr(s, "(") + 1), ")", ""), " ", ""))
+        End If
+        Dim fm As Collection: Set fm = FullMoonsAmsterdam(yr)
+        Dim v As Variant
+        For Each v In fm
+            If m = 0 Or Month(CDate(v)) = m Then c.Add v
+        Next v
+        Set EvalWhen = c: Exit Function
+    End If
+
+    Err.Raise 5, , "Onbekende WHEN: " & expr
+End Function
+
+'============= deterministische randoms ============
+Private Function ResolveRandoms(ByVal src As String, ByVal seed As Long, ByVal salt As Long) As String
+    Dim s As String: s = Trim$(src)
+    If Len(s) = 0 Then ResolveRandoms = "": Exit Function
+
+    ' CHOOSE{a|b|c}
+    If InStr(1, s, "CHOOSE{", vbTextCompare) = 1 And Right$(s, 1) = "}" Then
+        Dim inner As String: inner = Mid$(s, 8, Len(s) - 8) ' binnen {..}
+        inner = Left$(inner, Len(inner) - 1)
+        Dim opts As Variant: opts = Splt(inner, "|")
+        Dim idx As Long: idx = (DetRand(seed, salt) Mod (UBound(opts) - LBound(opts) + 1)) + LBound(opts)
+        ResolveRandoms = Trim$(CStr(opts(idx)))
+        Exit Function
+    End If
+
+    ' RANGE{min..max}
+    If InStr(1, s, "RANGE{", vbTextCompare) = 1 And Right$(s, 1) = "}" Then
+        Dim rng As String: rng = Mid$(s, 7, Len(s) - 7)
+        rng = Left$(rng, Len(rng) - 1)
+        Dim ab As Variant: ab = Splt(rng, "..")
+        Dim a As Long: a = CLng(ab(0))
+        Dim b As Long: b = CLng(ab(1))
+        Dim n As Long: n = a + (DetRand(seed, salt) Mod (b - a + 1))
+        ResolveRandoms = CStr(n)
+        Exit Function
+    End If
+
+    ResolveRandoms = s
+End Function
+
+Private Function ResolveRange(ByVal fallback As Long, ByVal seed As Long, ByVal salt As Long) As Long
+    ' als veld tekstuele RANGE{..} bevat, wordt het elders al verwerkt; hier alleen fallback
+    ResolveRange = fallback
+End Function
+
+Private Function DetRand(ByVal seed As Long, ByVal salt As Long) As Long
+    ' simpele LCG, stabiel per dag + salt
+    Dim x As Double
+    x = CDbl(seed) * 1103515245# + 12345# + salt * 97#
+    If x < 0 Then x = -x
+    DetRand = CLng(x) And &H7FFFFFFF
+End Function
+
+'============= FULL MOON (Amsterdam) =================
+' Meeus-achtige benadering. Retourneert data/tijden (als Date) in lokale tijd (Europe/Amsterdam).
+Private Function FullMoonsAmsterdam(ByVal yr As Long) As Collection
+    Dim c As New Collection
+    Dim k As Long, JDE As Double, t As Double, i As Long
+    Dim d As Date
+
+    ' lunation number k voor volle maan (fase = 0.5)
+    ' start grofweg bij januari
+    k = Fix((yr - 2000#) * 12.3685)  ' begin rond dit jaar
+    ' verzamel genoeg om het hele jaar te dekken
+    For i = 0 To 18
+        JDE = FullMoonJDE(k + i)
+        d = JDE_to_UTC(JDE)
+        d = UTC_to_Amsterdam(d)
+        If Year(d) = yr Then c.Add DateValue(d) ' alleen datum; wil je tijd, voeg d toe
+        If Year(d) > yr And Month(d) > 1 Then Exit For
+    Next i
+    Set FullMoonsAmsterdam = c
+End Function
+
+Private Function FullMoonJDE(ByVal k As Double) As Double
+    ' Meeus benadering zonder line continuations
+    Dim T As Double, E As Double, J As Double
+    Dim M As Double, Mp As Double, F As Double, Om As Double
+    Dim s As Double
+
+    k = k + 0.5
+    T = k / 1236.85
+    E = 1 - 0.002516 * T - 0.0000074 * T * T
+
+    J = 2451550.09766 + 29.530588861 * k _
+      + 0.00015437 * T * T - 0.000000150 * T * T * T + 0.00000000073 * T ^ 4
+
+    M  = DegreesToRadians( 2.5534   + 29.10535670 * k - 0.0000014 * T * T - 0.00000011 * T ^ 3)
+    Mp = DegreesToRadians(201.5643   + 385.81693528 * k + 0.0107582 * T * T + 0.00001238 * T ^ 3 - 0.000000058 * T ^ 4)
+    F  = DegreesToRadians(160.7108   + 390.67050274 * k - 0.0016118 * T * T - 0.00000227 * T ^ 3 + 0.000000011 * T ^ 4)
+    Om = DegreesToRadians(124.7746   -   1.56375580 * k + 0.0020691 * T * T + 0.00000215 * T ^ 3)
+
+    s = 0
+    s = s + (-0.40614) * Sin(Mp)
+    s = s + (0.17302 * E) * Sin(M)
+    s = s + 0.01614 * Sin(2 * Mp)
+    s = s + 0.01043 * Sin(2 * F)
+    s = s + 0.00734 * E * Sin(Mp - M)
+    s = s - 0.00515 * E * Sin(Mp + M)
+    s = s + 0.00209 * Sin(2 * M)
+    s = s - 0.00111 * Sin(Mp - 2 * F)
+    s = s - 0.00057 * Sin(Mp + 2 * F)
+    s = s + 0.00056 * E * Sin(2 * Mp + M)
+    s = s - 0.00042 * Sin(3 * Mp)
+    s = s + 0.00042 * E * Sin(M + 2 * F)
+    s = s + 0.00038 * E * Sin(M - 2 * F)
+    s = s - 0.00024 * E * Sin(2 * Mp - M)
+    s = s - 0.00017 * Sin(Om)
+    s = s - 0.00007 * Sin(Mp + 2 * M)
+    s = s + 0.00004 * Sin(2 * Mp - 2 * F)
+    s = s + 0.00004 * Sin(3 * M)
+    s = s + 0.00003 * Sin(Mp + M - 2 * F)
+    s = s + 0.00003 * Sin(2 * Mp + 2 * F)
+    s = s - 0.00003 * Sin(Mp + M + 2 * F)
+    s = s + 0.00003 * Sin(Mp - M + 2 * F)
+    s = s - 0.00002 * Sin(Mp - M - 2 * F)
+    s = s - 0.00002 * Sin(3 * Mp + M)
+    s = s + 0.00002 * Sin(4 * Mp)
+
+    FullMoonJDE = J + s
+End Function
+
+
+Private Function DegreesToRadians(ByVal x As Double) As Double: DegreesToRadians = x * 3.14159265358979 / 180#: End Function
+
+Private Function JDE_to_UTC(ByVal JDE As Double) As Date
+    ' Julian Day to UTC date
+    Dim Z As Long, F As Double, A As Long, B As Long, C As Long, D As Long, E As Long, alpha As Long
+    Dim JD As Double: JD = JDE + 0.5
+    Z = Fix(JD): F = JD - Z
+    If Z < 2299161 Then
+        A = Z
+    Else
+        alpha = Fix((Z - 1867216.25) / 36524.25)
+        A = Z + 1 + alpha - Fix(alpha / 4)
+    End If
+    B = A + 1524
+    C = Fix((B - 122.1) / 365.25)
+    D = Fix(365.25 * C)
+    E = Fix((B - D) / 30.6001)
+    Dim day As Double: day = B - D - Fix(30.6001 * E) + F
+    Dim month As Long: If E < 14 Then month = E - 1 Else month = E - 13
+    Dim year As Long: If month > 2 Then year = C - 4716 Else year = C - 4715
+    JDE_to_UTC = DateSerial(year, month, Fix(day)) + TimeSerial((day - Fix(day)) * 24, 0, 0)
+End Function
+
+Private Function UTC_to_Amsterdam(ByVal dt As Date) As Date
+    ' benadering: CET=UTC+1, CEST=UTC+2; DST regel EU: laatste zondag maart–oktober
+    Dim y As Long: y = Year(dt)
+    Dim dstStart As Date, dstEnd As Date
+    dstStart = LastSunday(DateSerial(y, 3, 31)) + TimeSerial(2, 0, 0)
+    dstEnd   = LastSunday(DateSerial(y, 10, 31)) + TimeSerial(3, 0, 0)
+    If dt >= dstStart And dt < dstEnd Then
+        UTC_to_Amsterdam = dt + TimeSerial(2, 0, 0)
+    Else
+        UTC_to_Amsterdam = dt + TimeSerial(1, 0, 0)
+    End If
+End Function
+
+Private Function LastSunday(ByVal d As Date) As Date
+    Do While Weekday(d, vbMonday) <> 7
+        d = d - 1
+    Loop
+    LastSunday = d
+End Function
+
+'============= UI, AUDIT, EXPORT =================
+Private Sub SetupTools(ws As Worksheet)
+    ws.Cells.Clear
+    ws.Range("A1").Value = "Calendar tools": ws.Range("A1").Font.Bold = True
+    AddBtn ws, 10, 30,  "Export ALL",                  "ExportAll"
+    AddBtn ws, 10, 60,  "Export calendar.csv",         "ExportCalendar"
+    AddBtn ws, 10, 90,  "Export theme_boxes.csv",      "ExportThemeBoxes"
+    AddBtn ws, 10, 120, "Export light_shows.csv",      "ExportLightShows"
+    AddBtn ws, 10, 150, "Export color_ranges.csv",     "ExportColorRanges"
+    AddBtn ws, 10, 190, "Materialize rules → calendar","MaterializeRules"
+    ws.Columns("A:D").AutoFit
+End Sub
+
+Private Sub AddBtn(ws As Worksheet, ByVal l As Double, ByVal t As Double, ByVal cap As String, ByVal macroName As String)
+    Const xlButtonControl As Long = 0
+    Dim sh As Shape
+    Set sh = ws.Shapes.AddFormControl(xlButtonControl, l, t, 200, 24)
+    sh.TextFrame.Characters.Text = cap
+    sh.OnAction = macroName
+End Sub
+
+Private Sub SetupAudit(wsAu As Worksheet)
+    wsAu.Cells.Clear
+    wsAu.Range("A1").Value = "Today"
+    wsAu.Range("B1").Formula = "=TODAY()"
+    wsAu.Range("A2").Resize(7, 1).Value = Application.Transpose(Array("tts_sentence","tts_interval_min","theme_box_id","entries","light_show_id","color_range_id","color_range_start_end"))
+    wsAu.Range("D1").Resize(1, 3).Value = Array("Y","M","D")
+    wsAu.Range("D2").Formula = "=YEAR(B1)"
+    wsAu.Range("E2").Formula = "=MONTH(B1)"
+    wsAu.Range("F2").Formula = "=DAY(B1)"
+    wsAu.Range("B2").FormulaArray = "=IFERROR(INDEX(tblCalendar[tts_sentence],MATCH(1,(tblCalendar[year]=D2)*(tblCalendar[month]=E2)*(tblCalendar[day]=F2),0)),"""")"
+    wsAu.Range("B3").FormulaArray = "=IFERROR(INDEX(tblCalendar[tts_interval_min],MATCH(1,(tblCalendar[year]=D2)*(tblCalendar[month]=E2)*(tblCalendar[day]=F2),0)),"""")"
+    wsAu.Range("B4").FormulaArray = "=IFERROR(INDEX(tblCalendar[theme_box_id],MATCH(1,(tblCalendar[year]=D2)*(tblCalendar[month]=E2)*(tblCalendar[day]=F2),0)),"""")"
+    wsAu.Range("B6").FormulaArray = "=IFERROR(INDEX(tblCalendar[light_show_id],MATCH(1,(tblCalendar[year]=D2)*(tblCalendar[month]=E2)*(tblCalendar[day]=F2),0)),"""")"
+    wsAu.Range("B7").FormulaArray = "=IFERROR(INDEX(tblCalendar[color_range_id],MATCH(1,(tblCalendar[year]=D2)*(tblCalendar[month]=E2)*(tblCalendar[day]=F2),0)),"""")"
+    wsAu.Range("B5").Formula = "=IF(B4="""","""",IFERROR(INDEX(tblThemeBoxes[entries],MATCH(B4,tblThemeBoxes[theme_box_id],0)),""""))"
+    wsAu.Range("B8").Formula = "=IF(B7="""","""",IFERROR(INDEX(tblColorRanges[start_hex],MATCH(B7,tblColorRanges[color_range_id],0)),"""")) & "".."" & IF(B7="""","""",IFERROR(INDEX(tblColorRanges[end_hex],MATCH(B7,tblColorRanges[color_range_id],0)),""""))"
+    wsAu.Columns("A:H").AutoFit
+End Sub
+
+Public Sub ExportAll()
+    EnsureFolder GetSdrootPath
+    ExportCalendar: ExportThemeBoxes: ExportLightShows: ExportColorRanges
+    MsgBox "Export gereed naar: " & GetSdrootPath, vbInformation
+End Sub
+
+Public Sub ExportCalendar():    ExportMap "tblCalendar",   "calendar.csv",      Array("year","month","day","tts_sentence","tts_interval_min","theme_box_id","light_show_id","color_range_id","note"): End Sub
+Public Sub ExportThemeBoxes():  ExportMap "tblThemeBoxes", "theme_boxes.csv",   Array("theme_box_id","entries","note"): End Sub
+Public Sub ExportLightShows():  ExportMap "tblLightShows", "light_shows.csv",   Array("light_show_id","rgb1_hex","rgb2_hex","color_cycle_sec","bright_cycle_sec","fade_width","min_brightness","gradient_speed","center_x","center_y","radius","window_width","radius_osc","x_amp","y_amp","x_cycle_sec","y_cycle_sec","note"): End Sub
+Public Sub ExportColorRanges(): ExportMap "tblColorRanges","color_ranges.csv",  Array("color_range_id","start_hex","end_hex","note"): End Sub
+
+Private Sub ExportMap(ByVal tableName As String, ByVal outFile As String, headers As Variant)
+    Dim lo As ListObject, p As String, i As Long
+    Set lo = FindListObjectByName(tableName)
+    If lo Is Nothing Then Err.Raise 5, , "Tabel niet gevonden: " & tableName
+    For i = LBound(headers) To UBound(headers)
+        If GetTableColumnIndex(lo, CStr(headers(i))) = 0 Then Err.Raise 5, , "Kolom ontbreekt in " & tableName & ": " & headers(i)
+    Next i
+    EnsureFolder GetSdrootPath
+    p = GetSdrootPath & Application.PathSeparator & outFile
+    WriteCsv lo, headers, p
+End Sub
+
+Private Sub WriteCsv(ByVal lo As ListObject, headers As Variant, ByVal outPath As String)
+    Dim stm As Object: Set stm = CreateObject("ADODB.Stream")
+    With stm: .Type = 2: .Charset = "us-ascii": .Open: End With
+    Dim r As ListRow, i As Long, idx As Long, fields() As String, v As Variant, cellText As String
+    For Each r In lo.ListRows
+        ReDim fields(LBound(headers) To UBound(headers))
+        For i = LBound(headers) To UBound(headers)
+            idx = GetTableColumnIndex(lo, CStr(headers(i)))
+            v = r.Range.Cells(1, idx).Value
+            If IsError(v) Or IsEmpty(v) Then cellText = "" Else cellText = CStr(v)
+            fields(i) = SanitizeText(cellText)
+        Next i
+        stm.WriteText JoinSemicolon(fields) & vbCrLf, 0
+    Next r
+    If Dir(outPath) <> "" Then Kill outPath
+    stm.SaveToFile outPath, 2
+    stm.Close
+End Sub
+
+'============= infra (sheets, tables, cf, utils) =============
+Private Function EnsureSheet(ByVal name As String) As Worksheet
+    On Error Resume Next
+    Set EnsureSheet = ThisWorkbook.Sheets(name)
+    On Error GoTo 0
+    If EnsureSheet Is Nothing Then
+        Set EnsureSheet = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+        EnsureSheet.Name = name
+    End If
+End Function
+
+Private Sub EnsureTable(ws As Worksheet, ByVal loName As String, headers As Variant)
+    Dim lo As ListObject, i As Long, rng As Range
+    On Error Resume Next
+    Set lo = ws.ListObjects(loName)
+    On Error GoTo 0
+    If lo Is Nothing Then
+        For i = LBound(headers) To UBound(headers)
+            ws.Cells(1, i + 1).Value = headers(i)
+            ws.Cells(1, i + 1).Font.Bold = True
+        Next i
+        ws.Range(ws.Cells(1, 1), ws.Cells(1, UBound(headers) + 1)).Interior.Color = RGB(230, 230, 230)
+        Set rng = ws.Range(ws.Cells(1, 1), ws.Cells(2, UBound(headers) + 1))
+        ws.ListObjects.Add xlSrcRange, rng, , xlYes
+        ws.ListObjects(ws.ListObjects.Count).Name = loName
+    End If
+    ws.Columns("A:Z").AutoFit
+End Sub
+
+Private Sub SetListValidation(rng As Range, ByVal formula1 As String)
+    With rng.Validation
+        .Delete
+        .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=formula1
+    End With
+End Sub
+
+Private Sub ApplyMissingRefCF(rng As Range, ByVal formula1 As String)
+    With rng.FormatConditions.Add(Type:=xlExpression, Formula1:=formula1)
+        .Interior.Color = RGB(255, 200, 200)
+    End With
+End Sub
+
+Private Function FindListObjectByName(ByVal loName As String) As ListObject
+    Dim ws As Worksheet, lo As ListObject
+    For Each ws In ThisWorkbook.Worksheets
+        For Each lo In ws.ListObjects
+            If StrComp(lo.Name, loName, vbTextCompare) = 0 Then Set FindListObjectByName = lo: Exit Function
+        Next lo
+    Next ws
+End Function
+
+Private Function FindListObjectByNameGuess(names As Variant) As ListObject
+    Dim i As Long, o As ListObject
+    For i = LBound(names) To UBound(names)
+        Set o = FindListObjectByName(CStr(names(i)))
+        If Not o Is Nothing Then Set FindListObjectByNameGuess = o: Exit Function
+    Next i
+End Function
+
+Private Function GetTableColumnIndex(ByVal lo As ListObject, ByVal headerName As String) As Long
+    Dim i As Long
+    For i = 1 To lo.ListColumns.Count
+        If StrComp(lo.ListColumns(i).Name, headerName, vbTextCompare) = 0 Then GetTableColumnIndex = i: Exit Function
+    Next i
+    GetTableColumnIndex = 0
+End Function
+
+' FS + text utils
+Private Function GetWorkbookFolder() As String: GetWorkbookFolder = ThisWorkbook.Path: End Function
+Private Function GetSdrootPath() As String: GetSdrootPath = GetWorkbookFolder() & Application.PathSeparator & "sdroot": End Function
+Private Sub EnsureFolder(ByVal p As String): If Len(Dir(p, vbDirectory)) = 0 Then MkDir p: End If: End Sub
+
+Private Function TrimAndNormalize(ByVal s As String) As String
+    If Len(s) = 0 Then TrimAndNormalize = "": Exit Function
+    Dim t As String: t = s
+    t = Replace(t, vbCr, " "): t = Replace(t, vbLf, " ")
+    TrimAndNormalize = Application.WorksheetFunction.Trim(t)
+End Function
+
+Private Function SanitizeText(ByVal s As String) As String
+    Dim i As Long, ch As Integer, r As String, t As String
+    t = TrimAndNormalize(s)
+    For i = 1 To Len(t)
+        ch = AscW(Mid$(t, i, 1))
+        If ch = 59 Then
+            r = r & ","
+        ElseIf ch = 13 Or ch = 10 Then
+            r = r & " "
+        ElseIf ch >= 32 And ch <= 126 Then
+            r = r & Chr$(ch)
+        Else
+            r = r & "?"
+        End If
+    Next i
+    SanitizeText = r
+End Function
+
+Private Function JoinSemicolon(ByRef arr() As String) As String
+    Dim i As Long, sb As String
+    For i = LBound(arr) To UBound(arr)
+        If i > LBound(arr) Then sb = sb & ";"
+        sb = sb & arr(i)
+    Next i
+    JoinSemicolon = sb
+End Function
+
+' Easter
+Private Function WesternEasterDate(ByVal yr As Long) As Date
+    Dim a As Long, b As Long, c As Long, d As Long, e As Long, f As Long, g As Long
+    Dim h As Long, i As Long, k As Long, l As Long, m As Long, mo As Long, da As Long
+    a = yr Mod 19: b = yr \ 100: c = yr Mod 100: d = b \ 4: e = b Mod 4
+    f = (b + 8) \ 25: g = (b - f + 1) \ 3
+    h = (19 * a + b - d - g + 15) Mod 30
+    i = c \ 4: k = c Mod 4
+    l = (32 + 2 * e + 2 * i - h - k) Mod 7
+    m = (a + 11 * h + 22 * l) \ 451
+    mo = (h + l - 7 * m + 114) \ 31
+    da = ((h + l - 7 * m + 114) Mod 31) + 1
+    WesternEasterDate = DateSerial(yr, mo, da)
+End Function
+
+' safe Split wrapper (module name conflicts vermijden)
+Private Function Splt(ByVal s As String, ByVal sep As String) As Variant
+    Splt = VBA.Split(s, sep)
+End Function

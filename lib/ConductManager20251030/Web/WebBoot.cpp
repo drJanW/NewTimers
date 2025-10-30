@@ -1,5 +1,5 @@
 #include "WebBoot.h"
-#include "Globals.h"
+#include "LightManager.h"
 #include "WebInterfaceManager.h"
 #include "WebPolicy.h"
 

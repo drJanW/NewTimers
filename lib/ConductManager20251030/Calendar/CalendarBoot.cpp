@@ -3,13 +3,14 @@
 #include "Calendar.h"
 #include "CalendarPolicy.h"
 #include "Globals.h"
+#include "SDManager.h"
 
 #include <SD.h>
 
 CalendarBoot calendarBoot;
 
 void CalendarBoot::plan() {
-  if (!isSDReady()) {
+  if (!SDManager::isReady()) {
     PF("[CalendarBoot] SD not ready, skip calendar init\n");
     return;
   }

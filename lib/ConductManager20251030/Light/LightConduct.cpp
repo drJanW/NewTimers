@@ -13,14 +13,14 @@ float s_currentIntensity = 0.0f;
 uint8_t s_currentPaletteId = 0;
 bool s_timerActive = false;
 
-void applyLightshowFrame() {
+void applyLightshowUpdate() {
     (void)s_currentIntensity;
     (void)s_currentPaletteId;
-    // TODO: Implement distance-driven RGB lightshow frame rendering.
+    // TODO: Implement distance-driven RGB lightshow update logic.
 }
 
 bool scheduleAnimation(uint32_t intervalMs) {
-    TimerCallback cb = LightConduct::animationTick;
+    TimerCallback cb = LightConduct::animationCallback;
     if (!TimerManager::instance().restart(intervalMs, 1, cb)) {
         PF("[LightConduct] Failed to schedule light animation (%lu ms)\n",
            static_cast<unsigned long>(intervalMs));
@@ -34,7 +34,7 @@ bool scheduleAnimation(uint32_t intervalMs) {
 
 void stopAnimation() {
     if (s_timerActive) {
-        TimerCallback cb = LightConduct::animationTick;
+    TimerCallback cb = LightConduct::animationCallback;
         TimerManager::instance().cancel(cb);
         s_timerActive = false;
     }
@@ -73,7 +73,7 @@ void LightConduct::handleDistanceReading(float distanceMm) {
     }
 }
 
-void LightConduct::animationTick() {
-    applyLightshowFrame();
+void LightConduct::animationCallback() {
+    applyLightshowUpdate();
     s_timerActive = false;
 }

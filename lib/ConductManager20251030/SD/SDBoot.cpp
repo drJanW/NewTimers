@@ -24,7 +24,7 @@ bool SDBoot::plan() {
         s_instance = this;
     }
 
-    if (isSDReady()) {
+    if (SDManager::isReady()) {
         s_attemptCount = 0;
         SDPolicy::showStatus();
         return true;
@@ -42,7 +42,7 @@ bool SDBoot::plan() {
 
     bootSDManager();
 
-    if (isSDReady()) {
+    if (SDManager::isReady()) {
         s_attemptCount = 0;
         SDPolicy::showStatus();
         return true;

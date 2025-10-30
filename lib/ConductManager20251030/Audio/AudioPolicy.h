@@ -14,7 +14,7 @@ namespace AudioPolicy {
 
     // Distance-driven playback helpers
     bool distancePlaybackInterval(float distanceMm, uint32_t& intervalMs);
-    void updateDistancePlaybackVolume(float distanceMm);
+    float updateDistancePlaybackVolume(float distanceMm);
 
     // Optional: queueing strategy
     bool requestFragment(const AudioFragment& frag);

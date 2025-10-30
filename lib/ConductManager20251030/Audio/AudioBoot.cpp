@@ -7,7 +7,7 @@
 #include "AudioConduct.h"
 
 void AudioBoot::plan() {
-    if (!isSDReady()) {
+    if (!SDManager::isReady()) {
         PL("[Conduct][Plan] Audio boot deferred: SD not ready");
         return;
     }

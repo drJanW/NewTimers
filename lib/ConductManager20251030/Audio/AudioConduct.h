@@ -10,7 +10,7 @@ public:
     static const char* const kDistanceClipId;
 
     void plan();
-    static void startDistanceResponse();
+    static void startDistanceResponse(bool playImmediately = false);
     static void cb_playPCM();
 };
 

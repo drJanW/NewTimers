@@ -8,5 +8,5 @@ public:
 
     static void handleDistanceReading(float distanceMm);
 
-    static void animationTick();
+    static void animationCallback();
 };

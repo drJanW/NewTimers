@@ -1,6 +1,8 @@
 #include "SDPolicy.h"
 #include "SDVoting.h"       // weighted voting/selection helpers
 #include "Globals.h"        // for PF/PL macros if needed
+#include "SDManager.h"
+#include "AudioManager.h"
 #include "Audio/AudioDirector.h"
 
 namespace SDPolicy {
@@ -12,7 +14,8 @@ bool getRandomFragment(AudioFragment& outFrag) {
 
 bool deleteFile(uint8_t dirIndex, uint8_t fileIndex) {
     // Policy: only delete if audio is idle
-    if (!isAudioBusy() && !isSentencePlaying()) {
+    auto& audio = AudioManager::instance();
+    if (!audio.isBusy() && !audio.isSentencePlaying()) {
         SDVoting::deleteIndexedFile(dirIndex, fileIndex);
         return true;
     }
@@ -22,7 +25,9 @@ bool deleteFile(uint8_t dirIndex, uint8_t fileIndex) {
 }
 
 void showStatus() {
-    PF("[SDPolicy] SD ready=%d busy=%d\n", isSDReady(), isSDBusy());
+    PF("[SDPolicy] SD ready=%d busy=%d\n",
+       SDManager::isReady(),
+       SDManager::isBusy());
     // Could add more diagnostics here (e.g. number of indexed files)
 }
 

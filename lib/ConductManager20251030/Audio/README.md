@@ -27,7 +27,7 @@ This file captures the current understanding of how distance driven PCM playback
 - Calendar updates arrive on the hourly interval; the policy swap happens synchronously so the next fragment pick honours the new theme without needing an explicit audio reset.
 
 ## Callback behaviour
-- `cb_playPCM()` checks whether other audio is still busy. If fragments or sentences are active it re-arms itself with the busy retry window; otherwise it fetches the latest cached distance via `SensorsPolicy::currentDistance`, refreshes volume through `AudioPolicy::updateDistancePlaybackVolume`, and starts PCM playback.
+- `cb_playPCM()` checks whether other audio is still busy. If fragments or sentences are active it re-arms itself with the busy retry window; otherwise it fetches the latest cached distance via `SensorsPolicy::currentDistance`, asks `AudioPolicy::updateDistancePlaybackVolume` for the current multiplier, and starts PCM playback with the resulting level.
 - Actual playback is attempted via `PlayPCM::play`. A failure here is logged but otherwise the logic relies on the next distance event (or a fresh `setDistanceClipPointer()` call) to recover.
 
 These notes should keep the interaction between policy, conduct, and the timers straight without re-learning the same rules next time.
