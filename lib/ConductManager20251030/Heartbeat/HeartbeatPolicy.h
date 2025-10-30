@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 #ifndef HEARTBEAT_DEBUG
-#define HEARTBEAT_DEBUG 1
+#define HEARTBEAT_DEBUG 0
 #endif
 
 namespace HeartbeatPolicy {

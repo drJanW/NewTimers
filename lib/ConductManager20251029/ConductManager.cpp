@@ -47,6 +47,9 @@
 #include "SD/SDConduct.h"
 #include "SD/SDPolicy.h"
 
+#include "Calendar/CalendarBoot.h"
+#include "Calendar/CalendarConduct.h"
+
 #include "FetchManager.h"
 #include "WiFiManager.h"
 
@@ -282,6 +285,8 @@ void ConductManager::resumeAfterSDBoot() {
     sdPostBootCompleted = true;
 
     sdConduct.plan();
+    calendarBoot.plan();
+    calendarConduct.plan();
     wifiBoot.plan();
     wifiConduct.plan();
     webBoot.plan();
