@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include "LightPolicy.h"
 #include "Globals.h" // for MAX_BRIGHTNESS
-#include "../../ContextManager20251023/Calendar.h"
-#include "../../LightManager20251028/LightManager.h"
+#include "../../ContextManager20251030/Calendar.h"
+#include "../../LightManager20251030/LightManager.h"
 
 namespace LightPolicy {
 

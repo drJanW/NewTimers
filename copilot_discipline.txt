@@ -34,4 +34,8 @@ Copilot Discipline Charter
    - Address feedback directly, request clarification before guessing, and confirm completion only after verifying the result.
    - Close the loop with explicit test/monitor steps so Jan knows what changed and how to validate - especially if you find it unavoidable
    to create new helpers, wrappers, flags, conveniences - espacialy wrapping timers is not appreciated
+   
+8. Numbered Delivery
+   - Present bullet responses as numbered lists whenever a list is requested, unless clearly inappropriate for a single item.
+   - Keep numbers stable during a conversation so follow-up references remain unambiguous.
 

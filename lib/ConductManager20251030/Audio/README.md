@@ -23,8 +23,14 @@ This file captures the current understanding of how distance driven PCM playback
 
 ## Theme box coordination
 - `AudioPolicy::setThemeBox` stores the active theme identifier plus up to sixteen fragment directories supplied by the calendar conductor. When the calendar clears the theme we call `AudioPolicy::clearThemeBox` to remove the allow-list.
-- `AudioDirector::chooseFragmentDirectory` checks the allow-list first; if no candidate files exist inside any theme directory we fall back to the global fragment pool so the system never wedges.
+- `AudioDirector` now operates purely on the SD index weights (`file_count`/`total_score`). If a theme allow-list yields zero weighted directories it logs `[AudioDirector] No weighted directories for active theme filter` and returns failure instead of falling back to the global pool.
+- Callers must surface that failure (today the conductor keeps the previous fragment playing) so we can spot stale theme data and fix the index rather than masking it.
 - Calendar updates arrive on the hourly interval; the policy swap happens synchronously so the next fragment pick honours the new theme without needing an explicit audio reset.
+
+## Weighted fragment picker
+- `AudioDirector::selectRandomFragment` only considers directories and files whose weights are non-zero in `.root_dirs`/`.files_dir`. Any hole (zero score) results in an early return and an explicit log line.
+- Ensure `SDManager::rebuildIndex()` runs after adjusting scores; with fallbacks removed the director will refuse to play if the index is stale or empty.
+- Expect log noise when the SD data is incomplete—that is intentional so broken scoring does not silently continue.
 
 ## Callback behaviour
 - `cb_playPCM()` checks whether other audio is still busy. If fragments or sentences are active it re-arms itself with the busy retry window; otherwise it fetches the latest cached distance via `SensorsPolicy::currentDistance`, asks `AudioPolicy::updateDistancePlaybackVolume` for the current multiplier, and starts PCM playback with the resulting level.

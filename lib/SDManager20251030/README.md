@@ -99,6 +99,12 @@ Return: file_num (1-based, dus 007.mp3 = 7)
 
 Return 0: geen geldig bestand in deze subdir
 
+AudioDirector integratie (vanaf 30-10-2025)
+- Alleen directories met zowel file_count > 0 als total_score > 0 worden nog bekeken.
+- Themekaders (theme boxes) gebruiken dezelfde indexgegevens; lege filters leveren direct een foutmelding in de log.
+- Als geen enkele directory of file gewicht heeft, stopt de selectie zonder fallback. Zorg dus dat scores op de SD-kaart actueel zijn.
+- Logregels zoals `[AudioDirector] No weighted directories available` of `[AudioDirector] No weighted files in dir XXX` betekenen dat de index geen bruikbare entries bevat.
+
 Uitzonderingen / Speciale gevallen
 /000/ (Subdir 0)
 Deze wordt niet gekozen door standaard selectie
