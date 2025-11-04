@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "active_color": "color001",
+  "colors": [
+    {
+      "id": "color001",
+      "label": "Warm Sunset",
+      "rgb1_hex": "#FF7F00",
+      "rgb2_hex": "#552200"
+    },
+    {
+      "id": "color002",
+      "label": "Arctic Ice",
+      "rgb1_hex": "#00C6FF",
+      "rgb2_hex": "#003F7F"
+    },
+    {
+      "id": "color003",
+      "label": "Forest Dew",
+      "rgb1_hex": "#3FAF4E",
+      "rgb2_hex": "#0B3D17"
+    },
+    {
+      "id": "color004",
+      "label": "Royal Magenta",
+      "rgb1_hex": "#A83279",
+      "rgb2_hex": "#2B2E83"
+    },
+    {
+      "id": "color005",
+      "label": "Golden Hour",
+      "rgb1_hex": "#FFE066",
+      "rgb2_hex": "#FF6B6B"
+    },
+    {
+      "id": "color006",
+      "label": "Coral Reef",
+      "rgb1_hex": "#1CD8D2",
+      "rgb2_hex": "#93EDC7"
+    }
+  ]
+}

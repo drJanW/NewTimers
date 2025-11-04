@@ -1,0 +1,6 @@
+{
+  "deprecated": true,
+  "note": "Gebruik light_patterns.json en light_colors.json voor de gescheiden opslag van patronen en kleuren.",
+  "pattern_migrated_to": "light_patterns.json",
+  "color_migrated_to": "light_colors.json"
+}

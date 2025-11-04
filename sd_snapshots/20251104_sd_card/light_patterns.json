@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "active_pattern": "pattern001",
+  "patterns": [
+    {
+      "id": "pattern001",
+      "label": "Smooth Orbit",
+      "params": {
+        "color_cycle_sec": 18,
+        "bright_cycle_sec": 14,
+        "fade_width": 9,
+        "min_brightness": 12,
+        "gradient_speed": 0.6,
+        "center_x": 0,
+        "center_y": 0,
+        "radius": 22,
+        "window_width": 24,
+        "radius_osc": 4,
+        "x_amp": 3.5,
+        "y_amp": 2.5,
+        "x_cycle_sec": 22,
+        "y_cycle_sec": 20
+      }
+    },
+    {
+      "id": "pattern002",
+      "label": "Slow Breathing",
+      "params": {
+        "color_cycle_sec": 30,
+        "bright_cycle_sec": 28,
+        "fade_width": 16,
+        "min_brightness": 8,
+        "gradient_speed": 0.3,
+        "center_x": 0,
+        "center_y": 0,
+        "radius": 18,
+        "window_width": 28,
+        "radius_osc": 2,
+        "x_amp": 2,
+        "y_amp": 2,
+        "x_cycle_sec": 32,
+        "y_cycle_sec": 34
+      }
+    },
+    {
+      "id": "pattern003",
+      "label": "Rapid Sparks",
+      "params": {
+        "color_cycle_sec": 8,
+        "bright_cycle_sec": 6,
+        "fade_width": 4,
+        "min_brightness": 20,
+        "gradient_speed": 1.2,
+        "center_x": 0,
+        "center_y": 0,
+        "radius": 10,
+        "window_width": 14,
+        "radius_osc": 6,
+        "x_amp": 5,
+        "y_amp": 7,
+        "x_cycle_sec": 9,
+        "y_cycle_sec": 11
+      }
+    },
+    {
+      "id": "pattern004",
+      "label": "Wide Sweep",
+      "params": {
+        "color_cycle_sec": 20,
+        "bright_cycle_sec": 18,
+        "fade_width": 11,
+        "min_brightness": 12,
+        "gradient_speed": 0.6,
+        "center_x": 6,
+        "center_y": -4,
+        "radius": 40,
+        "window_width": 48,
+        "radius_osc": 3,
+        "x_amp": 8,
+        "y_amp": 5,
+        "x_cycle_sec": 26,
+        "y_cycle_sec": 24
+      }
+    },
+    {
+      "id": "pattern005",
+      "label": "Calm Center",
+      "params": {
+        "color_cycle_sec": 24,
+        "bright_cycle_sec": 18,
+        "fade_width": 6,
+        "min_brightness": 4,
+        "gradient_speed": 0.2,
+        "center_x": 0,
+        "center_y": 0,
+        "radius": 8,
+        "window_width": 12,
+        "radius_osc": 1.5,
+        "x_amp": 1.5,
+        "y_amp": 1.5,
+        "x_cycle_sec": 40,
+        "y_cycle_sec": 36
+      }
+    }
+  ]
+}
