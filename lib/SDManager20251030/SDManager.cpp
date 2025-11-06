@@ -102,12 +102,62 @@ void SDManager::rebuildIndex() {
     for (uint16_t i=0;i<SD_MAX_DIRS;i++) root.write((const uint8_t*)&empty,sizeof(DirEntry));
     root.close();
 
-    for (uint8_t d=1; d<=SD_MAX_DIRS; d++) scanDirectory(d);
+    uint16_t preservedDirs = 0;
+    uint16_t rebuiltDirs = 0;
+
+    for (uint16_t d = 1; d <= SD_MAX_DIRS; ++d) {
+        char dirPath[12];
+        snprintf(dirPath, sizeof(dirPath), "/%03u", static_cast<unsigned>(d));
+        if (!SD.exists(dirPath)) {
+            continue;
+        }
+
+        char filesDirPath[SDPATHLENGTH];
+        snprintf(filesDirPath, sizeof(filesDirPath), "%s%s", dirPath, FILES_DIR);
+
+        if (!SD.exists(filesDirPath)) {
+            scanDirectory(static_cast<uint8_t>(d));
+            ++rebuiltDirs;
+            continue;
+        }
+
+        File filesIndex = SD.open(filesDirPath, FILE_READ);
+        if (!filesIndex) {
+            PF("[SDManager] Unable to read %s, rebuilding directory\n", filesDirPath);
+            scanDirectory(static_cast<uint8_t>(d));
+            ++rebuiltDirs;
+            continue;
+        }
+
+        DirEntry dirEntry{0, 0};
+        for (uint16_t fnum = 1; fnum <= SD_MAX_FILES_PER_SUBDIR; ++fnum) {
+            FileEntry fe{};
+            if (filesIndex.read(reinterpret_cast<uint8_t*>(&fe), sizeof(FileEntry)) != sizeof(FileEntry)) {
+                break;
+            }
+            if (fe.size_kb == 0 || fe.score == 0) {
+                continue;
+            }
+            ++dirEntry.file_count;
+            dirEntry.total_score += fe.score;
+        }
+        filesIndex.close();
+
+        if (!writeDirEntry(static_cast<uint8_t>(d), &dirEntry)) {
+            PF("[SDManager] Failed to update dir entry %03u\n", static_cast<unsigned>(d));
+        } else if (dirEntry.file_count > 0) {
+            ++preservedDirs;
+        }
+    }
 
     File v = SD.open(SD_VERSION_FILENAME, FILE_WRITE);
     if (v){ v.print(SD_INDEX_VERSION); v.close(); PF("[SDManager] Wrote version %s\n", SD_INDEX_VERSION); }
 
-    PF("[SDManager] Index rebuild complete.\n");
+    setHighestDirNum();
+
+    PF("[SDManager] Index rebuild complete (preserved=%u rebuilt=%u).\n",
+       static_cast<unsigned>(preservedDirs),
+       static_cast<unsigned>(rebuiltDirs));
 }
 
 void SDManager::scanDirectory(uint8_t dir_num) {

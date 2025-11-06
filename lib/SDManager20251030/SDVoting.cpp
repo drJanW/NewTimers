@@ -160,7 +160,7 @@ void SDVoting::attachVoteRoute(AsyncWebServer& server) {
   });
 
   server.on("/next", HTTP_ANY, [](AsyncWebServerRequest* req){
-    PF("[WEB] NEXT requested\n");
+    PF("[audio][next] request\n");
     ContextManager_post(ContextManager::WebCmd::NextTrack);
     req->send(200, "text/plain", "NEXT scheduled");
   });

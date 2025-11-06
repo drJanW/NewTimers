@@ -191,6 +191,8 @@ bool start(const AudioFragment& fragment) {
              static_cast<unsigned>(state.stepMs),
              static_cast<unsigned long>(state.fadeOutDelayMs));
 
+        PF("[audio][fragment] %02u - %02u playing\n", fragment.dirIndex, fragment.fileIndex);
+
     return true;
 }
 

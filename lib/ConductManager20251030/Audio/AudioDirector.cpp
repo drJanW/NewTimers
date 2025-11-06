@@ -91,11 +91,20 @@ bool pickDirectory(DirPick& outDir, const uint8_t* allowList = nullptr, size_t a
         return false;
     }
 
+    PF("[AudioDirector] dir pool count=%u total_score=%lu\n",
+       static_cast<unsigned>(scoredCount),
+       static_cast<unsigned long>(totalScore));
+
     DirScore ticket = static_cast<DirScore>(random((long)totalScore)) + 1U;
+    PF("[AudioDirector] dir ticket=%lu\n", static_cast<unsigned long>(ticket));
     DirScore cumulative = 0;
     for (uint8_t i = 0; i < scoredCount; ++i) {
         cumulative += static_cast<DirScore>(scored[i].entry.total_score);
         if (ticket <= cumulative) {
+            PF("[AudioDirector] dir pick=%03u score=%u cumulative=%lu\n",
+               scored[i].id,
+               static_cast<unsigned>(scored[i].entry.total_score),
+               static_cast<unsigned long>(cumulative));
             outDir = scored[i];
             return true;
         }
@@ -117,6 +126,7 @@ bool pickFile(const DirPick& dirPick, uint8_t& outFile) {
     }
 
     FileScore totalScore = 0;
+    uint16_t candidateCount = 0;
     for (uint16_t fileNum = 1; fileNum <= SD_MAX_FILES_PER_SUBDIR; ++fileNum) {
         FileEntry entry{};
         if (filesIndex.read(reinterpret_cast<uint8_t*>(&entry), sizeof(FileEntry)) != sizeof(FileEntry)) {
@@ -125,6 +135,7 @@ bool pickFile(const DirPick& dirPick, uint8_t& outFile) {
         if (entry.size_kb == 0 || entry.score == 0) {
             continue;
         }
+        ++candidateCount;
         totalScore += static_cast<FileScore>(entry.score);
     }
 
@@ -134,7 +145,13 @@ bool pickFile(const DirPick& dirPick, uint8_t& outFile) {
         return false;
     }
 
+    PF("[AudioDirector] file pool dir=%03u count=%u total_score=%lu\n",
+       dirPick.id,
+       static_cast<unsigned>(candidateCount),
+       static_cast<unsigned long>(totalScore));
+
     const FileScore target = static_cast<FileScore>(random((long)totalScore)) + 1U;
+    PF("[AudioDirector] file ticket=%lu\n", static_cast<unsigned long>(target));
     filesIndex.seek(0);
     FileScore cumulative = 0;
     for (uint16_t fileNum = 1; fileNum <= SD_MAX_FILES_PER_SUBDIR; ++fileNum) {
@@ -148,6 +165,10 @@ bool pickFile(const DirPick& dirPick, uint8_t& outFile) {
         cumulative += static_cast<FileScore>(entry.score);
         if (target <= cumulative) {
             filesIndex.close();
+            PF("[AudioDirector] file pick=%03u score=%u cumulative=%lu\n",
+               static_cast<unsigned>(fileNum),
+               static_cast<unsigned>(entry.score),
+               static_cast<unsigned long>(cumulative));
             outFile = static_cast<uint8_t>(fileNum);
             return true;
         }
@@ -196,7 +217,7 @@ bool AudioDirector::selectRandomFragment(AudioFragment& outFrag) {
 
     const uint32_t rawDuration = static_cast<uint32_t>(fileEntry.size_kb) * 1024UL / BYTES_PER_MS;
     if (rawDuration <= HEADER_MS + 100U) {
-    PF("[AudioDirector] Fragment candidate too short %03u/%03u\n", dirPick.id, file);
+        PF("[AudioDirector] Fragment candidate too short %03u/%03u\n", dirPick.id, file);
         return false;
     }
 
@@ -205,6 +226,12 @@ bool AudioDirector::selectRandomFragment(AudioFragment& outFrag) {
     outFrag.startMs    = HEADER_MS;
     outFrag.durationMs = rawDuration - HEADER_MS;
     outFrag.fadeMs     = 5000U; // TODO: derive from context rules
+
+    PF("[AudioDirector] final pick %03u/%03u size_kb=%u raw_ms=%lu\n",
+       outFrag.dirIndex,
+       outFrag.fileIndex,
+       static_cast<unsigned>(fileEntry.size_kb),
+       static_cast<unsigned long>(rawDuration));
 
     return true;
 }
