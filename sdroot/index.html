@@ -1,2 +1,224 @@
-<!-- Placeholder file for SD card deployment.
-     Replace this file with the actual web UI assets before mirroring to the SD card. -->
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+     <meta charset="utf-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+     <title>kwal</title>
+     <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+     <main class="page" aria-labelledby="pageTitle">
+          <header class="page-header">
+               <h1 id="pageTitle">kwal versie 110308A</h1>
+               <button type="button" class="btn btn-small" id="refreshAll" aria-label="Ververs waarden" title="Ververs waarden">
+                    <span aria-hidden="true">&#8635;</span>
+                    <span class="sr-only">Ververs</span>
+               </button>
+          </header>
+
+          <section class="panel-grid">
+               <article class="panel" id="audioPanel" aria-labelledby="audioHeading">
+                    <header class="panel-header">
+                         <h2 id="audioHeading">Audio</h2>
+                    </header>
+                    <p class="status" id="audioStatus">-</p>
+                    <div class="panel-body">
+                         <div class="info-row">
+                              <span class="info-label">fragment</span>
+                              <span class="info-value" id="audioCurrent">--</span>
+                         </div>
+                         <label class="form-label" for="audioVolume">
+                              <span>Volume</span>
+                              <span class="value-tag" id="audioVolumeLabel">0%</span>
+                         </label>
+                         <input type="range" id="audioVolume" min="0" max="100" step="1">
+                         <div class="row row-centered">
+                              <button type="button" class="btn btn-icon" id="audioNextButton" aria-label="Volgende fragment" title="Volgende fragment">
+                                   <span aria-hidden="true">&#9193;</span>
+                                   <span class="sr-only">Volgende fragment</span>
+                              </button>
+                         </div>
+                         <div class="row vote-row" role="group" aria-label="Stemmen">
+                              <button type="button" class="btn btn-vote" data-vote="up" aria-label="Upvote">+</button>
+                              <button type="button" class="btn btn-vote" data-vote="down" aria-label="Downvote">-</button>
+                              <button type="button" class="btn btn-vote" data-vote="ban" aria-label="Nooit meer">0</button>
+                         </div>
+                    </div>
+               </article>
+
+               <article class="panel" id="lightPanel" aria-labelledby="lightHeading">
+                    <header class="panel-header">
+                         <h2 id="lightHeading">Licht</h2>
+                         <button type="button" class="btn btn-icon btn-gear" data-open-light aria-label="Lichtinstellingen">&#9881;</button>
+                    </header>
+                    <p class="status" id="lightStatus">-</p>
+                    <div class="panel-body">
+                         <label class="form-label" for="lightSlider">
+                              <span title="Helderheid">&#128262;</span>
+                              <span class="sr-only">Helderheid</span>
+                              <span class="value-tag" id="lightValue">0</span>
+                         </label>
+                         <input type="range" id="lightSlider" min="0" max="100" step="1">
+                         <div class="row row-centered">
+                              <button type="button" class="btn btn-icon" id="lightNext" aria-label="Volgende lichtshow" title="Volgende lichtshow">
+                                   <span aria-hidden="true">&#9193;</span>
+                                   <span class="sr-only">Volgende lichtshow</span>
+                              </button>
+                         </div>
+                    </div>
+               </article>
+          </section>
+
+          <footer class="page-footer">
+               <button type="button" class="btn btn-inline" id="openSdManager">SD-kaart</button>
+               <button type="button" class="btn btn-inline" id="openOtaSettings">OTA</button>
+          </footer>
+     </main>
+
+     <div class="modal hidden" id="lightModal" role="dialog" aria-modal="true" aria-labelledby="lightModalTitle">
+          <div class="modal-backdrop" data-dismiss></div>
+          <div class="modal-dialog">
+               <div class="modal-panel">
+                    <h2 id="lightModalTitle">Lichtinstellingen</h2>
+                    <div class="light-summary">
+                         <div class="light-summary-header">
+                              <span>Huidige helderheid</span>
+                              <span class="value-tag" id="lightModalPercent">0%</span>
+                         </div>
+                         <div class="marker-track">
+                              <div class="actual-marker" data-marker="light"></div>
+                         </div>
+                    </div>
+                    <div class="preset-controls">
+                         <div class="preset-group" id="colorGroup">
+                              <div class="preset-group-header">
+                                   <h3>Kleuren</h3>
+                              </div>
+                              <div class="color-pickers">
+                                   <div class="color-field">
+                                        <label for="lightColorA">Kleur A</label>
+                                        <input type="color" id="lightColorA" data-color="rgb1_hex" value="#ff7f00">
+                                   </div>
+                                   <div class="color-field">
+                                        <label for="lightColorB">Kleur B</label>
+                                        <input type="color" id="lightColorB" data-color="rgb2_hex" value="#552200">
+                                   </div>
+                              </div>
+                              <div class="preset-row">
+                                   <label for="colorSelect">Selectie</label>
+                                   <select id="colorSelect" aria-label="Kies kleurset"></select>
+                              </div>
+                              <div class="preset-row">
+                                   <label for="colorName">Naam</label>
+                                   <input type="text" id="colorName" placeholder="Naam" maxlength="48" aria-label="Kleursetnaam">
+                              </div>
+                              <div class="preset-buttons">
+                                   <button type="button" class="btn btn-small" id="colorSave">Bewaar kleuren</button>
+                                   <button type="button" class="btn btn-small" id="colorSaveAs">Nieuwe kleurset</button>
+                                   <button type="button" class="btn btn-small" id="colorDelete">Verwijder kleurset</button>
+                              </div>
+                         </div>
+                         <div class="preset-group" id="patternGroup">
+                              <div class="preset-group-header">
+                                   <h3>Patroon &amp; instellingen</h3>
+                              </div>
+                              <div class="preset-row">
+                                   <label for="patternSelect">Selectie</label>
+                                   <select id="patternSelect" aria-label="Kies patroon"></select>
+                              </div>
+                              <div class="preset-row">
+                                   <label for="patternName">Naam</label>
+                                   <input type="text" id="patternName" placeholder="Naam" maxlength="48" aria-label="Patroonnaam">
+                              </div>
+                              <div class="preset-buttons">
+                                   <button type="button" class="btn btn-small" id="patternSave">Bewaar patroon</button>
+                                   <button type="button" class="btn btn-small" id="patternSaveAs">Nieuw patroon</button>
+                                   <button type="button" class="btn btn-small" id="patternDelete">Verwijder patroon</button>
+                              </div>
+                              <p class="status" id="lightSettingsStatus">Instellingen niet geladen</p>
+                              <div class="settings-scroll" id="lightSettingsList" aria-label="Lichtparameters"></div>
+                         </div>
+                         <div class="preset-group" id="actionsGroup">
+                              <div class="preset-group-header">
+                                   <h3>Acties</h3>
+                              </div>
+                              <p class="hint">Voorbeeld = tijdelijk proberen, Activeer = vastzetten als huidige keuze.</p>
+                              <div class="preset-actions">
+                                   <button type="button" class="btn btn-small" id="presetPreview">Voorbeeld</button>
+                                   <button type="button" class="btn btn-small" id="presetActivate">Activeer</button>
+                              </div>
+                         </div>
+                    </div>
+                    <div class="modal-actions">
+                         <button type="button" class="btn btn-small" data-dismiss>Sluiten</button>
+                    </div>
+               </div>
+          </div>
+     </div>
+
+     <div class="modal hidden" id="sdModal" role="dialog" aria-modal="true" aria-labelledby="sdModalTitle">
+          <div class="modal-backdrop" data-dismiss></div>
+          <div class="modal-dialog">
+               <div class="modal-panel">
+                    <h2 id="sdModalTitle">SD-kaartbeheer</h2>
+                    <p class="status" id="sdStatus">Niet geladen</p>
+                    <div class="sd-toolbar">
+                         <label class="sd-path-label" for="sdPath">Pad</label>
+                         <input type="text" id="sdPath" class="sd-path-input" readonly>
+                         <div class="sd-toolbar-actions">
+                              <button type="button" class="btn btn-small" id="sdUp">Omhoog</button>
+                              <button type="button" class="btn btn-small" id="sdRefresh">Ververs</button>
+                         </div>
+                    </div>
+                    <div class="sd-list" role="region" aria-live="polite">
+                         <table class="sd-table">
+                              <thead>
+                                   <tr>
+                                        <th scope="col">Naam</th>
+                                        <th scope="col">Type</th>
+                                        <th scope="col">Grootte</th>
+                                        <th scope="col" class="sd-actions-header">Acties</th>
+                                   </tr>
+                              </thead>
+                              <tbody id="sdEntries"></tbody>
+                         </table>
+                    </div>
+                    <form class="sd-upload" id="sdUploadForm" enctype="multipart/form-data">
+                         <label class="sr-only" for="sdFile">Bestand</label>
+                         <input type="file" id="sdFile" name="file">
+                         <button type="submit" class="btn btn-small" id="sdUploadButton">Upload</button>
+                         <span class="status status-info" id="sdUploadStatus">Geen bestand gekozen</span>
+                    </form>
+                    <div class="modal-actions">
+                         <button type="button" class="btn btn-small" data-dismiss>Sluiten</button>
+                    </div>
+               </div>
+          </div>
+     </div>
+
+     <div class="modal hidden" id="otaModal" role="dialog" aria-modal="true" aria-labelledby="otaModalTitle">
+          <div class="modal-backdrop" data-dismiss></div>
+          <div class="modal-dialog">
+               <div class="modal-panel">
+                    <h2 id="otaModalTitle">OTA</h2>
+                    <p class="hint">Gebruik deze stappen voor een update.</p>
+                    <p class="status" id="otaStatus">Niet geactiveerd</p>
+                    <div class="row">
+                         <button type="button" class="btn btn-small" data-ota="arm">Arm</button>
+                         <button type="button" class="btn btn-small" data-ota="confirm">Bevestig &amp; herstart</button>
+                    </div>
+                    <div class="modal-actions">
+                         <button type="button" class="btn btn-small" data-dismiss>Sluiten</button>
+                    </div>
+               </div>
+          </div>
+     </div>
+
+     <script src="kwal.js"></script>
+     <script>
+          if (window.kwalApp && typeof window.kwalApp.boot === 'function') {
+               window.kwalApp.boot();
+          }
+     </script>
+</body>
+</html>

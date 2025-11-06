@@ -6,7 +6,10 @@
 #include "ConductManager.h"
 #include "AudioManager.h"
 #include "SDVoting.h"
+#include "WebLightStore.h"
 #include <ESPAsyncWebServer.h>
+#include <AsyncJson.h>
+#include <WiFi.h>
 
 #ifndef WEBIF_LOG_LEVEL
 #define WEBIF_LOG_LEVEL 1
@@ -19,6 +22,160 @@
 #endif
 
 static AsyncWebServer server(80);
+
+namespace {
+
+void ensureLightStoreReady()
+{
+  if (!WebLightStore::instance().isReady())
+  {
+    WebLightStore::instance().begin();
+  }
+}
+
+void sendJsonResponse(AsyncWebServerRequest *request, String payload, const char *extraHeader = nullptr, const String &extraValue = String())
+{
+  AsyncWebServerResponse *response = request->beginResponse(200, "application/json", payload);
+  response->addHeader("Cache-Control", "no-store");
+  if (extraHeader && extraHeader[0] != '\0')
+  {
+    response->addHeader(extraHeader, extraValue);
+  }
+  request->send(response);
+}
+
+void sendError(AsyncWebServerRequest *request, int code, const String &message)
+{
+  AsyncWebServerResponse *response = request->beginResponse(code, "text/plain", message);
+  response->addHeader("Cache-Control", "no-store");
+  request->send(response);
+}
+
+void attachLightStoreRoutes()
+{
+  server.on("/api/light/patterns", HTTP_GET, [](AsyncWebServerRequest *request) {
+    ensureLightStoreReady();
+    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson());
+  });
+
+  server.on("/api/light/colors", HTTP_GET, [](AsyncWebServerRequest *request) {
+    ensureLightStoreReady();
+    sendJsonResponse(request, WebLightStore::instance().buildColorsJson());
+  });
+
+  auto *patternUpdate = new AsyncCallbackJsonWebHandler("/api/light/patterns");
+  patternUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    ensureLightStoreReady();
+    String affected;
+    String error;
+    JsonVariantConst body = json;
+    if (!WebLightStore::instance().updatePattern(body, affected, error))
+    {
+      sendError(request, 400, error);
+      return;
+    }
+    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson(), "X-Light-Pattern", affected);
+  });
+  patternUpdate->setMethod(HTTP_POST);
+  server.addHandler(patternUpdate);
+
+  auto *patternDelete = new AsyncCallbackJsonWebHandler("/api/light/patterns/delete");
+  patternDelete->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    ensureLightStoreReady();
+    String affected;
+    String error;
+    JsonVariantConst body = json;
+    if (!WebLightStore::instance().deletePattern(body, affected, error))
+    {
+      sendError(request, 400, error);
+      return;
+    }
+    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson(), "X-Light-Pattern", affected);
+  });
+  patternDelete->setMethod(HTTP_POST);
+  server.addHandler(patternDelete);
+
+  auto *patternSelect = new AsyncCallbackJsonWebHandler("/api/light/patterns/select");
+  patternSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    ensureLightStoreReady();
+    String error;
+    JsonObjectConst obj = json.as<JsonObjectConst>();
+    String id = obj["id"].as<String>();
+    if (!WebLightStore::instance().selectPattern(id, error))
+    {
+      sendError(request, 400, error);
+      return;
+    }
+    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson(), "X-Light-Pattern", WebLightStore::instance().getActivePatternId());
+  });
+  patternSelect->setMethod(HTTP_POST);
+  server.addHandler(patternSelect);
+
+  auto *colorUpdate = new AsyncCallbackJsonWebHandler("/api/light/colors");
+  colorUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    ensureLightStoreReady();
+    String affected;
+    String error;
+    JsonVariantConst body = json;
+    if (!WebLightStore::instance().updateColor(body, affected, error))
+    {
+      sendError(request, 400, error);
+      return;
+    }
+    sendJsonResponse(request, WebLightStore::instance().buildColorsJson(), "X-Light-Color", affected);
+  });
+  colorUpdate->setMethod(HTTP_POST);
+  server.addHandler(colorUpdate);
+
+  auto *colorDelete = new AsyncCallbackJsonWebHandler("/api/light/colors/delete");
+  colorDelete->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    ensureLightStoreReady();
+    String affected;
+    String error;
+    JsonVariantConst body = json;
+    if (!WebLightStore::instance().deleteColor(body, affected, error))
+    {
+      sendError(request, 400, error);
+      return;
+    }
+    sendJsonResponse(request, WebLightStore::instance().buildColorsJson(), "X-Light-Color", affected);
+  });
+  colorDelete->setMethod(HTTP_POST);
+  server.addHandler(colorDelete);
+
+  auto *colorSelect = new AsyncCallbackJsonWebHandler("/api/light/colors/select");
+  colorSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    ensureLightStoreReady();
+    String error;
+    JsonObjectConst obj = json.as<JsonObjectConst>();
+    String id = obj["id"].as<String>();
+    if (!WebLightStore::instance().selectColor(id, error))
+    {
+      sendError(request, 400, error);
+      return;
+    }
+    sendJsonResponse(request, WebLightStore::instance().buildColorsJson(), "X-Light-Color", WebLightStore::instance().getActiveColorId());
+  });
+  colorSelect->setMethod(HTTP_POST);
+  server.addHandler(colorSelect);
+
+  auto *previewHandler = new AsyncCallbackJsonWebHandler("/api/light/preview");
+  previewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    ensureLightStoreReady();
+    String error;
+    JsonVariantConst body = json;
+    if (!WebLightStore::instance().preview(body, error))
+    {
+      sendError(request, 400, error);
+      return;
+    }
+    sendJsonResponse(request, String("{\"status\":\"ok\"}"));
+  });
+  previewHandler->setMethod(HTTP_POST);
+  server.addHandler(previewHandler);
+}
+
+} // namespace
 
 void handleRoot(AsyncWebServerRequest *request)
 {
@@ -109,12 +266,20 @@ void handleLightNext(AsyncWebServerRequest *request)
 
 void beginWebInterface()
 {
+  ensureLightStoreReady();
+
   server.on("/", HTTP_GET, handleRoot);
   server.on("/setBrightness", HTTP_GET, handleSetBrightness);
   server.on("/getBrightness", HTTP_GET, handleGetBrightness);
   server.on("/setWebAudioLevel", HTTP_GET, handleSetWebAudioLevel);
   server.on("/getWebAudioLevel", HTTP_GET, handleGetWebAudioLevel);
   server.on("/light/next", HTTP_GET, handleLightNext);
+
+  // Serve the monolithic UI assets directly from the SD card so the browser can load styling and logic.
+  server.serveStatic("/styles.css", SD, "/styles.css");
+  server.serveStatic("/kwal.js", SD, "/kwal.js");
+
+  attachLightStoreRoutes();
 
   // OTA routes
   server.on("/ota/arm", HTTP_GET, handleOtaArm);
