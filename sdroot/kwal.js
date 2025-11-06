@@ -98,7 +98,18 @@
         colorInputs: {
             rgb1_hex: document.querySelector('input[data-color="rgb1_hex"]'),
             rgb2_hex: document.querySelector('input[data-color="rgb2_hex"]')
-        }
+        },
+        sdModal: document.getElementById('sdModal'),
+        sdStatus: document.getElementById('sdStatus'),
+        sdPath: document.getElementById('sdPath'),
+        sdEntries: document.getElementById('sdEntries'),
+        sdUploadForm: document.getElementById('sdUploadForm'),
+        sdUploadStatus: document.getElementById('sdUploadStatus'),
+        sdUploadButton: document.getElementById('sdUploadButton'),
+        sdFile: document.getElementById('sdFile'),
+        sdRefresh: document.getElementById('sdRefresh'),
+        sdUp: document.getElementById('sdUp'),
+        openSdManager: document.getElementById('openSdManager')
     };
 
     const buildPatternControls = () => {
@@ -158,7 +169,15 @@
         audio: { dir: 0, file: 0 },
         pattern: createCollectionState('Patroon geladen'),
         color: createCollectionState('Kleurset geladen'),
-        previewActive: false
+        previewActive: false,
+        sd: {
+            status: null,
+            loadingPromise: null,
+            path: '/',
+            parent: '/',
+            entries: [],
+            truncated: false
+        }
     };
 
     const percentFrom255 = (value) => Math.round((value / 255) * 100);
@@ -280,6 +299,334 @@
         dom.lightSettingsStatus.className = `status status-${tone}`;
         dom.lightSettingsStatus.textContent = text;
     };
+
+    const setSdControlsEnabled = (enabled) => {
+        if (dom.sdUploadButton) {
+            dom.sdUploadButton.disabled = !enabled;
+        }
+        if (dom.sdFile) {
+            dom.sdFile.disabled = !enabled;
+        }
+        if (dom.sdUp) {
+            dom.sdUp.disabled = !enabled;
+        }
+        if (dom.sdRefresh) {
+            dom.sdRefresh.disabled = !enabled;
+        }
+    };
+
+    const applySdStatus = (payload) => {
+        const ready = payload && payload.ready === true;
+        const busy = payload && payload.busy === true;
+        const hasIndex = payload && payload.hasIndex === true;
+        state.sd.status = { ready, busy, hasIndex };
+
+        let message;
+        let tone;
+        if (busy) {
+            message = 'SD-kaart bezig';
+            tone = 'pending';
+        } else if (!ready) {
+            message = 'SD-kaart niet beschikbaar';
+            tone = 'error';
+        } else if (!hasIndex) {
+            message = 'SD-kaart gereed, index.html ontbreekt';
+            tone = 'info';
+        } else {
+            message = 'SD-kaart gereed';
+            tone = 'success';
+        }
+
+        setStatus('sdStatus', message, tone);
+
+        if (dom.sdPath) {
+            dom.sdPath.value = ready ? state.sd.path : '';
+        }
+        if (dom.sdUploadStatus) {
+            if (!ready) {
+                dom.sdUploadStatus.textContent = 'Geen kaart beschikbaar';
+            } else if (busy) {
+                dom.sdUploadStatus.textContent = 'Bezig, wacht even...';
+            } else if (!dom.sdUploadStatus.textContent
+                || dom.sdUploadStatus.textContent === 'Geen kaart beschikbaar'
+                || dom.sdUploadStatus.textContent.startsWith('Bezig')) {
+                dom.sdUploadStatus.textContent = 'Geen bestand gekozen';
+            }
+        }
+        if (dom.sdEntries && !ready) {
+            dom.sdEntries.innerHTML = '';
+        }
+
+        setSdControlsEnabled(ready && !busy);
+        if (dom.sdUp) {
+            dom.sdUp.disabled = !ready || busy || state.sd.path === '/';
+        }
+    };
+
+    const fetchSdStatus = async (options = {}) => {
+        if (state.sd.loadingPromise) {
+            return state.sd.loadingPromise;
+        }
+        if (options.showPending !== false) {
+            setStatus('sdStatus', 'Status ophalen…', 'pending');
+        }
+        const task = (async () => {
+            try {
+                const response = await fetch('/api/sd/status', { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                const payload = await response.json();
+                applySdStatus(payload);
+                return payload;
+            } catch (error) {
+                setStatus('sdStatus', 'Status ophalen mislukt', 'error');
+                throw error;
+            } finally {
+                state.sd.loadingPromise = null;
+            }
+        })();
+        state.sd.loadingPromise = task;
+        return task;
+    };
+
+    const formatBytes = (value) => {
+        const units = ['B', 'KB', 'MB', 'GB'];
+        let result = Number(value);
+        let unitIndex = 0;
+        while (result >= 1024 && unitIndex < units.length - 1) {
+            result /= 1024;
+            unitIndex += 1;
+        }
+        if (unitIndex === 0) {
+            return `${Math.round(result)} ${units[unitIndex]}`;
+        }
+        return `${result.toFixed(result < 10 ? 1 : 0)} ${units[unitIndex]}`;
+    };
+
+    const renderSdEntries = () => {
+        if (!dom.sdEntries) {
+            return;
+        }
+        const fragment = document.createDocumentFragment();
+        const entries = Array.isArray(state.sd.entries) ? state.sd.entries : [];
+        if (entries.length === 0) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 4;
+            cell.className = 'sd-empty';
+            cell.textContent = 'Geen bestanden';
+            row.appendChild(cell);
+            fragment.appendChild(row);
+        } else {
+            entries.forEach((entry) => {
+                const row = document.createElement('tr');
+                row.className = 'sd-entry-row';
+                row.dataset.name = entry.name;
+                row.dataset.type = entry.type;
+
+                const nameCell = document.createElement('td');
+                if (entry.type === 'dir') {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'link-button sd-entry-nav';
+                    button.dataset.name = entry.name;
+                    button.textContent = entry.name || '(naamloos)';
+                    nameCell.appendChild(button);
+                } else {
+                    nameCell.textContent = entry.name || '(naamloos)';
+                }
+                row.appendChild(nameCell);
+
+                const typeCell = document.createElement('td');
+                typeCell.textContent = entry.type === 'dir' ? 'Map' : 'Bestand';
+                row.appendChild(typeCell);
+
+                const sizeCell = document.createElement('td');
+                sizeCell.textContent = entry.type === 'dir' ? '-' : formatBytes(entry.size || 0);
+                row.appendChild(sizeCell);
+
+                const actionsCell = document.createElement('td');
+                actionsCell.className = 'sd-actions';
+                const deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.className = 'btn btn-small sd-entry-delete';
+                deleteButton.dataset.name = entry.name;
+                deleteButton.dataset.type = entry.type;
+                deleteButton.textContent = 'Verwijder';
+                if (entry.name === '' || entry.name === '.' || entry.name === '..') {
+                    deleteButton.disabled = true;
+                }
+                actionsCell.appendChild(deleteButton);
+                row.appendChild(actionsCell);
+
+                fragment.appendChild(row);
+            });
+        }
+
+        dom.sdEntries.innerHTML = '';
+        dom.sdEntries.appendChild(fragment);
+    };
+
+    const applySdList = (payload) => {
+        if (!payload || typeof payload !== 'object') {
+            return;
+        }
+        state.sd.path = typeof payload.path === 'string' && payload.path.length > 0 ? payload.path : '/';
+        state.sd.parent = typeof payload.parent === 'string' && payload.parent.length > 0 ? payload.parent : '/';
+        state.sd.entries = Array.isArray(payload.entries) ? payload.entries : [];
+        state.sd.truncated = payload.truncated === true;
+
+        if (dom.sdPath) {
+            dom.sdPath.value = state.sd.path;
+        }
+
+        renderSdEntries();
+
+        if (dom.sdUp) {
+            dom.sdUp.disabled = !state.sd.status || !state.sd.status.ready || state.sd.status.busy || state.sd.path === '/';
+        }
+
+        if (state.sd.truncated) {
+            setStatus('sdStatus', 'Lijst ingekort (te veel items)', 'info');
+        } else {
+            setStatus('sdStatus', 'Map geladen', 'success');
+        }
+    };
+
+    const joinSdPath = (basePath, name) => {
+        if (!name) {
+            return basePath || '/';
+        }
+        const trimmedName = name.replace(/\/+$/, '');
+        if (basePath === '/' || !basePath) {
+            return `/${trimmedName}`;
+        }
+        return `${basePath.replace(/\/+$/, '')}/${trimmedName}`;
+    };
+
+    const fetchSdList = async (targetPath, options = {}) => {
+        if (!state.sd.status || state.sd.status.ready !== true) {
+            setStatus('sdStatus', 'SD niet beschikbaar', 'error');
+            return null;
+        }
+
+        const desiredPath = typeof targetPath === 'string' && targetPath.length > 0 ? targetPath : state.sd.path || '/';
+        if (state.sd.loadingPromise) {
+            return state.sd.loadingPromise;
+        }
+        if (options.showPending !== false) {
+            setStatus('sdStatus', 'Map laden…', 'pending');
+        }
+
+        const task = (async () => {
+            try {
+                const response = await fetch(`/api/sd/list?path=${encodeURIComponent(desiredPath)}`, { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                const payload = await response.json();
+                applySdList(payload);
+                return payload;
+            } catch (error) {
+                setStatus('sdStatus', error.message || 'Map laden mislukt', 'error');
+                throw error;
+            } finally {
+                state.sd.loadingPromise = null;
+            }
+        })();
+        state.sd.loadingPromise = task;
+        return task;
+    };
+
+    const uploadSdFile = async () => {
+        if (!state.sd.status || !state.sd.status.ready) {
+            setStatus('sdStatus', 'SD niet beschikbaar', 'error');
+            return false;
+        }
+        if (!dom.sdFile || !dom.sdFile.files || dom.sdFile.files.length === 0) {
+            setStatus('sdStatus', 'Geen bestand gekozen', 'error');
+            return false;
+        }
+        const file = dom.sdFile.files[0];
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+        formData.append('path', state.sd.path || '/');
+
+        if (dom.sdUploadButton) {
+            dom.sdUploadButton.disabled = true;
+        }
+        if (dom.sdFile) {
+            dom.sdFile.disabled = true;
+        }
+
+        setStatus('sdStatus', `Uploaden ${file.name}…`, 'pending');
+        try {
+            const response = await fetch('/api/sd/upload', {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || response.statusText);
+            }
+            await response.json().catch(() => ({}));
+            setStatus('sdStatus', 'Upload geslaagd', 'success');
+            if (dom.sdUploadStatus) {
+                dom.sdUploadStatus.textContent = 'Geen bestand gekozen';
+            }
+            if (dom.sdFile) {
+                dom.sdFile.value = '';
+            }
+            await fetchSdList(state.sd.path || '/', { showPending: false }).catch(() => {});
+            return true;
+        } catch (error) {
+            setStatus('sdStatus', error.message || 'Upload mislukt', 'error');
+            return false;
+        } finally {
+            if (dom.sdUploadButton) {
+                dom.sdUploadButton.disabled = !state.sd.status || !state.sd.status.ready || state.sd.status.busy;
+            }
+            if (dom.sdFile) {
+                dom.sdFile.disabled = !state.sd.status || !state.sd.status.ready || state.sd.status.busy;
+            }
+            setSdControlsEnabled(state.sd.status && state.sd.status.ready && !state.sd.status.busy);
+        }
+    };
+
+    const deleteSdEntry = async (name, type) => {
+        if (!name) {
+            return false;
+        }
+        const targetPath = joinSdPath(state.sd.path || '/', name);
+        if (!window.confirm(`Verwijder ${type === 'dir' ? 'map' : 'bestand'} "${name}"?`)) {
+            return false;
+        }
+        setStatus('sdStatus', `Verwijderen ${name}…`, 'pending');
+        try {
+            const response = await fetch('/api/sd/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: targetPath })
+            });
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || response.statusText);
+            }
+            await response.json().catch(() => ({}));
+            setStatus('sdStatus', 'Verwijderd', 'success');
+            await fetchSdList(state.sd.path || '/', { showPending: false }).catch(() => {});
+            return true;
+        } catch (error) {
+            setStatus('sdStatus', error.message || 'Verwijderen mislukt', 'error');
+            return false;
+        }
+        finally {
+            setSdControlsEnabled(state.sd.status && state.sd.status.ready && !state.sd.status.busy);
+        }
+    };
+
+    setSdControlsEnabled(false);
 
     const applyPatternDraftToUI = (draft) => {
         if (!draft) {
@@ -1413,6 +1760,7 @@
 
     const modals = {
         light: dom.lightModal,
+        sd: dom.sdModal,
         ota: dom.otaModal
     };
     let openKey = null;
@@ -1435,6 +1783,19 @@
         modal.classList.remove('hidden');
         document.body.classList.add('modal-open');
         openKey = key;
+        if (key === 'sd') {
+            if (!state.sd.status) {
+                setStatus('sdStatus', 'Status ophalen...', 'pending');
+            }
+            fetchSdStatus({ showPending: !state.sd.status })
+                .then(() => {
+                    if (state.sd.status && state.sd.status.ready && !state.sd.status.busy) {
+                        return fetchSdList(state.sd.path || '/', { showPending: true });
+                    }
+                    return null;
+                })
+                .catch(() => {});
+        }
     };
 
     const closeModal = async () => {
@@ -1457,6 +1818,11 @@
             openModal('light').catch(() => {});
         });
     });
+    if (dom.openSdManager) {
+        dom.openSdManager.addEventListener('click', () => {
+            openModal('sd').catch(() => {});
+        });
+    }
     document.getElementById('openOtaSettings').addEventListener('click', () => openModal('ota'));
     document.querySelectorAll('[data-dismiss]').forEach((node) => node.addEventListener('click', () => {
         closeModal().catch(() => {});
@@ -1466,6 +1832,64 @@
             closeModal().catch(() => {});
         }
     });
+
+    if (dom.sdRefresh) {
+        dom.sdRefresh.addEventListener('click', () => {
+            const currentPath = state.sd.path || '/';
+            fetchSdStatus({ showPending: true })
+                .then(() => {
+                    if (state.sd.status && state.sd.status.ready) {
+                        return fetchSdList(currentPath, { showPending: true });
+                    }
+                    return null;
+                })
+                .catch(() => {});
+        });
+    }
+    if (dom.sdUp) {
+        dom.sdUp.addEventListener('click', () => {
+            if (!state.sd.status || !state.sd.status.ready) {
+                return;
+            }
+            const targetPath = state.sd.parent || '/';
+            fetchSdList(targetPath, { showPending: true }).catch(() => {});
+        });
+    }
+    if (dom.sdFile) {
+        dom.sdFile.addEventListener('change', () => {
+            if (!dom.sdUploadStatus) {
+                return;
+            }
+            const file = dom.sdFile.files && dom.sdFile.files[0];
+            dom.sdUploadStatus.textContent = file ? file.name : 'Geen bestand gekozen';
+        });
+    }
+    if (dom.sdEntries) {
+        dom.sdEntries.addEventListener('click', (event) => {
+            if (!state.sd.status || !state.sd.status.ready) {
+                return;
+            }
+            const navTarget = event.target.closest('.sd-entry-nav');
+            if (navTarget) {
+                const name = navTarget.dataset.name || '';
+                const nextPath = joinSdPath(state.sd.path || '/', name);
+                fetchSdList(nextPath, { showPending: true }).catch(() => {});
+                return;
+            }
+            const deleteTarget = event.target.closest('.sd-entry-delete');
+            if (deleteTarget) {
+                const name = deleteTarget.dataset.name || '';
+                const type = deleteTarget.dataset.type || 'file';
+                deleteSdEntry(name, type).catch(() => {});
+            }
+        });
+    }
+    if (dom.sdUploadForm) {
+        dom.sdUploadForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            uploadSdFile().catch(() => {});
+        });
+    }
 
     const refreshAll = async () => {
         await Promise.all([

@@ -50,6 +50,8 @@ struct FileEntry {
     uint8_t  reserved;
 };
 
+typedef void (*SDListCallback)(const char* name, bool isDirectory, uint32_t sizeBytes, void* context);
+
 class SDManager {
 public:
     static SDManager& instance();
@@ -81,6 +83,13 @@ public:
     String readTextFile(const char* path);
     bool   deleteFile(const char* path);
     bool   renameFile(const char* oldPath, const char* newPath);
+        bool   removePath(const char* path);
+
+    bool   listDirectory(const char* path,
+                         SDListCallback callback,
+                         void* context,
+                         size_t maxEntries,
+                         bool* truncated);
 
 private:
     SDManager() : highestDirNum(0), ready_(false), busy_(false) {}
