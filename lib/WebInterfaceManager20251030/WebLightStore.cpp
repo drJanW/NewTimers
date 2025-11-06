@@ -180,6 +180,7 @@ bool WebLightStore::selectPattern(const String& id, String& errorMessage) {
     if (id.isEmpty()) {
         activePatternId_.clear();
         applyActiveToLights();
+        PF("[WebLightStore] Pattern cleared to context\n");
         return true;
     }
     PatternEntry* entry = findPattern(id);
@@ -188,6 +189,7 @@ bool WebLightStore::selectPattern(const String& id, String& errorMessage) {
         return false;
     }
     activePatternId_ = entry->id;
+    PF("[WebLightStore] Pattern select %s\n", activePatternId_.c_str());
     applyActiveToLights();
     return true;
 }
@@ -195,19 +197,23 @@ bool WebLightStore::selectPattern(const String& id, String& errorMessage) {
 bool WebLightStore::selectColor(const String& id, String& errorMessage) {
     if (!ready_) {
         errorMessage = F("store not ready");
+        PF("[WebLightStore] selectColor rejected: store not ready\n");
         return false;
     }
     if (id.isEmpty()) {
         activeColorId_ = String();
         applyActiveToLights();
+        PF("[WebLightStore] Color cleared to defaults\n");
         return true;
     }
     ColorEntry* entry = findColor(id);
     if (!entry) {
         errorMessage = F("color not found");
+        PF("[WebLightStore] selectColor unknown id='%s'\n", id.c_str());
         return false;
     }
     activeColorId_ = entry->id;
+    PF("[WebLightStore] Color select %s\n", activeColorId_.c_str());
     applyActiveToLights();
     return true;
 }
@@ -789,5 +795,10 @@ void WebLightStore::applyActiveToLights() {
         params.RGB1 = color->primary;
         params.RGB2 = color->secondary;
     }
+    PF("[WebLightStore] Apply pattern=%s color=%s rgb1=%02X%02X%02X rgb2=%02X%02X%02X\n",
+       pattern ? pattern->id.c_str() : "<none>",
+       color ? color->id.c_str() : "<default>",
+       params.RGB1.r, params.RGB1.g, params.RGB1.b,
+       params.RGB2.r, params.RGB2.g, params.RGB2.b);
     PlayLightShow(params);
 }

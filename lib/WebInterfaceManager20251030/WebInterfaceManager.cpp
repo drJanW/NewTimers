@@ -419,21 +419,37 @@ void attachLightStoreRoutes()
     sendJsonResponse(request, WebLightStore::instance().buildColorsJson());
   });
 
-  auto *patternUpdate = new AsyncCallbackJsonWebHandler("/api/light/patterns");
-  patternUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+  // Register the more specific pattern routes before the generic /api/light/patterns handler
+  auto *patternSelect = new AsyncCallbackJsonWebHandler("/api/light/patterns/select");
+  patternSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureLightStoreReady();
-    String affected;
     String error;
-    JsonVariantConst body = json;
-    if (!WebLightStore::instance().updatePattern(body, affected, error))
+    String id;
+    if (json.is<JsonObject>()) {
+      JsonObjectConst obj = json.as<JsonObjectConst>();
+      if (!obj.isNull() && obj.containsKey("id")) {
+        id = obj["id"].as<String>();
+      }
+    }
+    if (id.isEmpty()) {
+      if (request->hasParam("id", true)) {
+        id = request->getParam("id", true)->value();
+      } else if (request->hasParam("id")) {
+        id = request->getParam("id")->value();
+      }
+    }
+    PF("[WebLightStore] HTTP pattern/select id='%s' content-type='%s'\n",
+       id.c_str(),
+       request->contentType().c_str());
+    if (!WebLightStore::instance().selectPattern(id, error))
     {
-      sendError(request, 400, error);
+      sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
       return;
     }
-    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson(), "X-Light-Pattern", affected);
+    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson(), "X-Light-Pattern", WebLightStore::instance().getActivePatternId());
   });
-  patternUpdate->setMethod(HTTP_POST);
-  server.addHandler(patternUpdate);
+  patternSelect->setMethod(HTTP_POST);
+  server.addHandler(patternSelect);
 
   auto *patternDelete = new AsyncCallbackJsonWebHandler("/api/light/patterns/delete");
   patternDelete->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
@@ -451,37 +467,53 @@ void attachLightStoreRoutes()
   patternDelete->setMethod(HTTP_POST);
   server.addHandler(patternDelete);
 
-  auto *patternSelect = new AsyncCallbackJsonWebHandler("/api/light/patterns/select");
-  patternSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureLightStoreReady();
-    String error;
-    JsonObjectConst obj = json.as<JsonObjectConst>();
-    String id = obj["id"].as<String>();
-    if (!WebLightStore::instance().selectPattern(id, error))
-    {
-      sendError(request, 400, error);
-      return;
-    }
-    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson(), "X-Light-Pattern", WebLightStore::instance().getActivePatternId());
-  });
-  patternSelect->setMethod(HTTP_POST);
-  server.addHandler(patternSelect);
-
-  auto *colorUpdate = new AsyncCallbackJsonWebHandler("/api/light/colors");
-  colorUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+  auto *patternUpdate = new AsyncCallbackJsonWebHandler("/api/light/patterns");
+  patternUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureLightStoreReady();
     String affected;
     String error;
     JsonVariantConst body = json;
-    if (!WebLightStore::instance().updateColor(body, affected, error))
+    if (!WebLightStore::instance().updatePattern(body, affected, error))
     {
       sendError(request, 400, error);
       return;
     }
-    sendJsonResponse(request, WebLightStore::instance().buildColorsJson(), "X-Light-Color", affected);
+    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson(), "X-Light-Pattern", affected);
   });
-  colorUpdate->setMethod(HTTP_POST);
-  server.addHandler(colorUpdate);
+  patternUpdate->setMethod(HTTP_POST);
+  server.addHandler(patternUpdate);
+
+  // Register the color routes in order of most specific path first to avoid prefix matches
+  auto *colorSelect = new AsyncCallbackJsonWebHandler("/api/light/colors/select");
+  colorSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    ensureLightStoreReady();
+    String error;
+    String id;
+    if (json.is<JsonObject>()) {
+      JsonObjectConst obj = json.as<JsonObjectConst>();
+      if (!obj.isNull() && obj.containsKey("id")) {
+        id = obj["id"].as<String>();
+      }
+    }
+    if (id.isEmpty()) {
+      if (request->hasParam("id", true)) {
+        id = request->getParam("id", true)->value();
+      } else if (request->hasParam("id")) {
+        id = request->getParam("id")->value();
+      }
+    }
+    PF("[WebLightStore] HTTP color/select id='%s' content-type='%s'\n",
+       id.c_str(),
+       request->contentType().c_str());
+    if (!WebLightStore::instance().selectColor(id, error))
+    {
+      sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
+      return;
+    }
+    sendJsonResponse(request, WebLightStore::instance().buildColorsJson(), "X-Light-Color", WebLightStore::instance().getActiveColorId());
+  });
+  colorSelect->setMethod(HTTP_POST);
+  server.addHandler(colorSelect);
 
   auto *colorDelete = new AsyncCallbackJsonWebHandler("/api/light/colors/delete");
   colorDelete->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
@@ -499,21 +531,21 @@ void attachLightStoreRoutes()
   colorDelete->setMethod(HTTP_POST);
   server.addHandler(colorDelete);
 
-  auto *colorSelect = new AsyncCallbackJsonWebHandler("/api/light/colors/select");
-  colorSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+  auto *colorUpdate = new AsyncCallbackJsonWebHandler("/api/light/colors");
+  colorUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureLightStoreReady();
+    String affected;
     String error;
-    JsonObjectConst obj = json.as<JsonObjectConst>();
-    String id = obj["id"].as<String>();
-    if (!WebLightStore::instance().selectColor(id, error))
+    JsonVariantConst body = json;
+    if (!WebLightStore::instance().updateColor(body, affected, error))
     {
       sendError(request, 400, error);
       return;
     }
-    sendJsonResponse(request, WebLightStore::instance().buildColorsJson(), "X-Light-Color", WebLightStore::instance().getActiveColorId());
+    sendJsonResponse(request, WebLightStore::instance().buildColorsJson(), "X-Light-Color", affected);
   });
-  colorSelect->setMethod(HTTP_POST);
-  server.addHandler(colorSelect);
+  colorUpdate->setMethod(HTTP_POST);
+  server.addHandler(colorUpdate);
 
   auto *previewHandler = new AsyncCallbackJsonWebHandler("/api/light/preview");
   previewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
@@ -619,12 +651,6 @@ void handleOtaConfirm(AsyncWebServerRequest *request)
   }
 }
 
-void handleLightNext(AsyncWebServerRequest *request)
-{
-  ConductManager::intentNextLightShow();
-  request->send(200, "text/plain", "LIGHT NEXT");
-}
-
 /* ----- setup/loop glue ----- */
 
 void beginWebInterface()
@@ -636,7 +662,6 @@ void beginWebInterface()
   server.on("/getBrightness", HTTP_GET, handleGetBrightness);
   server.on("/setWebAudioLevel", HTTP_GET, handleSetWebAudioLevel);
   server.on("/getWebAudioLevel", HTTP_GET, handleGetWebAudioLevel);
-  server.on("/light/next", HTTP_GET, handleLightNext);
   server.on("/api/sd/status", HTTP_GET, sendSdStatus);
   server.on("/api/sd/list", HTTP_GET, sendSdList);
   server.on("/api/sd/upload", HTTP_POST, handleSdUploadRequest, handleSdUploadData);

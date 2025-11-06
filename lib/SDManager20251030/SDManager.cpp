@@ -129,6 +129,19 @@ void SDManager::rebuildIndex() {
             continue;
         }
 
+        const uint32_t expectedSize = static_cast<uint32_t>(SD_MAX_FILES_PER_SUBDIR) * sizeof(FileEntry);
+        const uint32_t actualSize = static_cast<uint32_t>(filesIndex.size());
+        if (actualSize != expectedSize) {
+            PF("[SDManager] Corrupt index %s (size=%lu expected=%lu), rebuilding\n",
+               filesDirPath,
+               static_cast<unsigned long>(actualSize),
+               static_cast<unsigned long>(expectedSize));
+            filesIndex.close();
+            scanDirectory(static_cast<uint8_t>(d));
+            ++rebuiltDirs;
+            continue;
+        }
+
         DirEntry dirEntry{0, 0};
         for (uint16_t fnum = 1; fnum <= SD_MAX_FILES_PER_SUBDIR; ++fnum) {
             FileEntry fe{};
@@ -165,7 +178,10 @@ void SDManager::scanDirectory(uint8_t dir_num) {
     char dirPath[12]; snprintf(dirPath,sizeof(dirPath),"/%03u",dir_num);
     char filesDirPath[SDPATHLENGTH]; snprintf(filesDirPath,sizeof(filesDirPath),"%s%s",dirPath,FILES_DIR);
 
-    File filesIndex = SD.open(filesDirPath, FILE_WRITE);
+    if (SD.exists(filesDirPath)) {
+        SD.remove(filesDirPath);
+    }
+    File filesIndex = SD.open(filesDirPath, "w");
     if (!filesIndex){ PF("[SDManager] Open fail: %s\n", filesDirPath); return; }
 
     DirEntry dirEntry={0,0};
@@ -206,10 +222,18 @@ bool SDManager::readDirEntry(uint8_t dir_num, DirEntry* entry){
 }
 bool SDManager::writeDirEntry(uint8_t dir_num, const DirEntry* entry){
     ScopedSDBusy guard;
-    File f=SD.open(ROOT_DIRS, FILE_WRITE); if(!f) return false;
-    f.seek((dir_num-1)*sizeof(DirEntry));
-    bool ok = f.write((const uint8_t*)entry,sizeof(DirEntry))==sizeof(DirEntry);
-    f.close(); return ok;
+    File f = SD.open(ROOT_DIRS, "r+");
+    if (!f) {
+        return false;
+    }
+    const uint32_t offset = static_cast<uint32_t>(dir_num - 1U) * sizeof(DirEntry);
+    if (!f.seek(offset)) {
+        f.close();
+        return false;
+    }
+    bool ok = f.write(reinterpret_cast<const uint8_t*>(entry), sizeof(DirEntry)) == sizeof(DirEntry);
+    f.close();
+    return ok;
 }
 bool SDManager::readFileEntry(uint8_t dir_num, uint8_t file_num, FileEntry* entry){
     ScopedSDBusy guard;
@@ -222,10 +246,18 @@ bool SDManager::readFileEntry(uint8_t dir_num, uint8_t file_num, FileEntry* entr
 bool SDManager::writeFileEntry(uint8_t dir_num, uint8_t file_num, const FileEntry* entry){
     ScopedSDBusy guard;
     char p[SDPATHLENGTH]; snprintf(p,sizeof(p),"/%03u%s",dir_num,FILES_DIR);
-    File f=SD.open(p, FILE_WRITE); if(!f) return false;
-    f.seek((file_num-1)*sizeof(FileEntry));
-    bool ok = f.write((const uint8_t*)entry,sizeof(FileEntry))==sizeof(FileEntry);
-    f.close(); return ok;
+    File f = SD.open(p, "r+");
+    if (!f) {
+        return false;
+    }
+    const uint32_t offset = static_cast<uint32_t>(file_num - 1U) * sizeof(FileEntry);
+    if (!f.seek(offset)) {
+        f.close();
+        return false;
+    }
+    bool ok = f.write(reinterpret_cast<const uint8_t*>(entry), sizeof(FileEntry)) == sizeof(FileEntry);
+    f.close();
+    return ok;
 }
 
 bool SDManager::fileExists(const char* fullPath){ return SD.exists(fullPath); }

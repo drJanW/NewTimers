@@ -9,7 +9,7 @@
 <body>
      <main class="page" aria-labelledby="pageTitle">
           <header class="page-header">
-               <h1 id="pageTitle">kwal versie 110608D</h1>
+               <h1 id="pageTitle">kwal versie 110608K</h1>
                <button type="button" class="btn btn-small" id="refreshAll" aria-label="Ververs waarden" title="Ververs waarden">
                     <span aria-hidden="true">&#8635;</span>
                     <span class="sr-only">Ververs</span>
@@ -53,18 +53,28 @@
                     </header>
                     <p class="status" id="lightStatus">-</p>
                     <div class="panel-body">
+                         <div class="info-row">
+                              <span class="info-label">Patroon</span>
+                              <span class="info-value" id="lightPatternLabel">-</span>
+                         </div>
+                         <div class="row row-actions">
+                              <button type="button" class="btn btn-small" id="patternNext" aria-label="Volgende patroon" title="Volgende patroon">Volgende patroon</button>
+                              <button type="button" class="btn btn-small" id="patternSettings" aria-label="Open patrooninstellingen" title="Open patrooninstellingen">Instellingen</button>
+                         </div>
+                         <div class="info-row">
+                              <span class="info-label">Kleuren</span>
+                              <span class="info-value" id="lightColorLabel">-</span>
+                         </div>
+                         <div class="row row-actions">
+                              <button type="button" class="btn btn-small" id="colorNext" aria-label="Volgende kleuren" title="Volgende kleuren">Volgende kleuren</button>
+                              <button type="button" class="btn btn-small" id="colorSettings" aria-label="Open kleureninstellingen" title="Open kleureninstellingen">Instellingen</button>
+                         </div>
                          <label class="form-label" for="lightSlider">
                               <span title="Helderheid">&#128262;</span>
                               <span class="sr-only">Helderheid</span>
                               <span class="value-tag" id="lightValue">0</span>
                          </label>
                          <input type="range" id="lightSlider" min="0" max="100" step="1">
-                         <div class="row row-centered">
-                              <button type="button" class="btn btn-icon" id="lightNext" aria-label="Volgende lichtshow" title="Volgende lichtshow">
-                                   <span aria-hidden="true">&#9193;</span>
-                                   <span class="sr-only">Volgende lichtshow</span>
-                              </button>
-                         </div>
                     </div>
                </article>
           </section>

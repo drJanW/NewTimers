@@ -19,7 +19,7 @@
 void setup() {
     Serial.begin(115200);
      while (!Serial) { delay(10); } 
-    PL("\n[Main] Version 110608K booting...");// Version MMDDXXA, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation)
+    PL("\n[Main] Version 110608P booting...");// Version MMDDXXA, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation)
  // version 103002C means : on oct 30, we had (at least) 3 attempts to get the second goal completed
 
     ConductManager::begin();

@@ -43,8 +43,8 @@
 
     // Build sentinel: update version string whenever web assets change so the device/browser can verify freshness.
     window.APP_BUILD_INFO = Object.freeze({
-        version: 'appjs-preview-fix-20251103T2305Z',
-        features: ['previewFallback', 'lastAppliedTracking']
+        version: 'webui-patternsplit-20251106T1040Z',
+        features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit']
     });
 
     const defaultPattern = {
@@ -75,9 +75,11 @@
         audioCurrent: document.getElementById('audioCurrent'),
         audioVolume: document.getElementById('audioVolume'),
         audioVolumeLabel: document.getElementById('audioVolumeLabel'),
-        lightSlider: document.getElementById('lightSlider'),
-        lightValue: document.getElementById('lightValue'),
-        lightModalPercent: document.getElementById('lightModalPercent'),
+    lightSlider: document.getElementById('lightSlider'),
+    lightValue: document.getElementById('lightValue'),
+    lightPatternLabel: document.getElementById('lightPatternLabel'),
+    lightColorLabel: document.getElementById('lightColorLabel'),
+    lightModalPercent: document.getElementById('lightModalPercent'),
         lightSettingsStatus: document.getElementById('lightSettingsStatus'),
         lightSettingsList: document.getElementById('lightSettingsList'),
         marker: document.querySelector('[data-marker="light"]'),
@@ -85,11 +87,15 @@
         otaModal: document.getElementById('otaModal'),
         patternSelect: document.getElementById('patternSelect'),
         patternName: document.getElementById('patternName'),
-        patternSave: document.getElementById('patternSave'),
+    patternNext: document.getElementById('patternNext'),
+    patternSettings: document.getElementById('patternSettings'),
+    patternSave: document.getElementById('patternSave'),
         patternSaveAs: document.getElementById('patternSaveAs'),
         patternDelete: document.getElementById('patternDelete'),
         colorSelect: document.getElementById('colorSelect'),
         colorName: document.getElementById('colorName'),
+    colorNext: document.getElementById('colorNext'),
+    colorSettings: document.getElementById('colorSettings'),
         colorSave: document.getElementById('colorSave'),
         colorSaveAs: document.getElementById('colorSaveAs'),
         colorDelete: document.getElementById('colorDelete'),
@@ -159,7 +165,10 @@
         selectedId: '',
         originalLabel: '',
         activeSnapshot: null,
-        lastLoadStatus: { text: defaultText, tone: 'info' }
+        lastLoadStatus: { text: defaultText, tone: 'info' },
+        currentId: '',
+        currentSource: 'context',
+        overrideActive: false
     });
 
     const state = {
@@ -190,6 +199,76 @@
         return id
             .replace(/_/g, ' ')
             .replace(/\b\w/g, (ch) => ch.toUpperCase());
+    };
+
+    const resolvePatternLabel = (id) => {
+        if (typeof id !== 'string' || id.length === 0) {
+            return '';
+        }
+        const entry = state.pattern.map.get(id);
+        if (entry) {
+            const label = typeof entry.label === 'string' ? entry.label.trim() : '';
+            if (label) {
+                return label;
+            }
+            return entry.id || formatIdLabel(id);
+        }
+        return formatIdLabel(id);
+    };
+
+    const resolveColorLabel = (id) => {
+        if (typeof id !== 'string' || id.length === 0) {
+            return '';
+        }
+        const entry = state.color.map.get(id);
+        if (entry) {
+            const label = typeof entry.label === 'string' ? entry.label.trim() : '';
+            if (label) {
+                return label;
+            }
+            return entry.id || formatIdLabel(id);
+        }
+        return formatIdLabel(id);
+    };
+
+    const updateLightSummary = () => {
+        if (dom.lightPatternLabel) {
+            let text;
+            if (!state.pattern.loaded && !state.pattern.overrideActive && !state.pattern.currentId) {
+                text = 'Niet geladen';
+            } else {
+                const label = resolvePatternLabel(state.pattern.currentId);
+                const effectiveSource = state.pattern.overrideActive ? 'manual' : (state.pattern.currentSource || 'context');
+                switch (effectiveSource) {
+                case 'manual':
+                    text = label ? `Handmatig • ${label}` : 'Handmatig';
+                    break;
+                case 'calendar':
+                    text = label ? `Kalender • ${label}` : 'Kalender';
+                    break;
+                case 'default':
+                    text = label ? `Standaard • ${label}` : 'Standaard';
+                    break;
+                default:
+                    text = label ? `Context • ${label}` : 'Context';
+                    break;
+                }
+            }
+            dom.lightPatternLabel.textContent = text;
+        }
+
+        if (dom.lightColorLabel) {
+            let text;
+            if (!state.color.loaded && !state.color.overrideActive && !state.color.currentId) {
+                text = 'Niet geladen';
+            } else if (state.color.overrideActive || state.color.currentId) {
+                const label = resolveColorLabel(state.color.currentId);
+                text = label ? `Handmatig • ${label}` : 'Handmatig';
+            } else {
+                text = 'Standaardkleuren';
+            }
+            dom.lightColorLabel.textContent = text;
+        }
     };
 
     const setMarker = (value255) => {
@@ -263,6 +342,7 @@
     };
 
     renderActiveMarkers();
+    updateLightSummary();
 
     const validHex = (value) => typeof value === 'string' && /^#([0-9a-f]{6})$/i.test(value.trim());
 
@@ -780,81 +860,6 @@
         updateActivateButton();
     };
 
-    const applyActiveLightStatus = (payload) => {
-        if (!payload || typeof payload !== 'object') {
-            return '';
-        }
-
-    const manual = payload.manual_override === true;
-    const rawPatternId = typeof payload.pattern_id === 'string' ? payload.pattern_id.trim() : '';
-    const rawColorId = typeof payload.color_id === 'string' ? payload.color_id.trim() : '';
-    const colorOverride = payload.color_overridden === true;
-
-    const patternIsContext = !manual && (!rawPatternId || rawPatternId.toLowerCase() === 'context');
-    const colorIsDefault = !colorOverride || !rawColorId || rawColorId.toLowerCase() === 'default';
-
-    state.pattern.lastAppliedId = rawPatternId;
-    state.color.lastAppliedId = rawColorId;
-
-    state.pattern.activeId = patternIsContext ? '' : rawPatternId;
-    state.color.activeId = colorIsDefault ? '' : rawColorId;
-
-        syncActiveSnapshot();
-        updatePatternControls();
-        updateColorControls();
-        renderActiveMarkers();
-        state.previewActive = false;
-        updatePreviewState();
-
-        const patternLabel = (() => {
-            if (rawPatternId && state.pattern.map.has(rawPatternId)) {
-                const item = state.pattern.map.get(rawPatternId);
-                if (item && typeof item.label === 'string' && item.label.trim().length > 0) {
-                    return item.label.trim();
-                }
-                return item ? item.id : formatIdLabel(rawPatternId);
-            }
-            if (rawPatternId) {
-                return formatIdLabel(rawPatternId);
-            }
-            return 'Context';
-        })();
-
-        const colorLabel = (() => {
-            if (colorOverride && rawColorId && state.color.map.has(rawColorId)) {
-                const item = state.color.map.get(rawColorId);
-                if (item && typeof item.label === 'string' && item.label.trim().length > 0) {
-                    return item.label.trim();
-                }
-                return item ? item.id : formatIdLabel(rawColorId);
-            }
-            if (colorOverride && rawColorId) {
-                return formatIdLabel(rawColorId);
-            }
-            return 'Standaard';
-        })();
-
-        const source = typeof payload.source === 'string' ? payload.source.toLowerCase() : 'context';
-        let message;
-        if (manual || source === 'manual') {
-            message = `Patroon ${patternLabel} actief`;
-        } else if (source === 'calendar') {
-            message = `Kalenderpatroon ${patternLabel}`;
-        } else if (source === 'default') {
-            message = `Standaardpatroon ${patternLabel}`;
-        } else {
-            message = patternLabel === 'Context' ? 'Context actief' : `Context ${patternLabel}`;
-        }
-
-        if (colorOverride) {
-            message += ` • kleuren ${colorLabel}`;
-        } else {
-            message += ' • standaardkleuren';
-        }
-
-        return message;
-    };
-
     const updateActivateButton = () => {
         if (!dom.presetActivate) {
             return;
@@ -883,6 +888,15 @@
         state.pattern.items = patterns;
         state.pattern.map = new Map(patterns.map((item) => [item.id, item]));
         state.pattern.activeId = typeof store.active_pattern === 'string' ? store.active_pattern : '';
+        state.pattern.overrideActive = state.pattern.activeId.length > 0;
+        if (state.pattern.overrideActive) {
+            state.pattern.currentId = state.pattern.activeId;
+            state.pattern.currentSource = 'manual';
+            state.pattern.lastAppliedId = state.pattern.activeId;
+        } else {
+            state.pattern.currentSource = 'context';
+            state.pattern.currentId = '';
+        }
         state.previewActive = false;
 
         syncActiveSnapshot();
@@ -924,6 +938,7 @@
         }
 
         updatePatternControls();
+        updateLightSummary();
     };
 
     const processColorStore = (store, options = {}) => {
@@ -932,6 +947,15 @@
         state.color.items = colors;
         state.color.map = new Map(colors.map((item) => [item.id, item]));
         state.color.activeId = typeof store.active_color === 'string' ? store.active_color : '';
+        state.color.overrideActive = state.color.activeId.length > 0;
+        if (state.color.overrideActive) {
+            state.color.currentId = state.color.activeId;
+            state.color.currentSource = 'manual';
+            state.color.lastAppliedId = state.color.activeId;
+        } else {
+            state.color.currentSource = 'default';
+            state.color.currentId = '';
+        }
 
         let nextSelected = options.selectedId || state.color.selectedId;
         if (nextSelected && nextSelected !== COLOR_DEFAULT && !state.color.map.has(nextSelected)) {
@@ -963,6 +987,7 @@
         }
 
         updateColorControls();
+        updateLightSummary();
     };
 
     const ensurePatterns = async () => {
@@ -1029,6 +1054,114 @@
             await state.color.loadingPromise;
         } catch (error) {
             // status reeds gezet
+        }
+    };
+
+    const selectPatternOnServer = async (patternId) => {
+        const response = await fetch('/api/light/patterns/select', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: patternId || '' })
+        });
+        if (!response.ok) {
+            const message = (await response.text()).trim();
+            throw new Error(message || response.statusText);
+        }
+        const data = await response.json();
+        state.pattern.loaded = true;
+        processPatternStore(data, { skipStatus: true });
+        return data;
+    };
+
+    const selectColorOnServer = async (colorId) => {
+        const response = await fetch('/api/light/colors/select', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: colorId || '' })
+        });
+        if (!response.ok) {
+            const message = (await response.text()).trim();
+            throw new Error(message || response.statusText);
+        }
+        const data = await response.json();
+        state.color.loaded = true;
+        processColorStore(data, { skipStatus: true });
+        return data;
+    };
+
+    const cyclePatternForward = async () => {
+        setStatus('lightStatus', 'Volgende patroon…', 'pending');
+        try {
+            await ensurePatterns();
+            const items = state.pattern.items;
+            if (!items.length) {
+                setStatus('lightStatus', 'Geen patronen beschikbaar', 'error');
+                return;
+            }
+            const candidates = [state.pattern.currentId, state.pattern.activeId, state.pattern.selectedId !== PATTERN_CONTEXT ? state.pattern.selectedId : ''];
+            let currentIndex = -1;
+            for (const candidate of candidates) {
+                if (!candidate) {
+                    continue;
+                }
+                const idx = items.findIndex((item) => item.id === candidate);
+                if (idx >= 0) {
+                    currentIndex = idx;
+                    break;
+                }
+            }
+            const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % items.length : 0;
+            const nextPattern = items[nextIndex];
+            await selectPatternOnServer(nextPattern.id);
+            const label = resolvePatternLabel(nextPattern.id) || nextPattern.id;
+            state.pattern.currentId = nextPattern.id;
+            state.pattern.currentSource = 'manual';
+            state.pattern.overrideActive = true;
+            state.pattern.lastAppliedId = nextPattern.id;
+            state.pattern.selectedId = nextPattern.id;
+            updateLightSummary();
+            setStatus('lightStatus', `Patroon ${label} actief`, 'success');
+        } catch (error) {
+            console.error('[light] patternNext failed', error);
+            setStatus('lightStatus', error && error.message ? `Patroon wisselen mislukt: ${error.message}` : 'Patroon wisselen mislukt', 'error');
+        }
+    };
+
+    const cycleColorForward = async () => {
+        setStatus('lightStatus', 'Volgende kleuren…', 'pending');
+        try {
+            await ensureColors();
+            const items = state.color.items;
+            if (!items.length) {
+                setStatus('lightStatus', 'Geen kleurensets beschikbaar', 'error');
+                return;
+            }
+            const candidates = [state.color.currentId, state.color.activeId, state.color.selectedId !== COLOR_DEFAULT ? state.color.selectedId : ''];
+            let currentIndex = -1;
+            for (const candidate of candidates) {
+                if (!candidate) {
+                    continue;
+                }
+                const idx = items.findIndex((item) => item.id === candidate);
+                if (idx >= 0) {
+                    currentIndex = idx;
+                    break;
+                }
+            }
+            const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % items.length : 0;
+            const nextColor = items[nextIndex];
+            await selectColorOnServer(nextColor.id);
+            const label = resolveColorLabel(nextColor.id) || nextColor.id;
+            state.color.currentId = nextColor.id;
+            state.color.currentSource = 'manual';
+            state.color.overrideActive = true;
+            state.color.lastAppliedId = nextColor.id;
+            state.color.selectedId = nextColor.id;
+            updateLightSummary();
+            setStatus('lightStatus', `Kleuren ${label} actief`, 'success');
+        } catch (error) {
+            console.error('[light] colorNext failed', error);
+            setStatus('lightStatus', error && error.message ? `Kleurenset wisselen mislukt: ${error.message}` : 'Kleurenset wisselen mislukt', 'error');
         }
     };
 
@@ -1466,6 +1599,9 @@
                 statusText: patternPayload.id ? 'Patroon actief' : 'Context actief',
                 statusTone: patternPayload.id ? 'success' : 'info'
             });
+            if (patternPayload.id) {
+                state.pattern.lastAppliedId = patternPayload.id;
+            }
 
             const colorResponse = await fetch('/api/light/colors/select', {
                 method: 'POST',
@@ -1480,6 +1616,9 @@
             state.color.loaded = true;
             state.color.store = colorStore;
             processColorStore(colorStore, { selectedId: colorPayload.id || COLOR_DEFAULT, skipStatus: true });
+            if (colorPayload.id) {
+                state.color.lastAppliedId = colorPayload.id;
+            }
 
             state.previewActive = false;
             updatePreviewState();
@@ -1608,26 +1747,55 @@
         pushBrightness(percent, 'main');
     });
 
-    document.getElementById('lightNext').addEventListener('click', async () => {
-        setStatus('lightStatus', 'Volgende show…', 'pending');
-        try {
-            const response = await fetch('/light/next');
-            if (!response.ok) {
-                throw new Error(response.statusText);
+    if (dom.patternNext) {
+        dom.patternNext.addEventListener('click', async () => {
+            if (dom.patternNext.disabled) {
+                return;
             }
-            const contentType = response.headers.get('content-type') || '';
-            if (contentType.includes('application/json')) {
-                const payload = await response.json();
-                const message = applyActiveLightStatus(payload) || payload.message || 'Aangevraagd';
-                setStatus('lightStatus', message, 'success');
-            } else {
-                const text = (await response.text()).trim();
-                setStatus('lightStatus', text || 'Aangevraagd', 'success');
+            dom.patternNext.disabled = true;
+            try {
+                await cyclePatternForward();
+            } finally {
+                dom.patternNext.disabled = false;
             }
-        } catch (error) {
-            setStatus('lightStatus', 'Mislukt', 'error');
-        }
-    });
+        });
+    }
+
+    if (dom.colorNext) {
+        dom.colorNext.addEventListener('click', async () => {
+            if (dom.colorNext.disabled) {
+                return;
+            }
+            dom.colorNext.disabled = true;
+            try {
+                await cycleColorForward();
+            } finally {
+                dom.colorNext.disabled = false;
+            }
+        });
+    }
+
+    const focusLightControl = (element) => {
+        window.setTimeout(() => {
+            if (element && typeof element.focus === 'function') {
+                element.focus({ preventScroll: false });
+            }
+        }, 80);
+    };
+
+    if (dom.patternSettings) {
+        dom.patternSettings.addEventListener('click', async () => {
+            await openModal('light');
+            focusLightControl(dom.patternSelect);
+        });
+    }
+
+    if (dom.colorSettings) {
+        dom.colorSettings.addEventListener('click', async () => {
+            await openModal('light');
+            focusLightControl(dom.colorSelect);
+        });
+    }
 
     const getAudioLevel = async () => {
         setStatus('audioStatus', 'Bezig…', 'pending');
@@ -1895,7 +2063,9 @@
         await Promise.all([
             getBrightness(),
             getAudioLevel(),
-            refreshPlaybackInfo({ retries: 3, delay: 150 })
+            refreshPlaybackInfo({ retries: 3, delay: 150 }),
+            ensurePatterns().catch(() => null),
+            ensureColors().catch(() => null)
         ]);
     };
 

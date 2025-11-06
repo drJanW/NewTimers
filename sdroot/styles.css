@@ -195,6 +195,15 @@ body.modal-open {
     justify-content: center;
 }
 
+.row-actions {
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.row-actions .btn + .btn {
+    margin-left: 6px;
+}
+
 .vote-row {
     justify-content: center;
     gap: 10px;
