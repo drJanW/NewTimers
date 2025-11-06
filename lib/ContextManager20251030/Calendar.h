@@ -23,13 +23,11 @@ struct CalendarThemeBox {
 	String note;
 };
 
-struct CalendarLightShow {
+struct CalendarLightPattern {
 	bool valid{false};
 	String id;
-	uint32_t rgb1{0};
-	uint32_t rgb2{0};
-	uint8_t colorCycleSec{0};
-	uint8_t brightCycleSec{0};
+	float colorCycleSec{0.0f};
+	float brightCycleSec{0.0f};
 	float fadeWidth{0.0f};
 	uint8_t minBrightness{0};
 	float gradientSpeed{0.0f};
@@ -40,8 +38,26 @@ struct CalendarLightShow {
 	float radiusOsc{0.0f};
 	float xAmp{0.0f};
 	float yAmp{0.0f};
-	uint8_t xCycleSec{0};
-	uint8_t yCycleSec{0};
+	float xCycleSec{0.0f};
+	float yCycleSec{0.0f};
+	String note;
+};
+
+struct CalendarLightPalette {
+	bool valid{false};
+	String id;
+	uint32_t primary{0};
+	uint32_t secondary{0};
+	String note;
+};
+
+struct CalendarLightShow {
+	bool valid{false};
+	String id;
+	String patternId;
+	String paletteId;
+	CalendarLightPattern pattern;
+	CalendarLightPalette palette;
 	String note;
 };
 
@@ -74,6 +90,8 @@ private:
 	bool loadCalendarRow(uint16_t year, uint8_t month, uint8_t day, CalendarEntry& out);
 	bool loadThemeBox(const String& id, CalendarThemeBox& out);
 	bool loadLightShow(const String& id, CalendarLightShow& out);
+	bool loadLightPattern(const String& id, CalendarLightPattern& out);
+	bool loadLightPalette(const String& id, CalendarLightPalette& out);
 	bool loadColorRange(const String& id, CalendarColorRange& out);
 
 		String pathFor(const char* file) const;

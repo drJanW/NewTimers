@@ -8,8 +8,10 @@
 
 1. `calendar.csv` columns: `year;month;day;tts_sentence;tts_interval_min;theme_box_id;light_show_id;color_range_id;note`. The `tts_sentence` field contains the literal text string to feed into TTS. Only the first matching row for today is used; overlapping dates (e.g. birthday on Christmas) accept this limitation.
 2. `theme_boxes.csv` columns: `theme_box_id;entries;note`. `entries` is a comma-separated list of MP3 subdirectory numbers. Existing weighted-random logic remains the only selection policy, so no extra weight columns are required.
-3. `light_shows.csv` columns mirror `LightShowParams`: `light_show_id;rgb1_hex;rgb2_hex;color_cycle_sec;bright_cycle_sec;fade_width;min_brightness;gradient_speed;center_x;center_y;radius;window_width;radius_osc;x_amp;y_amp;x_cycle_sec;y_cycle_sec;note`. These placeholders already use the real parameter set so LightManager can apply them directly when the implementation lands.
-4. `color_ranges.csv` columns: `color_range_id;start_hex;end_hex;note`. These values align with the color pairings referenced by the light show entries.
+3. `light_patterns.csv` columns: `pattern_id;color_cycle_sec;bright_cycle_sec;fade_width;min_brightness;gradient_speed;center_x;center_y;radius;window_width;radius_osc;x_amp;y_amp;x_cycle_sec;y_cycle_sec;note`. Each row defines the geometric animation without binding it to a palette.
+4. `light_palettes.csv` columns: `palette_id;rgb1_hex;rgb2_hex;note`. These preset color pairs can be reused across multiple shows.
+5. `light_shows.csv` columns: `light_show_id;pattern_id;palette_id;note`. The calendar loader resolves the referenced pattern and palette before handing the combined preset to LightPolicy.
+6. `color_ranges.csv` columns: `color_range_id;start_hex;end_hex;note`. These values can override the palette at runtime when a calendar entry specifies an additional color range.
 
 ### Runtime flow
 

@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <math.h>
+
 #include "LightPolicy.h"
 #include "Globals.h" // for MAX_BRIGHTNESS
 #include "../../ContextManager20251030/Calendar.h"
@@ -46,7 +48,11 @@ void applyShowParams(const LightShowParams& params,
     PlayLightShow(params);
     s_calendarState.active  = true;
     s_calendarState.showId  = show.id;
-    s_calendarState.colorsId = colorsOverridden ? colorsId : String();
+    if (colorsOverridden) {
+        s_calendarState.colorsId = colorsId;
+    } else {
+        s_calendarState.colorsId = show.paletteId;
+    }
 
     const unsigned long rgb1 = (static_cast<unsigned long>(params.RGB1.r) << 16) |
                                (static_cast<unsigned long>(params.RGB1.g) << 8)  |
@@ -55,8 +61,12 @@ void applyShowParams(const LightShowParams& params,
                                (static_cast<unsigned long>(params.RGB2.g) << 8)  |
                                static_cast<unsigned long>(params.RGB2.b);
 
-    PF("[LightPolicy] Calendar show %s applied (palette #%06lX -> #%06lX, window %d)\n",
-       show.id.c_str(), rgb1 & 0x00FFFFFFUL, rgb2 & 0x00FFFFFFUL,
+    PF("[LightPolicy] Calendar show %s applied (pattern %s, colors %s, palette #%06lX -> #%06lX, window %d)\n",
+       show.id.c_str(),
+       show.patternId.c_str(),
+       colorsOverridden ? colorsId.c_str() : show.paletteId.c_str(),
+       rgb1 & 0x00FFFFFFUL,
+       rgb2 & 0x00FFFFFFUL,
        params.windowWidth);
 }
 
@@ -96,10 +106,42 @@ bool distanceAnimationFor(float distanceMm,
 
 void applyCalendarLightshow(const CalendarLightShow& show,
                             const CalendarColorRange& colors) {
-    LightShowParams params;
+    if (!show.valid || !show.pattern.valid) {
+        PF("[LightPolicy] Calendar show %s invalid, clearing\n", show.id.c_str());
+        clearCalendarLightshow();
+        return;
+    }
 
-    uint32_t primary   = show.rgb1;
-    uint32_t secondary = show.rgb2;
+    LightShowParams params;
+    const auto& pattern = show.pattern;
+    auto asCycle = [](float value) -> uint8_t {
+        if (value <= 0.0f) {
+            return 0;
+        }
+        if (value >= 255.0f) {
+            return 255;
+        }
+        return static_cast<uint8_t>(lroundf(value));
+    };
+    params.colorCycleSec  = guardCycle(asCycle(pattern.colorCycleSec));
+    params.brightCycleSec = guardCycle(asCycle(pattern.brightCycleSec));
+    params.fadeWidth      = guardFadeWidth(pattern.fadeWidth);
+    params.minBrightness  = pattern.minBrightness > MAX_BRIGHTNESS
+                                ? MAX_BRIGHTNESS
+                                : pattern.minBrightness;
+    params.gradientSpeed  = guardGradientSpeed(pattern.gradientSpeed);
+    params.centerX        = pattern.centerX;
+    params.centerY        = pattern.centerY;
+    params.radius         = pattern.radius;
+    params.windowWidth    = pattern.windowWidth > 0 ? pattern.windowWidth : 16;
+    params.radiusOsc      = pattern.radiusOsc;
+    params.xAmp           = pattern.xAmp;
+    params.yAmp           = pattern.yAmp;
+    params.xCycleSec      = guardCycle(asCycle(pattern.xCycleSec));
+    params.yCycleSec      = guardCycle(asCycle(pattern.yCycleSec));
+
+    uint32_t primary   = show.palette.valid ? show.palette.primary   : 0x00FFFFFFUL;
+    uint32_t secondary = show.palette.valid ? show.palette.secondary : 0x007F7F7FUL;
     bool colorsOverridden = false;
     if (colors.valid) {
         primary = colors.startColor;
@@ -109,24 +151,8 @@ void applyCalendarLightshow(const CalendarLightShow& show,
 
     params.RGB1 = toCRGB(primary);
     params.RGB2 = toCRGB(secondary);
-    params.colorCycleSec  = guardCycle(show.colorCycleSec);
-    params.brightCycleSec = guardCycle(show.brightCycleSec);
-    params.fadeWidth      = guardFadeWidth(show.fadeWidth);
-    params.minBrightness  = show.minBrightness > MAX_BRIGHTNESS
-                                ? MAX_BRIGHTNESS
-                                : show.minBrightness;
-    params.gradientSpeed  = guardGradientSpeed(show.gradientSpeed);
-    params.centerX        = show.centerX;
-    params.centerY        = show.centerY;
-    params.radius         = show.radius;
-    params.windowWidth    = show.windowWidth > 0 ? show.windowWidth : 16;
-    params.radiusOsc      = show.radiusOsc;
-    params.xAmp           = show.xAmp;
-    params.yAmp           = show.yAmp;
-    params.xCycleSec      = guardCycle(show.xCycleSec);
-    params.yCycleSec      = guardCycle(show.yCycleSec);
 
-    const String colorsId = colors.valid ? colors.id : String();
+    const String colorsId = colors.valid ? colors.id : show.paletteId;
     applyShowParams(params, show, colorsOverridden, colorsId);
 }
 

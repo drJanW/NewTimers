@@ -10,11 +10,15 @@ namespace {
 constexpr const char* kCalendarFile     = "calendar.csv";
 constexpr const char* kThemeBoxFile     = "theme_boxes.csv";
 constexpr const char* kLightShowFile    = "light_shows.csv";
+constexpr const char* kLightPatternFile = "light_patterns.csv";
+constexpr const char* kLightPaletteFile = "light_palettes.csv";
 constexpr const char* kColorRangeFile   = "color_ranges.csv";
 
 constexpr size_t kCalendarColumns       = 9;
 constexpr size_t kThemeBoxColumns       = 3;
-constexpr size_t kLightShowColumns      = 18;
+constexpr size_t kLightShowColumns      = 4;
+constexpr size_t kLightPatternColumns   = 16;
+constexpr size_t kLightPaletteColumns   = 4;
 constexpr size_t kColorRangeColumns     = 4;
 
 class ScopedSDBusy {
@@ -251,6 +255,7 @@ bool CalendarManager::loadLightShow(const String& id, CalendarLightShow& out) {
 		return false;
 	}
 
+	CalendarLightShow show{};
 	bool matched = false;
 	while (file.available()) {
 		String raw = file.readStringUntil('\n');
@@ -261,7 +266,7 @@ bool CalendarManager::loadLightShow(const String& id, CalendarLightShow& out) {
 
 		String columns[kLightShowColumns];
 		const size_t count = split(raw, columns, kLightShowColumns);
-		if (count < 17) {
+		if (count < 3) {
 			continue;
 		}
 		if (columns[0].equalsIgnoreCase("light_show_id")) {
@@ -271,38 +276,50 @@ bool CalendarManager::loadLightShow(const String& id, CalendarLightShow& out) {
 			continue;
 		}
 
-		uint32_t rgb1 = 0;
-		uint32_t rgb2 = 0;
-		if (!parseHexColor(columns[1], rgb1) || !parseHexColor(columns[2], rgb2)) {
-			PF("[CalendarManager] Light show %s has invalid color codes\n", id.c_str());
-			break;
-		}
-
-		out.valid = true;
-		out.id = columns[0];
-		out.rgb1 = rgb1;
-		out.rgb2 = rgb2;
-		out.colorCycleSec  = static_cast<uint8_t>(columns[3].toInt());
-		out.brightCycleSec = static_cast<uint8_t>(columns[4].toInt());
-		out.fadeWidth      = columns[5].toFloat();
-		out.minBrightness  = static_cast<uint8_t>(columns[6].toInt());
-		out.gradientSpeed  = columns[7].toFloat();
-		out.centerX        = columns[8].toFloat();
-		out.centerY        = columns[9].toFloat();
-		out.radius         = columns[10].toFloat();
-		out.windowWidth    = columns[11].toInt();
-		out.radiusOsc      = columns[12].toFloat();
-		out.xAmp           = columns[13].toFloat();
-		out.yAmp           = columns[14].toFloat();
-		out.xCycleSec      = static_cast<uint8_t>(columns[15].toInt());
-		out.yCycleSec      = static_cast<uint8_t>(columns[16].toInt());
-		out.note           = count >= 18 ? columns[17] : "";
+		show.valid = true;
+		show.id = columns[0];
+		show.patternId = columns[1];
+		show.paletteId = columns[2];
+		show.note = count >= 4 ? columns[3] : "";
 		matched = true;
 		break;
 	}
 
 	file.close();
-	return matched;
+	if (!matched) {
+		return false;
+	}
+
+	if (show.patternId.isEmpty()) {
+		PF("[CalendarManager] Light show %s missing pattern reference\n", show.id.c_str());
+		return false;
+	}
+
+	if (!show.patternId.isEmpty()) {
+		if (!loadLightPattern(show.patternId, show.pattern)) {
+			PF("[CalendarManager] Light show %s references missing pattern %s\n",
+			   show.id.c_str(), show.patternId.c_str());
+			show.valid = false;
+			return false;
+		}
+	}
+
+	if (!show.paletteId.isEmpty()) {
+		if (!loadLightPalette(show.paletteId, show.palette)) {
+			PF("[CalendarManager] Light show %s references missing palette %s\n",
+			   show.id.c_str(), show.paletteId.c_str());
+		}
+	} else {
+		PF("[CalendarManager] Light show %s has no palette reference; using fallback colors\n",
+		   show.id.c_str());
+	}
+
+	if (!show.pattern.valid) {
+		return false;
+	}
+
+	out = show;
+	return true;
 }
 
 bool CalendarManager::loadColorRange(const String& id, CalendarColorRange& out) {
@@ -345,6 +362,113 @@ bool CalendarManager::loadColorRange(const String& id, CalendarColorRange& out) 
 		out.startColor = startColor;
 		out.endColor = endColor;
 		out.note = count >= 4 ? columns[3] : "";
+		matched = true;
+		break;
+	}
+
+	file.close();
+	return matched;
+}
+
+bool CalendarManager::loadLightPattern(const String& id, CalendarLightPattern& out) {
+	ScopedSDBusy guard;
+	File file = fs_->open(pathFor(kLightPatternFile).c_str(), FILE_READ);
+	if (!file) {
+		PF("[CalendarManager] Failed to open %s\n", pathFor(kLightPatternFile).c_str());
+		return false;
+	}
+
+	bool matched = false;
+	while (file.available()) {
+		String raw = file.readStringUntil('\n');
+		trim(raw);
+		if (isLineSkippable(raw)) {
+			continue;
+		}
+
+		String columns[kLightPatternColumns];
+		const size_t count = split(raw, columns, kLightPatternColumns);
+		if (count < 15) {
+			continue;
+		}
+		if (columns[0].equalsIgnoreCase("pattern_id")) {
+			continue;
+		}
+		if (!columns[0].equalsIgnoreCase(id)) {
+			continue;
+		}
+
+		CalendarLightPattern pattern{};
+		pattern.valid = true;
+		pattern.id = columns[0];
+		pattern.colorCycleSec  = columns[1].toFloat();
+		pattern.brightCycleSec = columns[2].toFloat();
+		pattern.fadeWidth      = columns[3].toFloat();
+		pattern.minBrightness  = static_cast<uint8_t>(columns[4].toInt());
+		pattern.gradientSpeed  = columns[5].toFloat();
+		pattern.centerX        = columns[6].toFloat();
+		pattern.centerY        = columns[7].toFloat();
+		pattern.radius         = columns[8].toFloat();
+		pattern.windowWidth    = columns[9].toInt();
+		pattern.radiusOsc      = columns[10].toFloat();
+		pattern.xAmp           = columns[11].toFloat();
+		pattern.yAmp           = columns[12].toFloat();
+		pattern.xCycleSec      = columns[13].toFloat();
+		pattern.yCycleSec      = columns[14].toFloat();
+		pattern.note           = count >= 16 ? columns[15] : "";
+
+		out = pattern;
+		matched = true;
+		break;
+	}
+
+	file.close();
+	return matched;
+}
+
+bool CalendarManager::loadLightPalette(const String& id, CalendarLightPalette& out) {
+	ScopedSDBusy guard;
+	File file = fs_->open(pathFor(kLightPaletteFile).c_str(), FILE_READ);
+	if (!file) {
+		PF("[CalendarManager] Failed to open %s\n", pathFor(kLightPaletteFile).c_str());
+		return false;
+	}
+
+	bool matched = false;
+	while (file.available()) {
+		String raw = file.readStringUntil('\n');
+		trim(raw);
+		if (isLineSkippable(raw)) {
+			continue;
+		}
+
+		String columns[kLightPaletteColumns];
+		const size_t count = split(raw, columns, kLightPaletteColumns);
+		if (count < 3) {
+			continue;
+		}
+		if (columns[0].equalsIgnoreCase("palette_id")) {
+			continue;
+		}
+		if (!columns[0].equalsIgnoreCase(id)) {
+			continue;
+		}
+
+		uint32_t primary = 0;
+		uint32_t secondary = 0;
+		if (!parseHexColor(columns[1], primary) || !parseHexColor(columns[2], secondary)) {
+			PF("[CalendarManager] Palette %s has invalid color codes\n", id.c_str());
+			break;
+		}
+
+		CalendarLightPalette palette{};
+		palette.valid = true;
+		palette.id = columns[0];
+		palette.primary = primary;
+		palette.secondary = secondary;
+		palette.note = count >= 4 ? columns[3] : "";
+
+		out = palette;
 		matched = true;
 		break;
 	}

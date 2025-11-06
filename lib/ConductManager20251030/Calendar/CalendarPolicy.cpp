@@ -118,23 +118,31 @@ void handleThemeBox(const CalendarThemeBox& box) {
 }
 
 void handleLightShow(const CalendarLightShow& show, const CalendarColorRange& colors) {
-  if (!show.valid) {
+  if (!show.valid || !show.pattern.valid) {
     if (!colors.valid) {
       LightPolicy::clearCalendarLightshow();
       return;
     }
-    PF("[CalendarPolicy] Light show request missing valid show, clearing\n");
+    PF("[CalendarPolicy] Light show request missing valid pattern, clearing\n");
     LightPolicy::clearCalendarLightshow();
     return;
   }
 
   LightPolicy::applyCalendarLightshow(show, colors);
 
-  const uint32_t primary   = colors.valid ? colors.startColor : show.rgb1;
-  const uint32_t secondary = colors.valid ? colors.endColor   : show.rgb2;
+  const uint32_t primary   = colors.valid ? colors.startColor
+                                          : (show.palette.valid ? show.palette.primary : 0x00FFFFFFUL);
+  const uint32_t secondary = colors.valid ? colors.endColor
+                                          : (show.palette.valid ? show.palette.secondary : 0x007F7F7FUL);
 
-  PF("[CalendarPolicy] Light show %s applied (palette %s -> %s)\n",
-     show.id.c_str(), formatColor(primary).c_str(), formatColor(secondary).c_str());
+  const String colorSource = colors.valid ? colors.id : show.paletteId;
+
+  PF("[CalendarPolicy] Light show %s applied (pattern %s, colors %s => %s -> %s)\n",
+     show.id.c_str(),
+     show.patternId.c_str(),
+     colorSource.c_str(),
+     formatColor(primary).c_str(),
+     formatColor(secondary).c_str());
 }
 
 } // namespace CalendarPolicy

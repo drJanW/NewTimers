@@ -1,4 +1,4 @@
-light_show_id;rgb1_hex;rgb2_hex;color_cycle_sec;bright_cycle_sec;fade_width;min_brightness;gradient_speed;center_x;center_y;radius;window_width;radius_osc;x_amp;y_amp;x_cycle_sec;y_cycle_sec;note
-lights_autumn;#FF7F00;#552200;18;14;9.0;12;0.60;0.0;0.0;22.0;24;4.0;3.5;2.5;22;20;Warm amber swirl placeholder
-lights_warm;#FF0000;#00FF00;12;16;7.5;18;0.45;0.0;0.0;18.0;20;3.0;0.0;0.0;18;18;Festive pulse placeholder
-lights_midnight;#000033;#00FFFF;10;10;6.0;8;0.75;0.0;0.0;26.0;28;6.5;4.0;4.0;24;26;Midnight ribbon placeholder
+light_show_id;pattern_id;palette_id;note
+lights_autumn;pattern_autumn;palette_autumn;Warm amber swirl
+lights_warm;pattern_warm;palette_warm;Festive pulse
+lights_midnight;pattern_midnight;palette_midnight;Midnight ribbon
