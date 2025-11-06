@@ -1,6 +1,8 @@
 
 #include "ConductManager.h"
 
+#include <vector>
+
 #include "ConductBoot.h"
 #include "TimerManager.h"
 #include "Globals.h"
@@ -50,6 +52,9 @@
 #include "Calendar/CalendarBoot.h"
 #include "Calendar/CalendarConduct.h"
 
+#include "Calendar.h"//<==================
+#include "SDManager.h"//<=================
+
 #include "FetchManager.h"
 #include "WiFiManager.h"
 
@@ -79,6 +84,101 @@ constexpr uint32_t TIME_DISPLAY_INTERVAL_MS = 10 * 12000;    // ~1.7 minutes
 
 void clockTick() {
     PRTClock::instance().update();
+}
+
+constexpr const char* kLightShowsCsvPath = "/light_shows.csv";
+
+std::vector<String> s_lightShowIds;
+size_t s_lightShowCursor = 0;
+bool s_lightShowListLoaded = false;
+
+bool shouldSkipPresetLine(const String& line) {
+    if (line.isEmpty()) {
+        return true;
+    }
+    if (line.startsWith("#") || line.startsWith("//")) {
+        return true;
+    }
+    return false;
+}
+
+size_t splitSemicolon(const String& line, String* columns, size_t maxColumns) {
+    if (!columns || maxColumns == 0) {
+        return 0;
+    }
+    size_t count = 0;
+    int start = 0;
+    const int length = line.length();
+    while (count < maxColumns && start <= length) {
+        int sep = line.indexOf(';', start);
+        if (sep < 0) {
+            sep = length;
+        }
+        String token = line.substring(start, sep);
+        token.trim();
+        columns[count++] = token;
+        start = sep + 1;
+        if (sep >= length) {
+            break;
+        }
+    }
+    return count;
+}
+
+bool loadLightShowPresets() {
+    s_lightShowIds.clear();
+    s_lightShowCursor = 0;
+
+    if (!SDManager::isReady()) {
+        CONDUCT_LOG_WARN("[Conduct] Light preset load skipped, SD not ready\n");
+        return false;
+    }
+
+    String payload = SDManager::instance().readTextFile(kLightShowsCsvPath);
+    if (payload.length() == 0) {
+        CONDUCT_LOG_WARN("[Conduct] Light preset list empty (%s)\n", kLightShowsCsvPath);
+        return false;
+    }
+
+    int start = 0;
+    const int len = payload.length();
+    while (start < len) {
+        int end = payload.indexOf('\n', start);
+        String line = (end >= 0) ? payload.substring(start, end) : payload.substring(start);
+        start = (end >= 0) ? end + 1 : len;
+        line.trim();
+        if (shouldSkipPresetLine(line)) {
+            continue;
+        }
+
+        String columns[4];
+        const size_t count = splitSemicolon(line, columns, 4);
+        if (count < 2) {
+            continue;
+        }
+        if (columns[0].equalsIgnoreCase("light_show_id") || columns[0].isEmpty()) {
+            continue;
+        }
+        s_lightShowIds.push_back(columns[0]);
+    }
+
+    if (s_lightShowIds.empty()) {
+        CONDUCT_LOG_WARN("[Conduct] No light presets found in %s\n", kLightShowsCsvPath);
+        return false;
+    }
+
+    CONDUCT_LOG_INFO("[Conduct] Loaded %u light presets from %s\n",
+                     static_cast<unsigned>(s_lightShowIds.size()),
+                     kLightShowsCsvPath);
+    return true;
+}
+
+bool ensureLightShowPresets() {
+    if (s_lightShowListLoaded && !s_lightShowIds.empty()) {
+        return true;
+    }
+    s_lightShowListLoaded = loadLightShowPresets();
+    return s_lightShowListLoaded;
 }
 
 } // namespace
@@ -273,8 +373,49 @@ bool ConductManager::isClockInFallback() {
 
 void ConductManager::intentNextLightShow() {
     CONDUCT_LOG_DEBUG("[Conduct] intentNextLightShow\n");
-    nextImmediate();
-    intentPlayFragment();
+    if (!calendarManager.isReady()) {
+        CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: calendar manager not ready\n");
+        return;
+    }
+
+    if (!ensureLightShowPresets()) {
+        CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: no light presets available\n");
+        return;
+    }
+
+    const size_t total = s_lightShowIds.size();
+    if (total == 0) {
+        CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: light preset list empty\n");
+        return;
+    }
+
+    const size_t startIndex = s_lightShowCursor % total;
+    for (size_t offset = 0; offset < total; ++offset) {
+        const size_t index = (startIndex + offset) % total;
+        const String& presetId = s_lightShowIds[index];
+
+        CalendarLightShow show;
+        if (!calendarManager.lookupLightShow(presetId, show)) {
+            CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: failed to load preset %s\n",
+                             presetId.c_str());
+            continue;
+        }
+        if (!show.valid || !show.pattern.valid) {
+            CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: preset %s invalid\n",
+                             presetId.c_str());
+            continue;
+        }
+
+        CalendarColorRange none{};
+        LightPolicy::applyCalendarLightshow(show, none);
+        s_lightShowCursor = (index + 1) % total;
+        CONDUCT_LOG_INFO("[Conduct] intentNextLightShow: applied preset %s\n", presetId.c_str());
+        return;
+    }
+
+    CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: no playable presets found\n");
+    LightPolicy::clearCalendarLightshow();
+    s_lightShowListLoaded = false;
 }
 
 void ConductManager::resumeAfterSDBoot() {

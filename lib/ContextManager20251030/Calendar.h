@@ -85,6 +85,7 @@ public:
 	bool hasSnapshot() const;
 	bool isReady() const;
 	void clear();
+	bool lookupLightShow(const String& id, CalendarLightShow& out);
 
 private:
 	bool loadCalendarRow(uint16_t year, uint8_t month, uint8_t day, CalendarEntry& out);

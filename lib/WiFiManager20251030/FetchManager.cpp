@@ -49,6 +49,9 @@ namespace {
 
 #define DEBUG_FETCH 1
 
+constexpr uint32_t WEATHER_RETRY_DELAY_MS = 5UL * 60UL * 1000UL;
+constexpr uint32_t SUN_RETRY_DELAY_MS     = 5UL * 60UL * 1000UL;
+
 // --- Timezone for Europe/Amsterdam ---
 TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120};
 TimeChangeRule CET  = {"CET", Last, Sun, Oct, 3, 60};
@@ -144,6 +147,7 @@ static void cb_tryWeather() {
             PL("[Fetch] No WiFi, skipping weather");
         }
         ContextManager::clearWeather();
+        TM().restart(WEATHER_RETRY_DELAY_MS, 0, cb_tryWeather);
         return;
     }
     if (!clockSvc().isTimeFetched()) {
@@ -151,6 +155,7 @@ static void cb_tryWeather() {
             PL("[Fetch] No NTP/time, skipping weather");
         }
         ContextManager::clearWeather();
+        TM().restart(WEATHER_RETRY_DELAY_MS, 0, cb_tryWeather);
         return;
     }
 
@@ -160,6 +165,7 @@ static void cb_tryWeather() {
             PL("[Fetch] Weather fetch failed, will retry");
         }
         ContextManager::clearWeather();
+        TM().restart(WEATHER_RETRY_DELAY_MS, 0, cb_tryWeather);
         return;
     }
 
@@ -199,12 +205,14 @@ static void cb_trySun() {
         if (DEBUG_FETCH) {
             PL("[Fetch] No WiFi, skipping sun data");
         }
+        TM().restart(SUN_RETRY_DELAY_MS, 0, cb_trySun);
         return;
     }
     if (!clockSvc().isTimeFetched()) {
         if (DEBUG_FETCH) {
             PL("[Fetch] No NTP/time, skipping sun data");
         }
+        TM().restart(SUN_RETRY_DELAY_MS, 0, cb_trySun);
         return;
     }
 
@@ -213,6 +221,7 @@ static void cb_trySun() {
         if (DEBUG_FETCH) {
             PL("[Fetch] Sun fetch failed, will retry");
         }
+        TM().restart(SUN_RETRY_DELAY_MS, 0, cb_trySun);
         return;
     }
 

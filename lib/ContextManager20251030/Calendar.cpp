@@ -146,6 +146,14 @@ void CalendarManager::clear() {
 	hasSnapshot_ = false;
 }
 
+bool CalendarManager::lookupLightShow(const String& id, CalendarLightShow& out) {
+	if (!ready_ || !fs_) {
+		return false;
+	}
+	out = CalendarLightShow{};
+	return loadLightShow(id, out);
+}
+
 bool CalendarManager::loadCalendarRow(uint16_t year, uint8_t month, uint8_t day, CalendarEntry& out) {
 	ScopedSDBusy guard;
 	File file = fs_->open(pathFor(kCalendarFile).c_str(), FILE_READ);
