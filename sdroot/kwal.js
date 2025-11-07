@@ -43,8 +43,8 @@
 
     // Build sentinel: update version string whenever web assets change so the device/browser can verify freshness.
     window.APP_BUILD_INFO = Object.freeze({
-        version: 'webui-patternsplit-20251106T1040Z',
-        features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit']
+        version: 'webui-patternsplit-20251106T1735Z',
+        features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit', 'splitLightModals']
     });
 
     const defaultPattern = {
@@ -75,32 +75,33 @@
         audioCurrent: document.getElementById('audioCurrent'),
         audioVolume: document.getElementById('audioVolume'),
         audioVolumeLabel: document.getElementById('audioVolumeLabel'),
-    lightSlider: document.getElementById('lightSlider'),
-    lightValue: document.getElementById('lightValue'),
-    lightPatternLabel: document.getElementById('lightPatternLabel'),
-    lightColorLabel: document.getElementById('lightColorLabel'),
-    lightModalPercent: document.getElementById('lightModalPercent'),
-        lightSettingsStatus: document.getElementById('lightSettingsStatus'),
+        lightSlider: document.getElementById('lightSlider'),
+        lightValue: document.getElementById('lightValue'),
+        lightPatternLabel: document.getElementById('lightPatternLabel'),
+        lightColorLabel: document.getElementById('lightColorLabel'),
+        patternModalPercent: document.getElementById('patternModalPercent'),
+        colorModalPercent: document.getElementById('colorModalPercent'),
+        patternSettingsStatus: document.getElementById('patternSettingsStatus'),
+        colorSettingsStatus: document.getElementById('colorSettingsStatus'),
         lightSettingsList: document.getElementById('lightSettingsList'),
         marker: document.querySelector('[data-marker="light"]'),
-        lightModal: document.getElementById('lightModal'),
+        patternModal: document.getElementById('patternModal'),
+        colorModal: document.getElementById('colorModal'),
         otaModal: document.getElementById('otaModal'),
         patternSelect: document.getElementById('patternSelect'),
         patternName: document.getElementById('patternName'),
-    patternNext: document.getElementById('patternNext'),
-    patternSettings: document.getElementById('patternSettings'),
-    patternSave: document.getElementById('patternSave'),
+        patternNext: document.getElementById('patternNext'),
+        patternSettings: document.getElementById('patternSettings'),
+        patternSave: document.getElementById('patternSave'),
         patternSaveAs: document.getElementById('patternSaveAs'),
         patternDelete: document.getElementById('patternDelete'),
         colorSelect: document.getElementById('colorSelect'),
         colorName: document.getElementById('colorName'),
-    colorNext: document.getElementById('colorNext'),
-    colorSettings: document.getElementById('colorSettings'),
+        colorNext: document.getElementById('colorNext'),
+        colorSettings: document.getElementById('colorSettings'),
         colorSave: document.getElementById('colorSave'),
         colorSaveAs: document.getElementById('colorSaveAs'),
         colorDelete: document.getElementById('colorDelete'),
-        presetPreview: document.getElementById('presetPreview'),
-        presetActivate: document.getElementById('presetActivate'),
         colorInputs: {
             rgb1_hex: document.querySelector('input[data-color="rgb1_hex"]'),
             rgb2_hex: document.querySelector('input[data-color="rgb2_hex"]')
@@ -143,6 +144,9 @@
     };
 
     buildPatternControls();
+
+    const previewButtons = Array.from(document.querySelectorAll('[data-light-action="preview"]'));
+    const activateButtons = Array.from(document.querySelectorAll('[data-light-action="activate"]'));
 
     const lightRangeInputs = Array.from(dom.lightSettingsList.querySelectorAll('[data-setting-range]'));
 
@@ -372,12 +376,21 @@
         return base;
     };
 
-    const setLightSettingsStatus = (text, tone = 'info') => {
-        if (!dom.lightSettingsStatus) {
-            return;
+    const setLightSettingsStatus = (text, tone = 'info', scope = 'pattern') => {
+        const apply = (node) => {
+            if (!node) {
+                return;
+            }
+            node.className = `status status-${tone}`;
+            node.textContent = text;
+        };
+
+        if (scope === 'pattern' || scope === 'both') {
+            apply(dom.patternSettingsStatus);
         }
-        dom.lightSettingsStatus.className = `status status-${tone}`;
-        dom.lightSettingsStatus.textContent = text;
+        if (scope === 'color' || scope === 'both') {
+            apply(dom.colorSettingsStatus);
+        }
     };
 
     const setSdControlsEnabled = (enabled) => {
@@ -732,11 +745,15 @@
     };
 
     const updatePreviewState = () => {
-        if (!dom.presetPreview) {
+        if (!previewButtons.length) {
             return;
         }
-        dom.presetPreview.disabled = !state.pattern.draft || !state.color.draft;
-        dom.presetPreview.textContent = state.previewActive ? 'Voorbeeld actief' : 'Voorbeeld';
+        const disabled = !state.pattern.draft || !state.color.draft;
+        const label = state.previewActive ? 'Voorbeeld actief' : 'Voorbeeld';
+        previewButtons.forEach((button) => {
+            button.disabled = disabled;
+            button.textContent = label;
+        });
     };
 
     const updatePatternControls = () => {
@@ -861,7 +878,7 @@
     };
 
     const updateActivateButton = () => {
-        if (!dom.presetActivate) {
+        if (!activateButtons.length) {
             return;
         }
         const selectedPattern = state.pattern.selectedId || PATTERN_CONTEXT;
@@ -874,11 +891,18 @@
         const anyDirty = state.pattern.dirty || state.pattern.labelDirty || state.color.dirty || state.color.labelDirty;
 
         if (selectedPattern === PATTERN_CONTEXT) {
-            dom.presetActivate.textContent = activePattern === PATTERN_CONTEXT ? 'Context actief' : 'Activeer context';
-            dom.presetActivate.disabled = activePattern === PATTERN_CONTEXT && !anyDirty && selectedColor === activeColor;
+            const label = activePattern === PATTERN_CONTEXT ? 'Context actief' : 'Activeer context';
+            const disabled = activePattern === PATTERN_CONTEXT && !anyDirty && selectedColor === activeColor;
+            activateButtons.forEach((button) => {
+                button.textContent = label;
+                button.disabled = disabled;
+            });
         } else {
-            dom.presetActivate.textContent = 'Activeer';
-            dom.presetActivate.disabled = patternMatches && colorMatches && !anyDirty;
+            const disabled = patternMatches && colorMatches && !anyDirty;
+            activateButtons.forEach((button) => {
+                button.textContent = 'Activeer';
+                button.disabled = disabled;
+            });
         }
     };
 
@@ -983,7 +1007,7 @@
 
         if (options.statusText && options.skipStatus !== true) {
             state.color.lastLoadStatus = { text: options.statusText, tone: options.statusTone || 'info' };
-            setLightSettingsStatus(options.statusText, options.statusTone || 'info');
+            setLightSettingsStatus(options.statusText, options.statusTone || 'info', 'color');
         }
 
         updateColorControls();
@@ -1043,7 +1067,7 @@
                     state.color.loaded = false;
                     state.color.store = { colors: [], active_color: '' };
                     processColorStore(state.color.store, { skipStatus: true });
-                    setLightSettingsStatus('Kleurensets laden mislukt', 'error');
+                    setLightSettingsStatus('Kleurensets laden mislukt', 'error', 'color');
                     throw error;
                 } finally {
                     state.color.loadingPromise = null;
@@ -1182,7 +1206,7 @@
         }
         state.color.dirty = true;
         state.previewActive = false;
-        setLightSettingsStatus('Wijzigingen niet opgeslagen', 'pending');
+        setLightSettingsStatus('Wijzigingen niet opgeslagen', 'pending', 'color');
         updateColorControls();
         updatePreviewState();
     };
@@ -1268,18 +1292,18 @@
                 state.color.labelDirty = false;
                 state.color.originalLabel = '';
                 applyColorDraftToUI(state.color.draft);
-                setLightSettingsStatus('Standaard kleuren gekozen', 'info');
+                setLightSettingsStatus('Standaard kleuren gekozen', 'info', 'color');
             } else {
                 const entry = state.color.map.get(value);
                 if (!entry) {
-                    setLightSettingsStatus('Kleurset niet gevonden', 'error');
+                    setLightSettingsStatus('Kleurset niet gevonden', 'error', 'color');
                     return;
                 }
                 state.color.draft = normalizeColor(entry);
                 state.color.originalLabel = entry.label && typeof entry.label === 'string' ? entry.label.trim() : '';
                 state.color.labelDirty = false;
                 applyColorDraftToUI(state.color.draft);
-                setLightSettingsStatus('Kleurset geladen', 'info');
+                setLightSettingsStatus('Kleurset geladen', 'info', 'color');
             }
             updateColorControls();
         });
@@ -1350,7 +1374,7 @@
             return false;
         }
         if (createNew && state.color.items.length >= MAX_LIGHT_COLORS) {
-            setLightSettingsStatus('Maximaal aantal kleurensets bereikt', 'error');
+            setLightSettingsStatus('Maximaal aantal kleurensets bereikt', 'error', 'color');
             return false;
         }
         const body = {
@@ -1361,12 +1385,12 @@
         };
         if (!createNew) {
             if (!state.color.selectedId || state.color.selectedId === COLOR_DEFAULT) {
-                setLightSettingsStatus('Kies een kleurset om te bewaren', 'error');
+                setLightSettingsStatus('Kies een kleurset om te bewaren', 'error', 'color');
                 return false;
             }
             body.id = state.color.selectedId;
         }
-        setLightSettingsStatus('Kleurset opslaan…', 'pending');
+        setLightSettingsStatus('Kleurset opslaan…', 'pending', 'color');
         try {
             const response = await fetch('/api/light/colors', {
                 method: 'POST',
@@ -1383,10 +1407,10 @@
             state.color.store = store;
             state.previewActive = false;
             processColorStore(store, { selectedId: headerId || COLOR_DEFAULT, skipStatus: true });
-            setLightSettingsStatus('Kleurset opgeslagen', 'success');
+            setLightSettingsStatus('Kleurset opgeslagen', 'success', 'color');
             return true;
         } catch (error) {
-            setLightSettingsStatus(error.message || 'Opslaan mislukt', 'error');
+            setLightSettingsStatus(error.message || 'Opslaan mislukt', 'error', 'color');
             return false;
         }
     };
@@ -1428,7 +1452,7 @@
 
     const deleteColor = async () => {
         if (!state.color.selectedId || state.color.selectedId === COLOR_DEFAULT) {
-            setLightSettingsStatus('Selecteer een kleurset om te verwijderen', 'error');
+            setLightSettingsStatus('Selecteer een kleurset om te verwijderen', 'error', 'color');
             return false;
         }
         const entry = state.color.map.get(state.color.selectedId);
@@ -1436,7 +1460,7 @@
         if (!window.confirm(`Kleurset "${label}" verwijderen?`)) {
             return false;
         }
-        setLightSettingsStatus('Kleurset verwijderen…', 'pending');
+        setLightSettingsStatus('Kleurset verwijderen…', 'pending', 'color');
         try {
             const response = await fetch('/api/light/colors/delete', {
                 method: 'POST',
@@ -1453,10 +1477,10 @@
             state.color.store = store;
             state.previewActive = false;
             processColorStore(store, { selectedId: headerId || COLOR_DEFAULT, skipStatus: true });
-            setLightSettingsStatus('Kleurset verwijderd', 'info');
+            setLightSettingsStatus('Kleurset verwijderd', 'info', 'color');
             return true;
         } catch (error) {
-            setLightSettingsStatus(error.message || 'Verwijderen mislukt', 'error');
+            setLightSettingsStatus(error.message || 'Verwijderen mislukt', 'error', 'color');
             return false;
         }
     };
@@ -1499,14 +1523,14 @@
             return '';
         })();
 
+        const patternPayload = deepClone(state.pattern.draft.params);
+        const colorPayload = {
+            rgb1_hex: state.color.draft.rgb1_hex,
+            rgb2_hex: state.color.draft.rgb2_hex
+        };
         const body = {
-            pattern: {
-                params: deepClone(state.pattern.draft.params)
-            },
-            color: {
-                rgb1_hex: state.color.draft.rgb1_hex,
-                rgb2_hex: state.color.draft.rgb2_hex
-            }
+            pattern: patternPayload,
+            color: colorPayload
         };
 
         const debugSnapshot = {
@@ -1526,31 +1550,18 @@
         };
         console.debug('[light-preview] prepared request', window.__LIGHT_PREVIEW_DEBUG__);
 
-        body._debug = {
-            version: window.APP_BUILD_INFO && window.APP_BUILD_INFO.version ? window.APP_BUILD_INFO.version : 'unknown',
-            snapshot: debugSnapshot,
-            timestamp: window.__LIGHT_PREVIEW_DEBUG__.at
-        };
-
         if (patternIdForPreview) {
-            body.pattern.id = patternIdForPreview;
             body.pattern_id = patternIdForPreview;
+            body.pattern.id = patternIdForPreview;
         }
         if (colorIdForPreview) {
-            body.color.id = colorIdForPreview;
             body.color_id = colorIdForPreview;
+            body.color.id = colorIdForPreview;
         }
 
-        if (!patternIdForPreview) {
-            setLightSettingsStatus('Geen patroon beschikbaar voor voorbeeld', 'error');
-            state.previewActive = false;
-            updatePreviewState();
-            return false;
-        }
-
-        const previewPatternLabel = patternIdForPreview || '(onbekend)';
+        const previewPatternLabel = patternIdForPreview || 'context';
         const previewColorLabel = colorIdForPreview || 'default';
-        setLightSettingsStatus(`Voorbeeld: ${previewPatternLabel} • kleur ${previewColorLabel}`, 'pending');
+        setLightSettingsStatus(`Voorbeeld: ${previewPatternLabel} • kleur ${previewColorLabel}`, 'pending', 'both');
         try {
             const response = await fetch('/api/light/preview', {
                 method: 'POST',
@@ -1562,12 +1573,12 @@
                 throw new Error(message || response.statusText);
             }
             state.previewActive = true;
-            setLightSettingsStatus('Voorbeeld actief (niet opgeslagen)', 'info');
+            setLightSettingsStatus('Voorbeeld actief (niet opgeslagen)', 'info', 'both');
             updatePreviewState();
             return true;
         } catch (error) {
             state.previewActive = false;
-            setLightSettingsStatus(error.message || 'Voorbeeld mislukt', 'error');
+            setLightSettingsStatus(error.message || 'Voorbeeld mislukt', 'error', 'both');
             updatePreviewState();
             return false;
         }
@@ -1580,7 +1591,7 @@
         const patternPayload = { id: selectedPattern === PATTERN_CONTEXT ? '' : selectedPattern };
         const colorPayload = { id: selectedColor === COLOR_DEFAULT ? '' : selectedColor };
 
-        setLightSettingsStatus('Activeren…', 'pending');
+        setLightSettingsStatus('Activeren…', 'pending', 'both');
         try {
             const patternResponse = await fetch('/api/light/patterns/select', {
                 method: 'POST',
@@ -1624,7 +1635,7 @@
             updatePreviewState();
             return true;
         } catch (error) {
-            setLightSettingsStatus(error.message || 'Activeren mislukt', 'error');
+            setLightSettingsStatus(error.message || 'Activeren mislukt', 'error', 'both');
             return false;
         }
     };
@@ -1652,7 +1663,7 @@
             persistPattern({ createNew: false }).catch(() => {});
         });
     }
-    if (dom.patternSaveAs) {
+    if (dom.patternSaveAs) {//!!
         dom.patternSaveAs.addEventListener('click', () => {
             persistPattern({ createNew: true }).catch(() => {});
         });
@@ -1679,24 +1690,28 @@
         });
     }
 
-    if (dom.presetPreview) {
-        dom.presetPreview.addEventListener('click', () => {
-            previewSelection().catch(() => {});
+    previewButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            previewSelection().catch(() => {});//!!
         });
-    }
+    });
 
-    if (dom.presetActivate) {
-        dom.presetActivate.addEventListener('click', () => {
+    activateButtons.forEach((button) => {
+        button.addEventListener('click', () => {
             activateSelection().catch(() => {});
         });
-    }
+    });
 
     const showBrightness = () => {
         const sliderPercent = percentFrom255(state.brightnessDraft);
         dom.lightSlider.value = String(sliderPercent);
         dom.lightValue.textContent = String(sliderPercent);
-        if (dom.lightModalPercent) {
-            dom.lightModalPercent.textContent = `${percentFrom255(state.brightnessLive)}%`;
+        const livePercentLabel = `${percentFrom255(state.brightnessLive)}%`;
+        if (dom.patternModalPercent) {
+            dom.patternModalPercent.textContent = livePercentLabel;
+        }
+        if (dom.colorModalPercent) {
+            dom.colorModalPercent.textContent = livePercentLabel;
         }
         setMarker(state.brightnessLive);
     };
@@ -1785,14 +1800,14 @@
 
     if (dom.patternSettings) {
         dom.patternSettings.addEventListener('click', async () => {
-            await openModal('light');
+            await openModal('pattern');
             focusLightControl(dom.patternSelect);
         });
     }
 
     if (dom.colorSettings) {
         dom.colorSettings.addEventListener('click', async () => {
-            await openModal('light');
+            await openModal('color');
             focusLightControl(dom.colorSelect);
         });
     }
@@ -1927,7 +1942,8 @@
     });
 
     const modals = {
-        light: dom.lightModal,
+        pattern: dom.patternModal,
+        color: dom.colorModal,
         sd: dom.sdModal,
         ota: dom.otaModal
     };
@@ -1938,7 +1954,7 @@
         if (!modal) {
             return;
         }
-        if (key === 'light') {
+        if (key === 'pattern' || key === 'color') {
             state.brightnessDraft = state.brightnessLive;
             state.previewActive = false;
             showBrightness();
@@ -1970,7 +1986,7 @@
         if (!openKey) {
             return;
         }
-        if (openKey === 'light') {
+        if (openKey === 'pattern' || openKey === 'color') {
             if (state.previewActive) {
                 await activateSelection(state.pattern.activeId || PATTERN_CONTEXT, state.color.activeId || COLOR_DEFAULT);
             }
@@ -1981,9 +1997,14 @@
         openKey = null;
     };
 
-    document.querySelectorAll('[data-open-light]').forEach((node) => {
+    document.querySelectorAll('[data-open-pattern]').forEach((node) => {
         node.addEventListener('click', () => {
-            openModal('light').catch(() => {});
+            openModal('pattern').catch(() => {});
+        });
+    });
+    document.querySelectorAll('[data-open-color]').forEach((node) => {
+        node.addEventListener('click', () => {
+            openModal('color').catch(() => {});
         });
     });
     if (dom.openSdManager) {

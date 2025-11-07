@@ -408,29 +408,51 @@ bool WebLightStore::deleteColor(JsonVariantConst body, String& affectedId, Strin
 }
 
 bool WebLightStore::preview(JsonVariantConst body, String& errorMessage) {
-    if (!body.is<JsonObject>()) {
-        errorMessage = F("invalid payload");
-        return false;
-    }
+    String rawBody;
+    serializeJson(body, rawBody);
+    PF("[WebLightStore] preview entry raw=%s\n", rawBody.c_str());
+
     JsonObjectConst obj = body.as<JsonObjectConst>();
     if (obj.isNull()) {
         errorMessage = F("invalid payload");
+        PF("[WebLightStore] preview reject: body not object\n");
         return false;
     }
     JsonVariantConst patternVariant = obj["pattern"];
     JsonVariantConst colorVariant = obj["color"];
     if (!patternVariant || !colorVariant) {
         errorMessage = F("pattern/color missing");
+        PF("[WebLightStore] preview reject: missing sections (pattern=%d color=%d)\n",
+           patternVariant.isNull() ? 0 : 1,
+           colorVariant.isNull() ? 0 : 1);
         return false;
     }
     LightShowParams params;
     if (!parsePatternParams(patternVariant, params, errorMessage)) {
+        PF("[WebLightStore] preview reject: pattern parse failed: %s\n",
+           errorMessage.isEmpty() ? "<no message>" : errorMessage.c_str());
         return false;
     }
-    CRGB primary, secondary;
+    CRGB primary;
+    CRGB secondary;
     if (!parseColorPayload(colorVariant, primary, secondary, errorMessage)) {
+        PF("[WebLightStore] preview reject: color parse failed: %s\n",
+           errorMessage.isEmpty() ? "<no message>" : errorMessage.c_str());
         return false;
     }
+
+    String patternJson;
+    String colorJson;
+    serializeJson(patternVariant, patternJson);
+    serializeJson(colorVariant, colorJson);
+    const char* patternId = obj["pattern_id"] | "";
+    const char* colorId = obj["color_id"] | "";
+    PF("[WebLightStore] preview request patternId='%s' colorId='%s' pattern=%s color=%s\n",
+       patternId,
+        colorId,
+       patternJson.c_str(),
+       colorJson.c_str());
+
     previewBackupParams_ = params;
     previewBackupColorA_ = primary;
     previewBackupColorB_ = secondary;
@@ -438,6 +460,7 @@ bool WebLightStore::preview(JsonVariantConst body, String& errorMessage) {
     params.RGB2 = secondary;
     PlayLightShow(params);
     previewActive_ = true;
+    PF("[WebLightStore] preview applied\n");
     return true;
 }
 
@@ -662,10 +685,6 @@ WebLightStore::ColorEntry* WebLightStore::findColor(const String& id) {
 }
 
 bool WebLightStore::parsePatternParams(JsonVariantConst src, LightShowParams& out, String& errorMessage) {
-    if (!src.is<JsonObject>()) {
-        errorMessage = F("params invalid");
-        return false;
-    }
     JsonObjectConst obj = src.as<JsonObjectConst>();
     if (obj.isNull()) {
         errorMessage = F("params invalid");

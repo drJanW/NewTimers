@@ -438,11 +438,12 @@ input[type="range"] {
 
 .preset-actions .btn {
     border-color: rgba(255, 197, 143, 0.55);
-
-#actionsGroup::before {
-    background: linear-gradient(150deg, rgba(116, 232, 255, 0.18), rgba(20, 20, 20, 0.95));
-}
     background: linear-gradient(160deg, rgba(255, 197, 143, 0.35), rgba(36, 36, 36, 0.9));
+}
+
+#actionsGroup::before,
+#colorActionsGroup::before {
+    background: linear-gradient(150deg, rgba(116, 232, 255, 0.18), rgba(20, 20, 20, 0.95));
 }
 
 .preset-actions .btn:hover:not(:disabled),

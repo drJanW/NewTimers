@@ -547,7 +547,8 @@ void attachLightStoreRoutes()
   colorUpdate->setMethod(HTTP_POST);
   server.addHandler(colorUpdate);
 
-  auto *previewHandler = new AsyncCallbackJsonWebHandler("/api/light/preview");
+  auto *previewHandler = new AsyncCallbackJsonWebHandler("/api/light/preview", nullptr, 4096);
+  previewHandler->setMaxContentLength(2048);
   previewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureLightStoreReady();
     String error;

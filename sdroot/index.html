@@ -9,7 +9,7 @@
 <body>
      <main class="page" aria-labelledby="pageTitle">
           <header class="page-header">
-               <h1 id="pageTitle">kwal versie 110608K</h1>
+               <h1 id="pageTitle">kwal versie 110608R</h1>
                <button type="button" class="btn btn-small" id="refreshAll" aria-label="Ververs waarden" title="Ververs waarden">
                     <span aria-hidden="true">&#8635;</span>
                     <span class="sr-only">Ververs</span>
@@ -49,7 +49,7 @@
                <article class="panel" id="lightPanel" aria-labelledby="lightHeading">
                     <header class="panel-header">
                          <h2 id="lightHeading">Licht</h2>
-                         <button type="button" class="btn btn-icon btn-gear" data-open-light aria-label="Lichtinstellingen">&#9881;</button>
+                         <button type="button" class="btn btn-icon btn-gear" data-open-pattern aria-label="Patrooninstellingen">&#9881;</button>
                     </header>
                     <p class="status" id="lightStatus">-</p>
                     <div class="panel-body">
@@ -85,18 +85,68 @@
           </footer>
      </main>
 
-     <div class="modal hidden" id="lightModal" role="dialog" aria-modal="true" aria-labelledby="lightModalTitle">
+     <div class="modal hidden" id="patternModal" role="dialog" aria-modal="true" aria-labelledby="patternModalTitle">
           <div class="modal-backdrop" data-dismiss></div>
           <div class="modal-dialog">
                <div class="modal-panel">
-                    <h2 id="lightModalTitle">Lichtinstellingen</h2>
+                    <h2 id="patternModalTitle">Patrooninstellingen</h2>
                     <div class="light-summary">
                          <div class="light-summary-header">
                               <span>Huidige helderheid</span>
-                              <span class="value-tag" id="lightModalPercent">0%</span>
+                              <span class="value-tag" id="patternModalPercent">0%</span>
                          </div>
                          <div class="marker-track">
                               <div class="actual-marker" data-marker="light"></div>
+                         </div>
+                    </div>
+                    <div class="preset-controls">
+                         <div class="preset-group" id="patternGroup">
+                              <div class="preset-group-header">
+                                   <h3>Patroon</h3>
+                              </div>
+                              <div class="preset-row">
+                                   <label for="patternSelect">Selectie</label>
+                                   <select id="patternSelect" aria-label="Kies patroon"></select>
+                              </div>
+                              <div class="preset-row">
+                                   <label for="patternName">Naam</label>
+                                   <input type="text" id="patternName" placeholder="Naam" maxlength="48" aria-label="Patroonnaam">
+                              </div>
+                              <div class="preset-buttons">
+                                   <button type="button" class="btn btn-small" id="patternSave">Bewaar patroon</button>
+                                   <button type="button" class="btn btn-small" id="patternSaveAs">Nieuw patroon</button>
+                                   <button type="button" class="btn btn-small" id="patternDelete">Verwijder patroon</button>
+                              </div>
+                              <p class="status" id="patternSettingsStatus">Instellingen niet geladen</p>
+                              <div class="settings-scroll" id="lightSettingsList" aria-label="Lichtparameters"></div>
+                         </div>
+                         <div class="preset-group" id="actionsGroup">
+                              <div class="preset-group-header">
+                                   <h3>Acties</h3>
+                              </div>
+                              <p class="hint">Voorbeeld = tijdelijk proberen, Activeer = vastzetten als huidige keuze.</p>
+                              <div class="preset-actions">
+                                   <button type="button" class="btn btn-small" data-light-action="preview">Voorbeeld</button>
+                                   <button type="button" class="btn btn-small" data-light-action="activate">Activeer</button>
+                              </div>
+                         </div>
+                    </div>
+                    <div class="modal-actions">
+                         <button type="button" class="btn btn-small" data-dismiss>Sluiten</button>
+                    </div>
+               </div>
+          </div>
+     </div>
+
+     <div class="modal hidden" id="colorModal" role="dialog" aria-modal="true" aria-labelledby="colorModalTitle">
+          <div class="modal-backdrop" data-dismiss></div>
+          <div class="modal-dialog">
+               <div class="modal-panel">
+                    <h2 id="colorModalTitle">Kleureninstellingen</h2>
+                    <div class="light-summary">
+                         <div class="light-summary-header">
+                              <span>Huidige helderheid</span>
+                              <span class="value-tag" id="colorModalPercent">0%</span>
                          </div>
                     </div>
                     <div class="preset-controls">
@@ -127,35 +177,16 @@
                                    <button type="button" class="btn btn-small" id="colorSaveAs">Nieuwe kleurset</button>
                                    <button type="button" class="btn btn-small" id="colorDelete">Verwijder kleurset</button>
                               </div>
+                              <p class="status" id="colorSettingsStatus">Kleurinstellingen niet geladen</p>
                          </div>
-                         <div class="preset-group" id="patternGroup">
-                              <div class="preset-group-header">
-                                   <h3>Patroon &amp; instellingen</h3>
-                              </div>
-                              <div class="preset-row">
-                                   <label for="patternSelect">Selectie</label>
-                                   <select id="patternSelect" aria-label="Kies patroon"></select>
-                              </div>
-                              <div class="preset-row">
-                                   <label for="patternName">Naam</label>
-                                   <input type="text" id="patternName" placeholder="Naam" maxlength="48" aria-label="Patroonnaam">
-                              </div>
-                              <div class="preset-buttons">
-                                   <button type="button" class="btn btn-small" id="patternSave">Bewaar patroon</button>
-                                   <button type="button" class="btn btn-small" id="patternSaveAs">Nieuw patroon</button>
-                                   <button type="button" class="btn btn-small" id="patternDelete">Verwijder patroon</button>
-                              </div>
-                              <p class="status" id="lightSettingsStatus">Instellingen niet geladen</p>
-                              <div class="settings-scroll" id="lightSettingsList" aria-label="Lichtparameters"></div>
-                         </div>
-                         <div class="preset-group" id="actionsGroup">
+                         <div class="preset-group" id="colorActionsGroup">
                               <div class="preset-group-header">
                                    <h3>Acties</h3>
                               </div>
                               <p class="hint">Voorbeeld = tijdelijk proberen, Activeer = vastzetten als huidige keuze.</p>
                               <div class="preset-actions">
-                                   <button type="button" class="btn btn-small" id="presetPreview">Voorbeeld</button>
-                                   <button type="button" class="btn btn-small" id="presetActivate">Activeer</button>
+                                   <button type="button" class="btn btn-small" data-light-action="preview">Voorbeeld</button>
+                                   <button type="button" class="btn btn-small" data-light-action="activate">Activeer</button>
                               </div>
                          </div>
                     </div>
