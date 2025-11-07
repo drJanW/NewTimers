@@ -719,17 +719,22 @@ bool WebLightStore::parseHexColor(const String& hex, CRGB& color) {
 }
 
 bool WebLightStore::parseColorPayload(JsonVariantConst src, CRGB& a, CRGB& b, String& errorMessage) {
-    if (!src.is<JsonObject>()) {
-        errorMessage = F("color invalid");
-        return false;
-    }
     JsonObjectConst obj = src.as<JsonObjectConst>();
     if (obj.isNull()) {
         errorMessage = F("color invalid");
         return false;
     }
+
     String rgb1 = obj["rgb1_hex"].as<String>();
     String rgb2 = obj["rgb2_hex"].as<String>();
+
+    if (rgb1.isEmpty() && obj.containsKey("primary")) {
+        rgb1 = obj["primary"].as<String>();
+    }
+    if (rgb2.isEmpty() && obj.containsKey("secondary")) {
+        rgb2 = obj["secondary"].as<String>();
+    }
+
     if (!parseHexColor(rgb1, a) || !parseHexColor(rgb2, b)) {
         errorMessage = F("bad color");
         return false;
