@@ -7,9 +7,9 @@
 
 #include "LightManager.h"
 
-class WebLightStore {
+class ColorsStore {
 public:
-    static WebLightStore& instance();
+    static ColorsStore& instance();
 
     void begin();
     bool isReady() const;
@@ -28,17 +28,11 @@ public:
 
     bool preview(JsonVariantConst body, String& errorMessage);
 
-    const String& getActivePatternId() const { return activePatternId_; }
+    String getActivePatternId() const;
     const String& getActiveColorId() const { return activeColorId_; }
 
 private:
-    WebLightStore() = default;
-
-    struct PatternEntry {
-        String id;
-        String label;
-        LightShowParams params;
-    };
+    ColorsStore() = default;
 
     struct ColorEntry {
         String id;
@@ -47,33 +41,23 @@ private:
         CRGB secondary;
     };
 
-    void ensureDefaults();
-    bool loadPatternsFromSD();
+    void ensureColorDefaults();
     bool loadColorsFromSD();
-    void loadDefaultPatterns();
     void loadDefaultColors();
-    bool savePatternsToSD() const;
     bool saveColorsToSD() const;
 
-    const PatternEntry* findPattern(const String& id) const;
-    PatternEntry* findPattern(const String& id);
     const ColorEntry* findColor(const String& id) const;
     ColorEntry* findColor(const String& id);
 
-    static bool parsePatternParams(JsonVariantConst src, LightShowParams& out, String& errorMessage);
     static bool parseColorPayload(JsonVariantConst src, CRGB& a, CRGB& b, String& errorMessage);
 
     static bool parseHexColor(const String& hex, CRGB& color);
-    static void fillPatternParams(JsonObject dest, const PatternEntry& entry);
 
-    String generatePatternId() const;
     String generateColorId() const;
 
     void applyActiveToLights();
 
-    std::vector<PatternEntry> patterns_;
     std::vector<ColorEntry> colors_;
-    String activePatternId_;
     String activeColorId_;
     bool ready_{false};
     bool previewActive_{false};

@@ -134,6 +134,7 @@ bool PatternStore::select(const String& id, String& errorMessage) {
     }
     if (id.isEmpty()) {
         activePatternId_.clear();
+        PF("[PatternStore] Cleared active pattern to context\n");
         return true;
     }
     PatternEntry* entry = findEntry(id);
@@ -142,6 +143,7 @@ bool PatternStore::select(const String& id, String& errorMessage) {
         return false;
     }
     activePatternId_ = entry->id;
+    PF("[PatternStore] Selected %s\n", activePatternId_.c_str());
     return true;
 }
 
@@ -183,6 +185,7 @@ bool PatternStore::update(JsonVariantConst body, String& affectedId, String& err
         if (selectEntry) {
             activePatternId_ = existing->id;
         }
+        PF("[PatternStore] Updated %s%s\n", affectedId.c_str(), selectEntry ? " (selected)" : "");
     } else {
         PatternEntry entry;
         entry.id = generateId();
@@ -193,6 +196,7 @@ bool PatternStore::update(JsonVariantConst body, String& affectedId, String& err
         if (selectEntry || activePatternId_.isEmpty()) {
             activePatternId_ = entry.id;
         }
+        PF("[PatternStore] Created %s%s\n", affectedId.c_str(), selectEntry ? " (selected)" : "");
     }
 
     if (!saveToSD()) {
@@ -235,6 +239,7 @@ bool PatternStore::remove(JsonVariantConst body, String& affectedId, String& err
         return false;
     }
     affectedId = activePatternId_;
+    PF("[PatternStore] Removed %s, fallback=%s\n", id.c_str(), affectedId.c_str());
     return true;
 }
 
@@ -270,6 +275,18 @@ bool PatternStore::parseParams(JsonVariantConst src, LightShowParams& out, Strin
     out.yAmp           = obj["y_amp"].as<float>();
     out.xCycleSec      = obj["x_cycle_sec"].as<uint8_t>();
     out.yCycleSec      = obj["y_cycle_sec"].as<uint8_t>();
+    return true;
+}
+
+bool PatternStore::getParamsForId(const String& id, LightShowParams& out) const {
+    if (id.isEmpty()) {
+        return false;
+    }
+    const PatternEntry* entry = findEntry(id);
+    if (!entry) {
+        return false;
+    }
+    out = entry->params;
     return true;
 }
 

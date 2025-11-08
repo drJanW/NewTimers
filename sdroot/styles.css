@@ -222,9 +222,24 @@ body.modal-open {
     font-size: 0.85rem;
     padding: 2px 8px;
     border-radius: 999px;
-    border: 1px solid var(--tag-border);
-    background: var(--tag-bg);
-    color: #0e1c36;
+    border: 1px solid rgba(120, 140, 170, 0.55);
+    background: rgba(120, 140, 170, 0.15);
+    color: #121212;
+    font-weight: 500;
+}
+
+#lightValue {
+    color: #1f1600;
+    background: #ffeb99;
+    border-color: #ffce45;
+    font-weight: 600;
+}
+
+#audioVolumeLabel {
+    color: #061939;
+    background: #bcd6ff;
+    border-color: #7fb1ff;
+    font-weight: 600;
 }
 
 input[type="range"] {

@@ -23,27 +23,54 @@
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
     const deepClone = (value) => JSON.parse(JSON.stringify(value));
 
+    const PATTERN_LIMITS = Object.freeze({
+        // LightShowParams stores these as uint8_t (0-255)
+        color_cycle_sec:  { min: 1,  max: 120, step: 1 },
+        bright_cycle_sec: { min: 1,  max: 120, step: 1 },
+        min_brightness:   { min: 1,  max: 255, step: 1 },
+        x_cycle_sec:      { min: 1,  max: 120, step: 1 },
+        y_cycle_sec:      { min: 1,  max: 120, step: 1 },
+
+        // These map to floats in LightShowParams
+        fade_width:     { min: 1,   max: 400, step: 0.5 },
+        gradient_speed: { min: 0.01, max: 1,   step: 0.01 },
+        center_x:       { min: -132, max: 132, step: 0.5 },
+        center_y:       { min: -132, max: 132, step: 0.5 },
+        radius:         { min: 1,   max: 164, step: 0.5 },
+        radius_osc:     { min: 1,   max: 164, step: 0.5 },
+        x_amp:          { min: 1,   max: 116, step: 0.5 },
+        y_amp:          { min: 1,   max: 116, step: 0.5 },
+
+        // Stored as int32 in LightShowParams
+        window_width:   { min: 1,   max: 164, step: 0.5 }
+    });
+
     const patternSettingConfig = [
-        { key: 'color_cycle_sec', label: 'Kleurcyclus (s)', min: 1, max: 120, step: 1 },
-        { key: 'bright_cycle_sec', label: 'Helderheidscyclus (s)', min: 1, max: 120, step: 1 },
-        { key: 'fade_width', label: 'Fadebreedte', min: 0, max: 40, step: 0.1 },
-        { key: 'min_brightness', label: 'Minimum helderheid', min: 0, max: 255, step: 1 },
-        { key: 'gradient_speed', label: 'Gradient snelheid', min: 0, max: 1, step: 0.01 },
-        { key: 'center_x', label: 'Centrum X', min: -32, max: 32, step: 0.5 },
-        { key: 'center_y', label: 'Centrum Y', min: -32, max: 32, step: 0.5 },
-        { key: 'radius', label: 'Radius', min: 0, max: 64, step: 0.5 },
-        { key: 'window_width', label: 'Vensterbreedte', min: 0, max: 64, step: 0.5 },
-        { key: 'radius_osc', label: 'Radiusoscillatie', min: 0, max: 16, step: 0.5 },
-        { key: 'x_amp', label: 'X amplitude', min: 0, max: 16, step: 0.5 },
-        { key: 'y_amp', label: 'Y amplitude', min: 0, max: 16, step: 0.5 },
-        { key: 'x_cycle_sec', label: 'X cyclus (s)', min: 1, max: 120, step: 1 },
-        { key: 'y_cycle_sec', label: 'Y cyclus (s)', min: 1, max: 120, step: 1 }
+        // uint8_t
+        { key: 'color_cycle_sec',  label: 'Kleurcyclus (s)', ...PATTERN_LIMITS.color_cycle_sec },
+        { key: 'bright_cycle_sec', label: 'Helderheidscyclus (s)', ...PATTERN_LIMITS.bright_cycle_sec },
+        { key: 'min_brightness',   label: 'Minimum helderheid', ...PATTERN_LIMITS.min_brightness },
+        { key: 'x_cycle_sec',      label: 'X cyclus (s)', ...PATTERN_LIMITS.x_cycle_sec },
+        { key: 'y_cycle_sec',      label: 'Y cyclus (s)', ...PATTERN_LIMITS.y_cycle_sec },
+
+        // float
+        { key: 'fade_width',     label: 'Fadebreedte', ...PATTERN_LIMITS.fade_width },
+        { key: 'gradient_speed', label: 'Gradient snelheid', ...PATTERN_LIMITS.gradient_speed },
+        { key: 'center_x',       label: 'Centrum X', ...PATTERN_LIMITS.center_x },
+        { key: 'center_y',       label: 'Centrum Y', ...PATTERN_LIMITS.center_y },
+        { key: 'radius',         label: 'Radius', ...PATTERN_LIMITS.radius },
+        { key: 'radius_osc',     label: 'Radiusoscillatie', ...PATTERN_LIMITS.radius_osc },
+        { key: 'x_amp',          label: 'X amplitude', ...PATTERN_LIMITS.x_amp },
+        { key: 'y_amp',          label: 'Y amplitude', ...PATTERN_LIMITS.y_amp },
+
+        // int32
+        { key: 'window_width',   label: 'Vensterbreedte', ...PATTERN_LIMITS.window_width }
     ];
     const patternSettingMap = new Map(patternSettingConfig.map((cfg) => [cfg.key, cfg]));
 
     // Build sentinel: update version string whenever web assets change so the device/browser can verify freshness.
     window.APP_BUILD_INFO = Object.freeze({
-        version: 'webui-patternsplit-20251106T1735Z',
+    version: 'webui-patternsplit-20251108T2255Z',
         features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit', 'splitLightModals']
     });
 
@@ -119,8 +146,27 @@
         openSdManager: document.getElementById('openSdManager')
     };
 
+    const applyPatternBoundsToInputs = () => {
+        if (!dom.lightSettingsList) {
+            return;
+        }
+        patternSettingConfig.forEach((cfg) => {
+            const input = dom.lightSettingsList.querySelector(`[data-setting-range="${cfg.key}"]`);
+            if (!input) {
+                return;
+            }
+            input.min = String(cfg.min);
+            input.max = String(cfg.max);
+            input.step = String(cfg.step);
+        });
+    };
+
     const buildPatternControls = () => {
         if (!dom.lightSettingsList) {
+            return;
+        }
+        if (dom.lightSettingsList.childElementCount > 0) {
+            applyPatternBoundsToInputs();
             return;
         }
         const fragment = document.createDocumentFragment();
@@ -144,6 +190,7 @@
     };
 
     buildPatternControls();
+    applyPatternBoundsToInputs();
 
     const previewButtons = Array.from(document.querySelectorAll('[data-light-action="preview"]'));
     const activateButtons = Array.from(document.querySelectorAll('[data-light-action="activate"]'));
@@ -546,7 +593,7 @@
                 deleteButton.className = 'btn btn-small sd-entry-delete';
                 deleteButton.dataset.name = entry.name;
                 deleteButton.dataset.type = entry.type;
-                deleteButton.textContent = 'Verwijder';
+                deleteButton.innerHTML = '<span aria-hidden="true">🗑️</span><span class="sr-only">Verwijder</span>';
                 if (entry.name === '' || entry.name === '.' || entry.name === '..') {
                     deleteButton.disabled = true;
                 }

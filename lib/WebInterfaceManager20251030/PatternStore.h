@@ -24,6 +24,7 @@ public:
 
     LightShowParams getActiveParams() const;
     bool parseParams(JsonVariantConst src, LightShowParams& out, String& errorMessage) const;
+    bool getParamsForId(const String& id, LightShowParams& out) const;
 
 private:
     PatternStore() = default;

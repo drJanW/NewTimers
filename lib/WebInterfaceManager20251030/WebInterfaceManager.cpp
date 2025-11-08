@@ -6,7 +6,7 @@
 #include "ConductManager.h"
 #include "AudioManager.h"
 #include "SDVoting.h"
-#include "WebLightStore.h"
+#include "ColorsStore.h"
 #include <ESPAsyncWebServer.h>
 #include <AsyncJson.h>
 #include <WiFi.h>
@@ -30,9 +30,9 @@ constexpr size_t kMaxSdEntries = 256;
 
 void ensureLightStoreReady()
 {
-  if (!WebLightStore::instance().isReady())
+  if (!ColorsStore::instance().isReady())
   {
-    WebLightStore::instance().begin();
+    ColorsStore::instance().begin();
   }
 }
 
@@ -411,12 +411,12 @@ void attachLightStoreRoutes()
 {
   server.on("/api/light/patterns", HTTP_GET, [](AsyncWebServerRequest *request) {
     ensureLightStoreReady();
-    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson());
+    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson());
   });
 
   server.on("/api/light/colors", HTTP_GET, [](AsyncWebServerRequest *request) {
     ensureLightStoreReady();
-    sendJsonResponse(request, WebLightStore::instance().buildColorsJson());
+    sendJsonResponse(request, ColorsStore::instance().buildColorsJson());
   });
 
   // Register the more specific pattern routes before the generic /api/light/patterns handler
@@ -438,15 +438,15 @@ void attachLightStoreRoutes()
         id = request->getParam("id")->value();
       }
     }
-    PF("[WebLightStore] HTTP pattern/select id='%s' content-type='%s'\n",
+    PF("[ColorsStore] HTTP pattern/select id='%s' content-type='%s'\n",
        id.c_str(),
        request->contentType().c_str());
-    if (!WebLightStore::instance().selectPattern(id, error))
+    if (!ColorsStore::instance().selectPattern(id, error))
     {
       sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
       return;
     }
-    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson(), "X-Light-Pattern", WebLightStore::instance().getActivePatternId());
+    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson(), "X-Light-Pattern", ColorsStore::instance().getActivePatternId());
   });
   patternSelect->setMethod(HTTP_POST);
   server.addHandler(patternSelect);
@@ -457,12 +457,12 @@ void attachLightStoreRoutes()
     String affected;
     String error;
     JsonVariantConst body = json;
-    if (!WebLightStore::instance().deletePattern(body, affected, error))
+    if (!ColorsStore::instance().deletePattern(body, affected, error))
     {
       sendError(request, 400, error);
       return;
     }
-    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson(), "X-Light-Pattern", affected);
+    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson(), "X-Light-Pattern", affected);
   });
   patternDelete->setMethod(HTTP_POST);
   server.addHandler(patternDelete);
@@ -473,12 +473,12 @@ void attachLightStoreRoutes()
     String affected;
     String error;
     JsonVariantConst body = json;
-    if (!WebLightStore::instance().updatePattern(body, affected, error))
+    if (!ColorsStore::instance().updatePattern(body, affected, error))
     {
       sendError(request, 400, error);
       return;
     }
-    sendJsonResponse(request, WebLightStore::instance().buildPatternsJson(), "X-Light-Pattern", affected);
+    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson(), "X-Light-Pattern", affected);
   });
   patternUpdate->setMethod(HTTP_POST);
   server.addHandler(patternUpdate);
@@ -502,15 +502,15 @@ void attachLightStoreRoutes()
         id = request->getParam("id")->value();
       }
     }
-    PF("[WebLightStore] HTTP color/select id='%s' content-type='%s'\n",
+    PF("[ColorsStore] HTTP color/select id='%s' content-type='%s'\n",
        id.c_str(),
        request->contentType().c_str());
-    if (!WebLightStore::instance().selectColor(id, error))
+    if (!ColorsStore::instance().selectColor(id, error))
     {
       sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
       return;
     }
-    sendJsonResponse(request, WebLightStore::instance().buildColorsJson(), "X-Light-Color", WebLightStore::instance().getActiveColorId());
+    sendJsonResponse(request, ColorsStore::instance().buildColorsJson(), "X-Light-Color", ColorsStore::instance().getActiveColorId());
   });
   colorSelect->setMethod(HTTP_POST);
   server.addHandler(colorSelect);
@@ -521,12 +521,12 @@ void attachLightStoreRoutes()
     String affected;
     String error;
     JsonVariantConst body = json;
-    if (!WebLightStore::instance().deleteColor(body, affected, error))
+    if (!ColorsStore::instance().deleteColor(body, affected, error))
     {
       sendError(request, 400, error);
       return;
     }
-    sendJsonResponse(request, WebLightStore::instance().buildColorsJson(), "X-Light-Color", affected);
+    sendJsonResponse(request, ColorsStore::instance().buildColorsJson(), "X-Light-Color", affected);
   });
   colorDelete->setMethod(HTTP_POST);
   server.addHandler(colorDelete);
@@ -537,12 +537,12 @@ void attachLightStoreRoutes()
     String affected;
     String error;
     JsonVariantConst body = json;
-    if (!WebLightStore::instance().updateColor(body, affected, error))
+    if (!ColorsStore::instance().updateColor(body, affected, error))
     {
       sendError(request, 400, error);
       return;
     }
-    sendJsonResponse(request, WebLightStore::instance().buildColorsJson(), "X-Light-Color", affected);
+    sendJsonResponse(request, ColorsStore::instance().buildColorsJson(), "X-Light-Color", affected);
   });
   colorUpdate->setMethod(HTTP_POST);
   server.addHandler(colorUpdate);
@@ -553,7 +553,7 @@ void attachLightStoreRoutes()
     ensureLightStoreReady();
     String error;
     JsonVariantConst body = json;
-    if (!WebLightStore::instance().preview(body, error))
+    if (!ColorsStore::instance().preview(body, error))
     {
       sendError(request, 400, error);
       return;
