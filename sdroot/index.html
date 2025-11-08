@@ -4,12 +4,12 @@
      <meta charset="utf-8">
      <meta name="viewport" content="width=device-width, initial-scale=1">
      <title>kwal</title>
-     <link rel="stylesheet" href="styles.css?v=110608R1">
+     <link rel="stylesheet" href="styles.css?v=webui-patternsplit-20251109T0130Z">
 </head>
 <body>
      <main class="page" aria-labelledby="pageTitle">
           <header class="page-header">
-               <h1 id="pageTitle">kwal versie 110608R</h1>
+               <h1 id="pageTitle">kwal versie 110808D</h1>
                <button type="button" class="btn btn-small" id="refreshAll" aria-label="Ververs waarden" title="Ververs waarden">
                     <span aria-hidden="true">&#8635;</span>
                     <span class="sr-only">Ververs</span>
@@ -154,12 +154,6 @@
           <div class="modal-dialog">
                <div class="modal-panel">
                     <h2 id="colorModalTitle">Kleureninstellingen</h2>
-                    <div class="light-summary">
-                         <div class="light-summary-header">
-                              <span>Huidige helderheid</span>
-                              <span class="value-tag" id="colorModalPercent">0%</span>
-                         </div>
-                    </div>
                     <div class="preset-controls">
                          <div class="preset-group" id="colorGroup">
                               <div class="preset-group-header">
@@ -184,9 +178,9 @@
                                    <input type="text" id="colorName" placeholder="Naam" maxlength="48" aria-label="Kleursetnaam">
                               </div>
                               <div class="preset-buttons">
-                                   <button type="button" class="btn btn-small" id="colorSave">Bewaar kleuren</button>
-                                   <button type="button" class="btn btn-small" id="colorSaveAs">Nieuwe kleurset</button>
-                                   <button type="button" class="btn btn-small" id="colorDelete">Verwijder kleurset</button>
+                                   <button type="button" class="btn btn-small" id="colorSave">Bewaar set</button>
+                                   <button type="button" class="btn btn-small" id="colorSaveAs">Nieuwe set</button>
+                                   <button type="button" class="btn btn-small" id="colorDelete">Verwijder set</button>
                               </div>
                               <p class="status" id="colorSettingsStatus">Kleurinstellingen niet geladen</p>
                          </div>
@@ -266,7 +260,7 @@
           </div>
      </div>
 
-     <script src="kwal.js"></script>
+     <script src="kwal.js?v=webui-patternsplit-20251109T0130Z"></script>
      <script>
           if (window.kwalApp && typeof window.kwalApp.boot === 'function') {
                window.kwalApp.boot();

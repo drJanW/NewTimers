@@ -537,6 +537,19 @@ void attachLightStoreRoutes()
     String affected;
     String error;
     JsonVariantConst body = json;
+    if (!json.isNull())
+    {
+      PF("[ColorsStore] HTTP colors/update content-type='%s' length=%d isObject=%d\n",
+         request->contentType().c_str(),
+         static_cast<int>(request->contentLength()),
+         json.is<JsonObject>() ? 1 : 0);
+    }
+    else
+    {
+      PF("[ColorsStore] HTTP colors/update received null JSON content-type='%s' length=%d\n",
+         request->contentType().c_str(),
+         static_cast<int>(request->contentLength()));
+    }
     if (!ColorsStore::instance().updateColor(body, affected, error))
     {
       sendError(request, 400, error);

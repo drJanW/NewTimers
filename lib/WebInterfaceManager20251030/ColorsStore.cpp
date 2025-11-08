@@ -182,15 +182,18 @@ bool ColorsStore::deletePattern(JsonVariantConst body, String& affectedId, Strin
 }
 
 bool ColorsStore::updateColor(JsonVariantConst body, String& affectedId, String& errorMessage) {
-    if (!body.is<JsonObject>()) {
-        errorMessage = F("invalid payload");
-        return false;
-    }
     JsonObjectConst obj = body.as<JsonObjectConst>();
     if (obj.isNull()) {
         errorMessage = F("invalid payload");
+        const bool isObject = body.is<JsonObject>();
+        PF("[ColorsStore] updateColor reject: JsonObjectConst null (isObject=%d isNull=%d)\n",
+           isObject ? 1 : 0,
+           body.isNull() ? 1 : 0);
         return false;
     }
+    String rawBody;
+    serializeJson(body, rawBody);
+    PF("[ColorsStore] updateColor payload=%s\n", rawBody.c_str());
     CRGB primary, secondary;
     JsonVariantConst colorVariant = obj;
     if (!parseColorPayload(colorVariant, primary, secondary, errorMessage)) {

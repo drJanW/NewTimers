@@ -47,30 +47,100 @@
 
     const patternSettingConfig = [
         // uint8_t
-        { key: 'color_cycle_sec',  label: 'Kleurcyclus (s)', ...PATTERN_LIMITS.color_cycle_sec },
-        { key: 'bright_cycle_sec', label: 'Helderheidscyclus (s)', ...PATTERN_LIMITS.bright_cycle_sec },
-        { key: 'min_brightness',   label: 'Minimum helderheid', ...PATTERN_LIMITS.min_brightness },
-        { key: 'x_cycle_sec',      label: 'X cyclus (s)', ...PATTERN_LIMITS.x_cycle_sec },
-        { key: 'y_cycle_sec',      label: 'Y cyclus (s)', ...PATTERN_LIMITS.y_cycle_sec },
+        {
+            key: 'color_cycle_sec',
+            label: 'Kleurcyclus (s)',
+            title: 'Tijd in seconden voordat de kleurenband weer bij het begin uitkomt.',
+            ...PATTERN_LIMITS.color_cycle_sec
+        },
+        {
+            key: 'bright_cycle_sec',
+            label: 'Helderheidscyclus (s)',
+            title: 'Tijd in seconden voor één volledige helderheidssinus.',
+            ...PATTERN_LIMITS.bright_cycle_sec
+        },
+        {
+            key: 'min_brightness',
+            label: 'Minimum helderheid',
+            title: 'Ondergrens van de helderheid; pixels worden nooit donkerder dan deze waarde (0-255).',
+            ...PATTERN_LIMITS.min_brightness
+        },
+        {
+            key: 'x_cycle_sec',
+            label: 'X-cyclus (s)',
+            title: 'Tijd in seconden voor één volledige beweging van de cirkel over de X-as.',
+            ...PATTERN_LIMITS.x_cycle_sec
+        },
+        {
+            key: 'y_cycle_sec',
+            label: 'Y-cyclus (s)',
+            title: 'Tijd in seconden voor één volledige beweging van de cirkel over de Y-as.',
+            ...PATTERN_LIMITS.y_cycle_sec
+        },
 
         // float
-        { key: 'fade_width',     label: 'Fadebreedte', ...PATTERN_LIMITS.fade_width },
-        { key: 'gradient_speed', label: 'Gradient snelheid', ...PATTERN_LIMITS.gradient_speed },
-        { key: 'center_x',       label: 'Centrum X', ...PATTERN_LIMITS.center_x },
-        { key: 'center_y',       label: 'Centrum Y', ...PATTERN_LIMITS.center_y },
-        { key: 'radius',         label: 'Radius', ...PATTERN_LIMITS.radius },
-        { key: 'radius_osc',     label: 'Radiusoscillatie', ...PATTERN_LIMITS.radius_osc },
-        { key: 'x_amp',          label: 'X amplitude', ...PATTERN_LIMITS.x_amp },
-        { key: 'y_amp',          label: 'Y amplitude', ...PATTERN_LIMITS.y_amp },
+        {
+            key: 'fade_width',
+            label: 'Fadebreedte',
+            title: 'Breedte van de overgangszone rond de lichtband; hogere waarden geven een zachtere rand.',
+            ...PATTERN_LIMITS.fade_width
+        },
+        {
+            key: 'gradient_speed',
+            label: 'Gradientsnelheid',
+            title: 'Aantal in- en uitadembewegingen van de lichtband per helderheidscyclus.',
+            ...PATTERN_LIMITS.gradient_speed
+        },
+        {
+            key: 'center_x',
+            label: 'Centrum X',
+            title: 'Horizontale verschuiving van het middelpunt van de cirkel (mm).',
+            ...PATTERN_LIMITS.center_x
+        },
+        {
+            key: 'center_y',
+            label: 'Centrum Y',
+            title: 'Verticale verschuiving van het middelpunt van de cirkel (mm).',
+            ...PATTERN_LIMITS.center_y
+        },
+        {
+            key: 'radius',
+            label: 'Straal',
+            title: 'Basisstraal van de lichtband (mm).',
+            ...PATTERN_LIMITS.radius
+        },
+        {
+            key: 'radius_osc',
+            label: 'Straaloscillatie',
+            title: 'Hoeveel de straal schommelt rond de basiswaarde (positief = pulserend groter, negatief = binnenwaartse sweep).',
+            ...PATTERN_LIMITS.radius_osc
+        },
+        {
+            key: 'x_amp',
+            label: 'X-amplitude',
+            title: 'Hoe ver de cirkel links/rechts meebeweegt tijdens animatie (mm).',
+            ...PATTERN_LIMITS.x_amp
+        },
+        {
+            key: 'y_amp',
+            label: 'Y-amplitude',
+            title: 'Hoe ver de cirkel op/neer meebeweegt tijdens animatie (mm).',
+            ...PATTERN_LIMITS.y_amp
+        },
 
         // int32
-        { key: 'window_width',   label: 'Vensterbreedte', ...PATTERN_LIMITS.window_width }
+        {
+            key: 'window_width',
+            label: 'Bandbreedte',
+            title: 'Aantal kleurstappen dat tegelijk zichtbaar is binnen de lichtband.',
+            ...PATTERN_LIMITS.window_width
+        }
     ];
     const patternSettingMap = new Map(patternSettingConfig.map((cfg) => [cfg.key, cfg]));
 
     // Build sentinel: update version string whenever web assets change so the device/browser can verify freshness.
     window.APP_BUILD_INFO = Object.freeze({
-    version: 'webui-patternsplit-20251108T2255Z',
+        version: 'webui-patternsplit-20251109T0130Z',
         features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit', 'splitLightModals']
     });
 
@@ -166,6 +236,17 @@
             return;
         }
         if (dom.lightSettingsList.childElementCount > 0) {
+            patternSettingConfig.forEach((cfg) => {
+                const label = dom.lightSettingsList.querySelector(`.settings-item[data-key="${cfg.key}"] .settings-label`);
+                if (label) {
+                    label.textContent = cfg.label;
+                    if (cfg.title) {
+                        label.title = cfg.title;
+                    } else {
+                        label.removeAttribute('title');
+                    }
+                }
+            });
             applyPatternBoundsToInputs();
             return;
         }
@@ -174,16 +255,43 @@
             const item = document.createElement('div');
             item.className = 'settings-item';
             item.dataset.key = cfg.key;
-            item.innerHTML = `
-                <div class="settings-item-header">
-                    <span>${cfg.label}</span>
-                    <span class="settings-value" data-value="${cfg.key}">0</span>
-                </div>
-                <div class="range-wrapper">
-                    <div class="range-marker" data-range-marker="${cfg.key}"></div>
-                    <input type="range" class="settings-range" data-setting-range="${cfg.key}" min="${cfg.min}" max="${cfg.max}" step="${cfg.step}">
-                </div>
-            `;
+
+            const header = document.createElement('div');
+            header.className = 'settings-item-header';
+
+            const label = document.createElement('span');
+            label.className = 'settings-label';
+            label.textContent = cfg.label;
+            if (cfg.title) {
+                label.title = cfg.title;
+            }
+
+            const value = document.createElement('span');
+            value.className = 'settings-value';
+            value.dataset.value = cfg.key;
+            value.textContent = '0';
+
+            header.append(label, value);
+            item.appendChild(header);
+
+            const rangeWrapper = document.createElement('div');
+            rangeWrapper.className = 'range-wrapper';
+
+            const marker = document.createElement('div');
+            marker.className = 'range-marker';
+            marker.dataset.rangeMarker = cfg.key;
+
+            const input = document.createElement('input');
+            input.type = 'range';
+            input.className = 'settings-range';
+            input.dataset.settingRange = cfg.key;
+            input.min = String(cfg.min);
+            input.max = String(cfg.max);
+            input.step = String(cfg.step);
+
+            rangeWrapper.append(marker, input);
+            item.appendChild(rangeWrapper);
+
             fragment.appendChild(item);
         });
         dom.lightSettingsList.appendChild(fragment);
@@ -903,7 +1011,8 @@
         const hasColor = !isDefault && state.color.map.has(currentId);
 
         if (dom.colorName) {
-            dom.colorName.disabled = isDefault;
+            dom.colorName.disabled = false;
+            dom.colorName.placeholder = isDefault ? 'Naam nieuwe set' : 'Naam';
         }
         if (dom.colorSave) {
             dom.colorSave.disabled = isDefault || (!state.color.dirty && !state.color.labelDirty);
@@ -1358,13 +1467,13 @@
 
     if (dom.colorName) {
         dom.colorName.addEventListener('input', () => {
-            if (state.color.selectedId === COLOR_DEFAULT) {
-                dom.colorName.value = '';
-                return;
-            }
             const value = dom.colorName.value.trim();
-            const original = (state.color.originalLabel || '').trim();
-            state.color.labelDirty = value !== original;
+            if (state.color.selectedId === COLOR_DEFAULT) {
+                state.color.labelDirty = value.length > 0;
+            } else {
+                const original = (state.color.originalLabel || '').trim();
+                state.color.labelDirty = value !== original;
+            }
             state.previewActive = false;
             updateColorControls();
             updatePreviewState();
@@ -1424,12 +1533,21 @@
             setLightSettingsStatus('Maximaal aantal kleurensets bereikt', 'error', 'color');
             return false;
         }
+        const label = dom.colorName ? dom.colorName.value.trim() : '';
+        if (!label) {
+            setLightSettingsStatus('Geef een naam op voor de kleurset', 'error', 'color');
+            if (dom.colorName) {
+                dom.colorName.focus();
+            }
+            return false;
+        }
         const body = {
-            label: dom.colorName ? dom.colorName.value.trim() : '',
+            label,
             select: createNew || state.color.selectedId === state.color.activeId,
             rgb1_hex: state.color.draft.rgb1_hex,
             rgb2_hex: state.color.draft.rgb2_hex
         };
+        console.log('persistColor payload', body, { createNew });
         if (!createNew) {
             if (!state.color.selectedId || state.color.selectedId === COLOR_DEFAULT) {
                 setLightSettingsStatus('Kies een kleurset om te bewaren', 'error', 'color');
