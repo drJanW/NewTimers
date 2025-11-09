@@ -354,7 +354,7 @@ void handleSdList(AsyncWebServerRequest *request)
   sendJsonResponse(request, payload);
 }
 
-void handleLightPatternsList(AsyncWebServerRequest *request)
+void handlePatternsList(AsyncWebServerRequest *request)
 {
   ensureColorsStoreReady();
   ColorsStore &store = ColorsStore::instance();
@@ -369,12 +369,12 @@ void handleLightPatternsList(AsyncWebServerRequest *request)
   const String activeId = store.getActivePatternId();
   if (!activeId.isEmpty())
   {
-    response->addHeader("X-Light-Pattern", activeId);
+    response->addHeader("X-Pattern", activeId);
   }
   request->send(response);
 }
 
-void handleLightColorsList(AsyncWebServerRequest *request)
+void handleColorsList(AsyncWebServerRequest *request)
 {
   ensureColorsStoreReady();
   ColorsStore &store = ColorsStore::instance();
@@ -389,7 +389,7 @@ void handleLightColorsList(AsyncWebServerRequest *request)
   const String activeId = store.getActiveColorId();
   if (!activeId.isEmpty())
   {
-    response->addHeader("X-Light-Color", activeId);
+    response->addHeader("X-Color", activeId);
   }
   request->send(response);
 }
@@ -585,12 +585,12 @@ void handleSdDelete(AsyncWebServerRequest *request, JsonVariant &json)
   sendJsonResponse(request, F("{\"status\":\"ok\"}"));
 }
 
-void attachLightStoreRoutes()
+void attachPatternColorRoutes()
 {
-  server.on("/api/light/patterns", HTTP_GET, handleLightPatternsList);
-  server.on("/api/light/colors", HTTP_GET, handleLightColorsList);
+  server.on("/api/patterns", HTTP_GET, handlePatternsList);
+  server.on("/api/colors", HTTP_GET, handleColorsList);
 
-  auto *patternSelect = new AsyncCallbackJsonWebHandler("/api/light/patterns/select");
+  auto *patternSelect = new AsyncCallbackJsonWebHandler("/api/patterns/select");
   patternSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureColorsStoreReady();
     String error;
@@ -620,12 +620,12 @@ void attachLightStoreRoutes()
       return;
     }
     const String activeId = ColorsStore::instance().getActivePatternId();
-    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson(), "X-Light-Pattern", activeId);
+    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson(), "X-Pattern", activeId);
   });
   patternSelect->setMethod(HTTP_POST);
   server.addHandler(patternSelect);
 
-  auto *patternDelete = new AsyncCallbackJsonWebHandler("/api/light/patterns/delete");
+  auto *patternDelete = new AsyncCallbackJsonWebHandler("/api/patterns/delete");
   patternDelete->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureColorsStoreReady();
     JsonObjectConst obj = json.as<JsonObjectConst>();
@@ -648,12 +648,12 @@ void attachLightStoreRoutes()
       return;
     }
     const String headerId = affected.length() ? affected : ColorsStore::instance().getActivePatternId();
-    sendJsonResponse(request, payload, "X-Light-Pattern", headerId);
+    sendJsonResponse(request, payload, "X-Pattern", headerId);
   });
   patternDelete->setMethod(HTTP_POST);
   server.addHandler(patternDelete);
 
-  auto *patternUpdate = new AsyncCallbackJsonWebHandler("/api/light/patterns");
+  auto *patternUpdate = new AsyncCallbackJsonWebHandler("/api/patterns");
   patternUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureColorsStoreReady();
     JsonObjectConst obj = json.as<JsonObjectConst>();
@@ -684,14 +684,14 @@ void attachLightStoreRoutes()
     const String activeId = affected.length() ? affected : store.getActivePatternId();
     if (!activeId.isEmpty())
     {
-      response->addHeader("X-Light-Pattern", activeId);
+      response->addHeader("X-Pattern", activeId);
     }
     request->send(response);
   });
   patternUpdate->setMethod(HTTP_POST);
   server.addHandler(patternUpdate);
 
-  auto *colorSelect = new AsyncCallbackJsonWebHandler("/api/light/colors/select");
+  auto *colorSelect = new AsyncCallbackJsonWebHandler("/api/colors/select");
   colorSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureColorsStoreReady();
     String error;
@@ -721,12 +721,12 @@ void attachLightStoreRoutes()
       return;
     }
     const String activeId = ColorsStore::instance().getActiveColorId();
-    sendJsonResponse(request, ColorsStore::instance().buildColorsJson(), "X-Light-Color", activeId);
+    sendJsonResponse(request, ColorsStore::instance().buildColorsJson(), "X-Color", activeId);
   });
   colorSelect->setMethod(HTTP_POST);
   server.addHandler(colorSelect);
 
-  auto *colorDelete = new AsyncCallbackJsonWebHandler("/api/light/colors/delete");
+  auto *colorDelete = new AsyncCallbackJsonWebHandler("/api/colors/delete");
   colorDelete->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureColorsStoreReady();
     JsonObjectConst obj = json.as<JsonObjectConst>();
@@ -749,12 +749,12 @@ void attachLightStoreRoutes()
       return;
     }
     const String headerId = affected.length() ? affected : ColorsStore::instance().getActiveColorId();
-    sendJsonResponse(request, payload, "X-Light-Color", headerId);
+    sendJsonResponse(request, payload, "X-Color", headerId);
   });
   colorDelete->setMethod(HTTP_POST);
   server.addHandler(colorDelete);
 
-  auto *colorUpdate = new AsyncCallbackJsonWebHandler("/api/light/colors");
+  auto *colorUpdate = new AsyncCallbackJsonWebHandler("/api/colors");
   colorUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureColorsStoreReady();
     JsonObjectConst obj = json.as<JsonObjectConst>();
@@ -785,14 +785,14 @@ void attachLightStoreRoutes()
     const String activeId = affected.length() ? affected : store.getActiveColorId();
     if (!activeId.isEmpty())
     {
-      response->addHeader("X-Light-Color", activeId);
+      response->addHeader("X-Color", activeId);
     }
     request->send(response);
   });
   colorUpdate->setMethod(HTTP_POST);
   server.addHandler(colorUpdate);
 
-  auto *previewHandler = new AsyncCallbackJsonWebHandler("/api/light/preview", nullptr, 4096);
+  auto *previewHandler = new AsyncCallbackJsonWebHandler("/api/patterns/preview", nullptr, 4096);
   previewHandler->setMaxContentLength(2048);
   previewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     ensureColorsStoreReady();
@@ -916,7 +916,7 @@ void beginWebInterface()
   server.serveStatic("/styles.css", SD, "/styles.css");
   server.serveStatic("/kwal.js", SD, "/kwal.js");
 
-  attachLightStoreRoutes();
+  attachPatternColorRoutes();
 
   // OTA routes
   server.on("/ota/arm", HTTP_GET, handleOtaArm);
