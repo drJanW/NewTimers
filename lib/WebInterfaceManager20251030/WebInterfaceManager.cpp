@@ -7,10 +7,13 @@
 #include "AudioManager.h"
 #include "SDVoting.h"
 #include "ColorsStore.h"
+#include "../ConductManager20251030/Web/WebDirector.h"
 #include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <WiFi.h>
 #include <memory>
+#include <cstring>
 
 #ifndef WEBIF_LOG_LEVEL
 #define WEBIF_LOG_LEVEL 1
@@ -26,9 +29,7 @@ static AsyncWebServer server(80);
 
 namespace {
 
-constexpr size_t kMaxSdEntries = 256;
-
-void ensureLightStoreReady()
+void ensureColorsStoreReady()
 {
   if (!ColorsStore::instance().isReady())
   {
@@ -129,54 +130,6 @@ String sanitizeSdPath(const String &raw)
   return path;
 }
 
-String buildParentPath(const String &path)
-{
-  if (path.length() <= 1)
-  {
-    return String("/");
-  }
-  int lastSlash = path.lastIndexOf('/');
-  if (lastSlash <= 0)
-  {
-    return String("/");
-  }
-  String parent = path.substring(0, lastSlash);
-  if (parent.length() == 0)
-  {
-    return String("/");
-  }
-  return parent;
-}
-
-struct SdListAccumulator
-{
-  String entries;
-  size_t count = 0;
-  bool first = true;
-};
-
-void sdListCollectCallback(const char *name, bool isDirectory, uint32_t sizeBytes, void *context)
-{
-  if (!context)
-  {
-    return;
-  }
-  auto *acc = static_cast<SdListAccumulator *>(context);
-  if (!acc->first)
-  {
-    acc->entries += ',';
-  }
-  acc->first = false;
-  acc->entries += F("{\"name\":\"");
-  appendJsonEscaped(acc->entries, name);
-  acc->entries += F("\",\"type\":\"");
-  acc->entries += isDirectory ? F("dir") : F("file");
-  acc->entries += F("\",\"size\":");
-  acc->entries += String(sizeBytes);
-  acc->entries += F("}");
-  acc->count++;
-}
-
 void sendSdStatus(AsyncWebServerRequest *request)
 {
   const bool ready = SDManager::isReady();
@@ -195,7 +148,121 @@ void sendSdStatus(AsyncWebServerRequest *request)
   sendJsonResponse(request, payload);
 }
 
-void sendSdList(AsyncWebServerRequest *request)
+namespace {
+
+class SdBusyLock {
+public:
+  SdBusyLock()
+  {
+    acquired_ = !SDManager::isBusy();
+    if (acquired_)
+    {
+      SDManager::setBusy(true);
+    }
+  }
+
+  ~SdBusyLock()
+  {
+    release();
+  }
+
+  bool acquired() const { return acquired_; }
+
+  void release()
+  {
+    if (acquired_)
+    {
+      SDManager::setBusy(false);
+      acquired_ = false;
+    }
+  }
+
+private:
+  bool acquired_{false};
+};
+
+String parentPath(const String &path)
+{
+  if (path.length() <= 1)
+  {
+    return String("/");
+  }
+  int lastSlash = path.lastIndexOf('/');
+  if (lastSlash <= 0)
+  {
+    return String("/");
+  }
+  return path.substring(0, lastSlash);
+}
+
+String extractBaseName(const char *fullPath)
+{
+  if (!fullPath)
+  {
+    return String();
+  }
+  const char *slash = strrchr(fullPath, '/');
+  if (slash && slash[1] != '\0')
+  {
+    return String(slash + 1);
+  }
+  return String(fullPath);
+}
+
+bool removeSdPath(const String &targetPath, String &errorMessage)
+{
+  File node = SD.open(targetPath.c_str(), FILE_READ);
+  if (!node)
+  {
+    errorMessage = F("Path not found");
+    return false;
+  }
+  const bool isDir = node.isDirectory();
+  node.close();
+
+  if (!isDir)
+  {
+    if (!SD.remove(targetPath.c_str()))
+    {
+      errorMessage = F("Delete failed");
+      return false;
+    }
+    return true;
+  }
+
+  File dir = SD.open(targetPath.c_str(), FILE_READ);
+  if (!dir)
+  {
+    errorMessage = F("Open directory failed");
+    return false;
+  }
+  for (File child = dir.openNextFile(); child; child = dir.openNextFile())
+  {
+    String childPath = targetPath;
+    if (!childPath.endsWith("/"))
+    {
+      childPath += '/';
+    }
+    childPath += extractBaseName(child.name());
+    child.close();
+    if (!removeSdPath(childPath, errorMessage))
+    {
+      dir.close();
+      return false;
+    }
+  }
+  dir.close();
+  if (!SD.rmdir(targetPath.c_str()))
+  {
+    errorMessage = F("Remove directory failed");
+    return false;
+  }
+  return true;
+}
+
+} // namespace
+
+void handleSdList(AsyncWebServerRequest *request)
 {
   if (!SDManager::isReady())
   {
@@ -211,33 +278,120 @@ void sendSdList(AsyncWebServerRequest *request)
     return;
   }
 
-  SdListAccumulator accumulator;
-  bool truncated = false;
-  const bool ok = SDManager::instance().listDirectory(path.c_str(), sdListCollectCallback, &accumulator, kMaxSdEntries, &truncated);
-  if (!ok)
+  SdBusyLock lock;
+  if (!lock.acquired())
+  {
+    sendError(request, 503, F("SD busy"));
+    return;
+  }
+
+  File dir = SD.open(path.c_str(), FILE_READ);
+  if (!dir)
   {
     sendError(request, 404, F("Path not found"));
     return;
   }
+  if (!dir.isDirectory())
+  {
+    dir.close();
+    sendError(request, 400, F("Not a directory"));
+    return;
+  }
 
+  constexpr size_t kMaxEntries = 256U;
+  size_t entryCount = 0;
+  bool truncated = false;
+  String entries;
+  entries.reserve(512);
+
+  for (File entry = dir.openNextFile(); entry; entry = dir.openNextFile())
+  {
+    if (entryCount > 0)
+    {
+      entries += ',';
+    }
+    const bool isDir = entry.isDirectory();
+    const uint32_t sizeBytes = isDir ? 0U : static_cast<uint32_t>(entry.size());
+    const String baseName = extractBaseName(entry.name());
+
+    entries += F("{\"name\":\"");
+    appendJsonEscaped(entries, baseName.c_str());
+    entries += F("\",\"type\":\"");
+    entries += isDir ? F("dir") : F("file");
+    entries += F("\",\"size\":");
+    entries += String(sizeBytes);
+    entries += '}';
+
+    entry.close();
+    ++entryCount;
+    if (entryCount >= kMaxEntries)
+    {
+      truncated = true;
+      break;
+    }
+  }
+  dir.close();
+
+  lock.release();
+
+  const bool busyFlag = SDManager::isBusy();
   String payload;
-  payload.reserve(128 + accumulator.entries.length());
+  payload.reserve(entries.length() + 160);
   payload += F("{\"path\":\"");
   appendJsonEscaped(payload, path.c_str());
   payload += F("\",\"parent\":\"");
-  const String parent = buildParentPath(path);
-  appendJsonEscaped(payload, parent.c_str());
+  appendJsonEscaped(payload, parentPath(path).c_str());
   payload += F("\",\"ready\":true,\"busy\":");
-  payload += SDManager::isBusy() ? F("true") : F("false");
+  payload += busyFlag ? F("true") : F("false");
   payload += F(",\"entryCount\":");
-  payload += String(accumulator.count);
+  payload += String(entryCount);
   payload += F(",\"truncated\":");
   payload += truncated ? F("true") : F("false");
   payload += F(",\"entries\":[");
-  payload += accumulator.entries;
+  payload += entries;
   payload += F("]}");
 
   sendJsonResponse(request, payload);
+}
+
+void handleLightPatternsList(AsyncWebServerRequest *request)
+{
+  ensureColorsStoreReady();
+  ColorsStore &store = ColorsStore::instance();
+  String payload = store.buildPatternsJson();
+  if (payload.isEmpty())
+  {
+    sendError(request, 500, F("Pattern export failed"));
+    return;
+  }
+  AsyncWebServerResponse *response = request->beginResponse(200, "application/json", payload);
+  response->addHeader("Cache-Control", "no-store");
+  const String activeId = store.getActivePatternId();
+  if (!activeId.isEmpty())
+  {
+    response->addHeader("X-Light-Pattern", activeId);
+  }
+  request->send(response);
+}
+
+void handleLightColorsList(AsyncWebServerRequest *request)
+{
+  ensureColorsStoreReady();
+  ColorsStore &store = ColorsStore::instance();
+  String payload = store.buildColorsJson();
+  if (payload.isEmpty())
+  {
+    sendError(request, 500, F("Color export failed"));
+    return;
+  }
+  AsyncWebServerResponse *response = request->beginResponse(200, "application/json", payload);
+  response->addHeader("Cache-Control", "no-store");
+  const String activeId = store.getActiveColorId();
+  if (!activeId.isEmpty())
+  {
+    response->addHeader("X-Light-Color", activeId);
+  }
+  request->send(response);
 }
 
 String sanitizeSdFilename(const String &raw)
@@ -389,7 +543,19 @@ void handleSdDelete(AsyncWebServerRequest *request, JsonVariant &json)
     return;
   }
 
+  if (!json.is<JsonObject>())
+  {
+    sendError(request, 400, F("Invalid payload"));
+    return;
+  }
+
   JsonObjectConst obj = json.as<JsonObjectConst>();
+  if (obj.isNull())
+  {
+    sendError(request, 400, F("Invalid payload"));
+    return;
+  }
+
   const String rawPath = obj["path"].as<String>();
   const String path = sanitizeSdPath(rawPath);
   if (path.length() == 0 || path == "/")
@@ -398,43 +564,50 @@ void handleSdDelete(AsyncWebServerRequest *request, JsonVariant &json)
     return;
   }
 
-  if (!SDManager::instance().removePath(path.c_str()))
+  SdBusyLock lock;
+  if (!lock.acquired())
   {
-    sendError(request, 404, F("Remove failed"));
+    sendError(request, 503, F("SD busy"));
     return;
   }
 
-  sendJsonResponse(request, String(F("{\"status\":\"ok\"}")));
+  String errorMessage;
+  if (!removeSdPath(path, errorMessage))
+  {
+    if (errorMessage.isEmpty())
+    {
+      errorMessage = F("Delete failed");
+    }
+    sendError(request, 400, errorMessage);
+    return;
+  }
+
+  sendJsonResponse(request, F("{\"status\":\"ok\"}"));
 }
 
 void attachLightStoreRoutes()
 {
-  server.on("/api/light/patterns", HTTP_GET, [](AsyncWebServerRequest *request) {
-    ensureLightStoreReady();
-    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson());
-  });
+  server.on("/api/light/patterns", HTTP_GET, handleLightPatternsList);
+  server.on("/api/light/colors", HTTP_GET, handleLightColorsList);
 
-  server.on("/api/light/colors", HTTP_GET, [](AsyncWebServerRequest *request) {
-    ensureLightStoreReady();
-    sendJsonResponse(request, ColorsStore::instance().buildColorsJson());
-  });
-
-  // Register the more specific pattern routes before the generic /api/light/patterns handler
   auto *patternSelect = new AsyncCallbackJsonWebHandler("/api/light/patterns/select");
   patternSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureLightStoreReady();
+    ensureColorsStoreReady();
     String error;
     String id;
-    if (json.is<JsonObject>()) {
-      JsonObjectConst obj = json.as<JsonObjectConst>();
-      if (!obj.isNull() && obj.containsKey("id")) {
-        id = obj["id"].as<String>();
-      }
+    JsonObjectConst obj = json.as<JsonObjectConst>();
+    if (!obj.isNull() && obj.containsKey("id"))
+    {
+      id = obj["id"].as<String>();
     }
-    if (id.isEmpty()) {
-      if (request->hasParam("id", true)) {
+    if (id.isEmpty())
+    {
+      if (request->hasParam("id", true))
+      {
         id = request->getParam("id", true)->value();
-      } else if (request->hasParam("id")) {
+      }
+      else if (request->hasParam("id"))
+      {
         id = request->getParam("id")->value();
       }
     }
@@ -446,59 +619,96 @@ void attachLightStoreRoutes()
       sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
       return;
     }
-    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson(), "X-Light-Pattern", ColorsStore::instance().getActivePatternId());
+    const String activeId = ColorsStore::instance().getActivePatternId();
+    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson(), "X-Light-Pattern", activeId);
   });
   patternSelect->setMethod(HTTP_POST);
   server.addHandler(patternSelect);
 
   auto *patternDelete = new AsyncCallbackJsonWebHandler("/api/light/patterns/delete");
   patternDelete->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureLightStoreReady();
-    String affected;
-    String error;
-    JsonVariantConst body = json;
-    if (!ColorsStore::instance().deletePattern(body, affected, error))
+    ensureColorsStoreReady();
+    JsonObjectConst obj = json.as<JsonObjectConst>();
+    if (obj.isNull())
     {
-      sendError(request, 400, error);
+      sendError(request, 400, F("invalid payload"));
       return;
     }
-    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson(), "X-Light-Pattern", affected);
+    String affected;
+    String error;
+    if (!ColorsStore::instance().deletePattern(obj, affected, error))
+    {
+      sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
+      return;
+    }
+    String payload = ColorsStore::instance().buildPatternsJson();
+    if (payload.isEmpty())
+    {
+      sendError(request, 500, F("pattern export failed"));
+      return;
+    }
+    const String headerId = affected.length() ? affected : ColorsStore::instance().getActivePatternId();
+    sendJsonResponse(request, payload, "X-Light-Pattern", headerId);
   });
   patternDelete->setMethod(HTTP_POST);
   server.addHandler(patternDelete);
 
   auto *patternUpdate = new AsyncCallbackJsonWebHandler("/api/light/patterns");
   patternUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureLightStoreReady();
-    String affected;
-    String error;
-    JsonVariantConst body = json;
-    if (!ColorsStore::instance().updatePattern(body, affected, error))
+    ensureColorsStoreReady();
+    JsonObjectConst obj = json.as<JsonObjectConst>();
+    if (obj.isNull())
     {
-      sendError(request, 400, error);
+      sendError(request, 400, F("invalid payload"));
       return;
     }
-    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson(), "X-Light-Pattern", affected);
+    PF("[PatternStore] HTTP pattern/update content-type='%s' length=%d\n",
+       request->contentType().c_str(),
+       static_cast<int>(request->contentLength()));
+    ColorsStore &store = ColorsStore::instance();
+    String affected;
+    String errorMessage;
+    if (!store.updatePattern(obj, affected, errorMessage))
+    {
+      sendError(request, 400, errorMessage.length() ? errorMessage : F("update failed"));
+      return;
+    }
+    String payload = store.buildPatternsJson();
+    if (payload.isEmpty())
+    {
+      sendError(request, 500, F("pattern export failed"));
+      return;
+    }
+    AsyncWebServerResponse *response = request->beginResponse(200, "application/json", payload);
+    response->addHeader("Cache-Control", "no-store");
+    const String activeId = affected.length() ? affected : store.getActivePatternId();
+    if (!activeId.isEmpty())
+    {
+      response->addHeader("X-Light-Pattern", activeId);
+    }
+    request->send(response);
   });
   patternUpdate->setMethod(HTTP_POST);
   server.addHandler(patternUpdate);
 
-  // Register the color routes in order of most specific path first to avoid prefix matches
   auto *colorSelect = new AsyncCallbackJsonWebHandler("/api/light/colors/select");
   colorSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureLightStoreReady();
+    ensureColorsStoreReady();
     String error;
     String id;
-    if (json.is<JsonObject>()) {
-      JsonObjectConst obj = json.as<JsonObjectConst>();
-      if (!obj.isNull() && obj.containsKey("id")) {
-        id = obj["id"].as<String>();
-      }
+    JsonObjectConst obj = json.as<JsonObjectConst>();
+    if (!obj.isNull() && obj.containsKey("id"))
+    {
+      id = obj["id"].as<String>();
     }
-    if (id.isEmpty()) {
-      if (request->hasParam("id", true)) {
+    if (id.isEmpty())
+    {
+      if (request->hasParam("id", true))
+      {
         id = request->getParam("id", true)->value();
-      } else if (request->hasParam("id")) {
+      }
+      else if (request->hasParam("id"))
+      {
         id = request->getParam("id")->value();
       }
     }
@@ -510,52 +720,74 @@ void attachLightStoreRoutes()
       sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
       return;
     }
-    sendJsonResponse(request, ColorsStore::instance().buildColorsJson(), "X-Light-Color", ColorsStore::instance().getActiveColorId());
+    const String activeId = ColorsStore::instance().getActiveColorId();
+    sendJsonResponse(request, ColorsStore::instance().buildColorsJson(), "X-Light-Color", activeId);
   });
   colorSelect->setMethod(HTTP_POST);
   server.addHandler(colorSelect);
 
   auto *colorDelete = new AsyncCallbackJsonWebHandler("/api/light/colors/delete");
   colorDelete->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureLightStoreReady();
-    String affected;
-    String error;
-    JsonVariantConst body = json;
-    if (!ColorsStore::instance().deleteColor(body, affected, error))
+    ensureColorsStoreReady();
+    JsonObjectConst obj = json.as<JsonObjectConst>();
+    if (obj.isNull())
     {
-      sendError(request, 400, error);
+      sendError(request, 400, F("invalid payload"));
       return;
     }
-    sendJsonResponse(request, ColorsStore::instance().buildColorsJson(), "X-Light-Color", affected);
+    String affected;
+    String error;
+    if (!ColorsStore::instance().deleteColor(obj, affected, error))
+    {
+      sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
+      return;
+    }
+    String payload = ColorsStore::instance().buildColorsJson();
+    if (payload.isEmpty())
+    {
+      sendError(request, 500, F("color export failed"));
+      return;
+    }
+    const String headerId = affected.length() ? affected : ColorsStore::instance().getActiveColorId();
+    sendJsonResponse(request, payload, "X-Light-Color", headerId);
   });
   colorDelete->setMethod(HTTP_POST);
   server.addHandler(colorDelete);
 
   auto *colorUpdate = new AsyncCallbackJsonWebHandler("/api/light/colors");
   colorUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureLightStoreReady();
-    String affected;
-    String error;
-    JsonVariantConst body = json;
-    if (!json.isNull())
+    ensureColorsStoreReady();
+    JsonObjectConst obj = json.as<JsonObjectConst>();
+    if (obj.isNull())
     {
-      PF("[ColorsStore] HTTP colors/update content-type='%s' length=%d isObject=%d\n",
-         request->contentType().c_str(),
-         static_cast<int>(request->contentLength()),
-         json.is<JsonObject>() ? 1 : 0);
-    }
-    else
-    {
-      PF("[ColorsStore] HTTP colors/update received null JSON content-type='%s' length=%d\n",
-         request->contentType().c_str(),
-         static_cast<int>(request->contentLength()));
-    }
-    if (!ColorsStore::instance().updateColor(body, affected, error))
-    {
-      sendError(request, 400, error);
+      sendError(request, 400, F("invalid payload"));
       return;
     }
-    sendJsonResponse(request, ColorsStore::instance().buildColorsJson(), "X-Light-Color", affected);
+    PF("[ColorsStore] HTTP colors/update content-type='%s' length=%d\n",
+       request->contentType().c_str(),
+       static_cast<int>(request->contentLength()));
+    ColorsStore &store = ColorsStore::instance();
+    String affected;
+    String errorMessage;
+    if (!store.updateColor(obj, affected, errorMessage))
+    {
+      sendError(request, 400, errorMessage.length() ? errorMessage : F("update failed"));
+      return;
+    }
+    String payload = store.buildColorsJson();
+    if (payload.isEmpty())
+    {
+      sendError(request, 500, F("color export failed"));
+      return;
+    }
+    AsyncWebServerResponse *response = request->beginResponse(200, "application/json", payload);
+    response->addHeader("Cache-Control", "no-store");
+    const String activeId = affected.length() ? affected : store.getActiveColorId();
+    if (!activeId.isEmpty())
+    {
+      response->addHeader("X-Light-Color", activeId);
+    }
+    request->send(response);
   });
   colorUpdate->setMethod(HTTP_POST);
   server.addHandler(colorUpdate);
@@ -563,7 +795,7 @@ void attachLightStoreRoutes()
   auto *previewHandler = new AsyncCallbackJsonWebHandler("/api/light/preview", nullptr, 4096);
   previewHandler->setMaxContentLength(2048);
   previewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureLightStoreReady();
+    ensureColorsStoreReady();
     String error;
     JsonVariantConst body = json;
     if (!ColorsStore::instance().preview(body, error))
@@ -669,7 +901,7 @@ void handleOtaConfirm(AsyncWebServerRequest *request)
 
 void beginWebInterface()
 {
-  ensureLightStoreReady();
+  ensureColorsStoreReady();
 
   server.on("/", HTTP_GET, handleRoot);
   server.on("/setBrightness", HTTP_GET, handleSetBrightness);
@@ -677,7 +909,7 @@ void beginWebInterface()
   server.on("/setWebAudioLevel", HTTP_GET, handleSetWebAudioLevel);
   server.on("/getWebAudioLevel", HTTP_GET, handleGetWebAudioLevel);
   server.on("/api/sd/status", HTTP_GET, sendSdStatus);
-  server.on("/api/sd/list", HTTP_GET, sendSdList);
+  server.on("/api/sd/list", HTTP_GET, handleSdList);
   server.on("/api/sd/upload", HTTP_POST, handleSdUploadRequest, handleSdUploadData);
 
   // Serve the monolithic UI assets directly from the SD card so the browser can load styling and logic.
