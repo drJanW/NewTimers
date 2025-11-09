@@ -586,7 +586,7 @@ void WebDirector::runLightPatternsGetJob(Job &job) {
         return;
     }
 
-    job.headerName = F("X-Light-Pattern");
+    job.headerName = F("X-Pattern");
     job.headerValue = store.getActivePatternId();
     job.useHeader = true;
     const unsigned patternBytes = static_cast<unsigned>(job.payloadBuffer.length());
@@ -617,7 +617,7 @@ void WebDirector::runLightColorsGetJob(Job &job) {
         return;
     }
 
-    job.headerName = F("X-Light-Color");
+    job.headerName = F("X-Color");
     job.headerValue = store.getActiveColorId();
     job.useHeader = true;
     const unsigned colorBytes = static_cast<unsigned>(job.payloadBuffer.length());
@@ -670,7 +670,7 @@ void WebDirector::runLightPatternUpdateJob(Job &job) {
         return;
     }
 
-    job.headerName = F("X-Light-Pattern");
+    job.headerName = F("X-Pattern");
     job.headerValue = affected.length() ? affected : store.getActivePatternId();
     job.useHeader = true;
     job.jsonPayload = String();
@@ -716,7 +716,7 @@ void WebDirector::runLightPatternDeleteJob(Job &job) {
         return;
     }
 
-    job.headerName = F("X-Light-Pattern");
+    job.headerName = F("X-Pattern");
     job.headerValue = affected.length() ? affected : store.getActivePatternId();
     job.useHeader = true;
     job.jsonPayload = String();
@@ -762,7 +762,7 @@ void WebDirector::runLightColorUpdateJob(Job &job) {
         return;
     }
 
-    job.headerName = F("X-Light-Color");
+    job.headerName = F("X-Color");
     job.headerValue = affected.length() ? affected : store.getActiveColorId();
     job.useHeader = true;
     job.jsonPayload = String();
@@ -808,7 +808,7 @@ void WebDirector::runLightColorDeleteJob(Job &job) {
         return;
     }
 
-    job.headerName = F("X-Light-Color");
+    job.headerName = F("X-Color");
     job.headerValue = affected.length() ? affected : store.getActiveColorId();
     job.useHeader = true;
     job.jsonPayload = String();

@@ -140,7 +140,7 @@
 
     // Build sentinel: update version string whenever web assets change so the device/browser can verify freshness.
     window.APP_BUILD_INFO = Object.freeze({
-        version: 'webui-patternsplit-20251109T1509Z',
+        version: 'webui-patternsplit-20251109T1615Z',
         features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit', 'splitLightModals']
     });
 
@@ -1180,11 +1180,11 @@
             state.pattern.loadingPromise = (async () => {
                 setLightSettingsStatus('Patronen laden…', 'pending');
                 try {
-                    const response = await fetch('/api/light/patterns');
+                    const response = await fetch('/api/patterns');
                     if (!response.ok) {
                         throw new Error(response.statusText);
                     }
-                    const headerId = response.headers.get('X-Light-Pattern') || '';
+                    const headerId = response.headers.get('X-Pattern') || '';
                     if (headerId) {
                         state.pattern.overrideActive = true;
                         state.pattern.currentId = headerId;
@@ -1200,7 +1200,7 @@
                         dom.lightPatternLabel.textContent = label ? `Handmatig • ${label}` : 'Handmatig';
                     }
                 } catch (error) {
-                    console.error('[light] ensurePatterns failed', error);
+                    console.error('[patterns] ensurePatterns failed', error);
                     state.pattern.loaded = false;
                     state.pattern.store = { patterns: [], active_pattern: '' };
                     processPatternStore(state.pattern.store, { statusText: 'Patronen laden mislukt', statusTone: 'error' });
@@ -1225,11 +1225,11 @@
         if (!state.color.loadingPromise) {
             state.color.loadingPromise = (async () => {
                 try {
-                    const response = await fetch('/api/light/colors');
+                    const response = await fetch('/api/colors');
                     if (!response.ok) {
                         throw new Error(response.statusText);
                     }
-                    const headerId = response.headers.get('X-Light-Color') || '';
+                    const headerId = response.headers.get('X-Color') || '';
                     if (headerId) {
                         state.color.overrideActive = true;
                         state.color.currentId = headerId;
@@ -1245,7 +1245,7 @@
                         dom.lightColorLabel.textContent = label ? `Handmatig • ${label}` : 'Handmatig';
                     }
                 } catch (error) {
-                    console.error('[light] ensureColors failed', error);
+                    console.error('[colors] ensureColors failed', error);
                     state.color.loaded = false;
                     state.color.store = { colors: [], active_color: '' };
                     processColorStore(state.color.store, { skipStatus: true });
@@ -1264,7 +1264,7 @@
     };
 
     const selectPatternOnServer = async (patternId) => {
-        const response = await fetch('/api/light/patterns/select', {
+    const response = await fetch('/api/patterns/select', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: patternId || '' })
@@ -1280,7 +1280,7 @@
     };
 
     const selectColorOnServer = async (colorId) => {
-        const response = await fetch('/api/light/colors/select', {
+    const response = await fetch('/api/colors/select', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: colorId || '' })
@@ -1328,7 +1328,7 @@
             updateLightSummary();
             setStatus('lightStatus', `Patroon ${label} actief`, 'success');
         } catch (error) {
-            console.error('[light] patternNext failed', error);
+            console.error('[patterns] patternNext failed', error);
             setStatus('lightStatus', error && error.message ? `Patroon wisselen mislukt: ${error.message}` : 'Patroon wisselen mislukt', 'error');
         }
     };
@@ -1366,7 +1366,7 @@
             updateLightSummary();
             setStatus('lightStatus', `Kleuren ${label} actief`, 'success');
         } catch (error) {
-            console.error('[light] colorNext failed', error);
+            console.error('[colors] colorNext failed', error);
             setStatus('lightStatus', error && error.message ? `Kleurenset wisselen mislukt: ${error.message}` : 'Kleurenset wisselen mislukt', 'error');
         }
     };
@@ -1528,7 +1528,7 @@
         }
         setLightSettingsStatus('Patroon opslaan…', 'pending');
         try {
-            const response = await fetch('/api/light/patterns', {
+            const response = await fetch('/api/patterns', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -1538,7 +1538,7 @@
                 throw new Error(message || response.statusText);
             }
             const store = await response.json();
-            const headerId = response.headers.get('X-Light-Pattern') || body.id || '';
+            const headerId = response.headers.get('X-Pattern') || body.id || '';
             state.pattern.loaded = true;
             state.pattern.store = store;
             state.previewActive = false;
@@ -1583,7 +1583,7 @@
         }
         setLightSettingsStatus('Kleurset opslaan…', 'pending', 'color');
         try {
-            const response = await fetch('/api/light/colors', {
+            const response = await fetch('/api/colors', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -1593,7 +1593,7 @@
                 throw new Error(message || response.statusText);
             }
             const store = await response.json();
-            const headerId = response.headers.get('X-Light-Color') || body.id || '';
+            const headerId = response.headers.get('X-Color') || body.id || '';
             state.color.loaded = true;
             state.color.store = store;
             state.previewActive = false;
@@ -1618,7 +1618,7 @@
         }
         setLightSettingsStatus('Patroon verwijderen…', 'pending');
         try {
-            const response = await fetch('/api/light/patterns/delete', {
+            const response = await fetch('/api/patterns/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: state.pattern.selectedId })
@@ -1628,7 +1628,7 @@
                 throw new Error(message || response.statusText);
             }
             const store = await response.json();
-            const headerId = response.headers.get('X-Light-Pattern') || store.active_pattern || '';
+            const headerId = response.headers.get('X-Pattern') || store.active_pattern || '';
             state.pattern.loaded = true;
             state.pattern.store = store;
             state.previewActive = false;
@@ -1653,7 +1653,7 @@
         }
         setLightSettingsStatus('Kleurset verwijderen…', 'pending', 'color');
         try {
-            const response = await fetch('/api/light/colors/delete', {
+            const response = await fetch('/api/colors/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: state.color.selectedId })
@@ -1663,7 +1663,7 @@
                 throw new Error(message || response.statusText);
             }
             const store = await response.json();
-            const headerId = response.headers.get('X-Light-Color') || store.active_color || '';
+            const headerId = response.headers.get('X-Color') || store.active_color || '';
             state.color.loaded = true;
             state.color.store = store;
             state.previewActive = false;
@@ -1754,7 +1754,7 @@
         const previewColorLabel = colorIdForPreview || 'default';
         setLightSettingsStatus(`Voorbeeld: ${previewPatternLabel} • kleur ${previewColorLabel}`, 'pending', 'both');
         try {
-            const response = await fetch('/api/light/preview', {
+            const response = await fetch('/api/patterns/preview', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -1784,7 +1784,7 @@
 
         setLightSettingsStatus('Activeren…', 'pending', 'both');
         try {
-            const patternResponse = await fetch('/api/light/patterns/select', {
+            const patternResponse = await fetch('/api/patterns/select', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(patternPayload)
@@ -1805,7 +1805,7 @@
                 state.pattern.lastAppliedId = patternPayload.id;
             }
 
-            const colorResponse = await fetch('/api/light/colors/select', {
+            const colorResponse = await fetch('/api/colors/select', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(colorPayload)
