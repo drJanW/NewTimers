@@ -20,6 +20,7 @@
 
 #include "Web/WebBoot.h"
 #include "Web/WebConduct.h"
+#include "Web/WebDirector.h"
 #include "Web/WebPolicy.h"
 
 #include "Audio/AudioBoot.h"
@@ -432,6 +433,7 @@ void ConductManager::resumeAfterSDBoot() {
     wifiConduct.plan();
     webBoot.plan();
     webConduct.plan();
+    WebDirector::instance().plan();
     audioBoot.plan();
     audioConduct.plan();
     lightBoot.plan();

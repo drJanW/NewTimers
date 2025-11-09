@@ -140,7 +140,7 @@
 
     // Build sentinel: update version string whenever web assets change so the device/browser can verify freshness.
     window.APP_BUILD_INFO = Object.freeze({
-        version: 'webui-patternsplit-20251109T0130Z',
+        version: 'webui-patternsplit-20251109T1509Z',
         features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit', 'splitLightModals']
     });
 
@@ -394,7 +394,7 @@
         if (dom.lightPatternLabel) {
             let text;
             if (!state.pattern.loaded && !state.pattern.overrideActive && !state.pattern.currentId) {
-                text = 'Niet geladen';
+                text = 'Laden…';
             } else {
                 const label = resolvePatternLabel(state.pattern.currentId);
                 const effectiveSource = state.pattern.overrideActive ? 'manual' : (state.pattern.currentSource || 'context');
@@ -419,7 +419,7 @@
         if (dom.lightColorLabel) {
             let text;
             if (!state.color.loaded && !state.color.overrideActive && !state.color.currentId) {
-                text = 'Niet geladen';
+                text = 'Laden…';
             } else if (state.color.overrideActive || state.color.currentId) {
                 const label = resolveColorLabel(state.color.currentId);
                 text = label ? `Handmatig • ${label}` : 'Handmatig';
@@ -1184,10 +1184,23 @@
                     if (!response.ok) {
                         throw new Error(response.statusText);
                     }
+                    const headerId = response.headers.get('X-Light-Pattern') || '';
+                    if (headerId) {
+                        state.pattern.overrideActive = true;
+                        state.pattern.currentId = headerId;
+                        state.pattern.currentSource = 'manual';
+                        state.pattern.lastAppliedId = headerId;
+                        updateLightSummary();
+                    }
                     const data = await response.json();
                     state.pattern.loaded = true;
                     processPatternStore(data, { statusText: 'Patronen geladen', statusTone: 'success' });
+                    if (dom.lightPatternLabel) {
+                        const label = resolvePatternLabel(state.pattern.currentId);
+                        dom.lightPatternLabel.textContent = label ? `Handmatig • ${label}` : 'Handmatig';
+                    }
                 } catch (error) {
+                    console.error('[light] ensurePatterns failed', error);
                     state.pattern.loaded = false;
                     state.pattern.store = { patterns: [], active_pattern: '' };
                     processPatternStore(state.pattern.store, { statusText: 'Patronen laden mislukt', statusTone: 'error' });
@@ -1216,10 +1229,23 @@
                     if (!response.ok) {
                         throw new Error(response.statusText);
                     }
+                    const headerId = response.headers.get('X-Light-Color') || '';
+                    if (headerId) {
+                        state.color.overrideActive = true;
+                        state.color.currentId = headerId;
+                        state.color.currentSource = 'manual';
+                        state.color.lastAppliedId = headerId;
+                        updateLightSummary();
+                    }
                     const data = await response.json();
                     state.color.loaded = true;
                     processColorStore(data, { skipStatus: true });
+                    if (dom.lightColorLabel) {
+                        const label = resolveColorLabel(state.color.currentId);
+                        dom.lightColorLabel.textContent = label ? `Handmatig • ${label}` : 'Handmatig';
+                    }
                 } catch (error) {
+                    console.error('[light] ensureColors failed', error);
                     state.color.loaded = false;
                     state.color.store = { colors: [], active_color: '' };
                     processColorStore(state.color.store, { skipStatus: true });

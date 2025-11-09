@@ -241,10 +241,6 @@ bool ColorsStore::updateColor(JsonVariantConst body, String& affectedId, String&
 }
 
 bool ColorsStore::deleteColor(JsonVariantConst body, String& affectedId, String& errorMessage) {
-    if (!body.is<JsonObject>()) {
-        errorMessage = F("invalid payload");
-        return false;
-    }
     JsonObjectConst obj = body.as<JsonObjectConst>();
     if (obj.isNull()) {
         errorMessage = F("invalid payload");
