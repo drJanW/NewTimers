@@ -1,9 +1,6 @@
 #pragma once
 #include <Arduino.h>
 
-struct CalendarLightShow;
-struct CalendarColorRange;
-
 namespace LightPolicy {
 
     // Apply brightness rules (caps, floors, context)
@@ -18,8 +15,4 @@ namespace LightPolicy {
                               float& intensity,
                               uint8_t& paletteId);
 
-    // Calendar-driven shows
-    void applyCalendarLightshow(const CalendarLightShow& show,
-                                const CalendarColorRange& colors);
-    void clearCalendarLightshow();
 }

@@ -26,7 +26,6 @@ public:
     static bool intentStartClockTick(bool fallbackMode);
     static bool isClockRunning();
     static bool isClockInFallback();
-    static void intentNextLightShow();
 
     // Context profiles
     static void setChristmasMode(bool enabled);

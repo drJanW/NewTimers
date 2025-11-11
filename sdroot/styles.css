@@ -163,10 +163,20 @@ body.modal-open {
     font-variant-numeric: tabular-nums;
 }
 
+.audio-fragment {
+    font-size: 0.95rem;
+    color: #dde6ff;
+}
+
 .status {
     margin: 0;
     font-size: 0.85rem;
     color: #e6e0cc;
+}
+
+#lightPanel .panel-header,
+#lightStatus {
+    display: none;
 }
 
 .status-success {
@@ -183,6 +193,10 @@ body.modal-open {
 
 .status-info {
     color: #a9c1ff;
+}
+
+#audioStatus {
+    display: none;
 }
 
 .row {

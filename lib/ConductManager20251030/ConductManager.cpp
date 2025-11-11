@@ -1,8 +1,6 @@
 
 #include "ConductManager.h"
 
-#include <vector>
-
 #include "ConductBoot.h"
 #include "TimerManager.h"
 #include "Globals.h"
@@ -26,6 +24,7 @@
 #include "Audio/AudioBoot.h"
 #include "Audio/AudioConduct.h"
 #include "Audio/AudioPolicy.h"
+#include "Audio/AudioDirector.h"
 
 #include "Light/LightBoot.h"
 #include "Light/LightConduct.h"
@@ -52,9 +51,6 @@
 
 #include "Calendar/CalendarBoot.h"
 #include "Calendar/CalendarConduct.h"
-
-#include "Calendar.h"//<==================
-#include "SDManager.h"//<=================
 
 #include "FetchManager.h"
 #include "WiFiManager.h"
@@ -85,101 +81,6 @@ constexpr uint32_t TIME_DISPLAY_INTERVAL_MS = 10 * 12000;    // ~1.7 minutes
 
 void clockTick() {
     PRTClock::instance().update();
-}
-
-constexpr const char* kLightShowsCsvPath = "/light_shows.csv";
-
-std::vector<String> s_lightShowIds;
-size_t s_lightShowCursor = 0;
-bool s_lightShowListLoaded = false;
-
-bool shouldSkipPresetLine(const String& line) {
-    if (line.isEmpty()) {
-        return true;
-    }
-    if (line.startsWith("#") || line.startsWith("//")) {
-        return true;
-    }
-    return false;
-}
-
-size_t splitSemicolon(const String& line, String* columns, size_t maxColumns) {
-    if (!columns || maxColumns == 0) {
-        return 0;
-    }
-    size_t count = 0;
-    int start = 0;
-    const int length = line.length();
-    while (count < maxColumns && start <= length) {
-        int sep = line.indexOf(';', start);
-        if (sep < 0) {
-            sep = length;
-        }
-        String token = line.substring(start, sep);
-        token.trim();
-        columns[count++] = token;
-        start = sep + 1;
-        if (sep >= length) {
-            break;
-        }
-    }
-    return count;
-}
-
-bool loadLightShowPresets() {
-    s_lightShowIds.clear();
-    s_lightShowCursor = 0;
-
-    if (!SDManager::isReady()) {
-        CONDUCT_LOG_WARN("[Conduct] Light preset load skipped, SD not ready\n");
-        return false;
-    }
-
-    String payload = SDManager::instance().readTextFile(kLightShowsCsvPath);
-    if (payload.length() == 0) {
-        CONDUCT_LOG_WARN("[Conduct] Light preset list empty (%s)\n", kLightShowsCsvPath);
-        return false;
-    }
-
-    int start = 0;
-    const int len = payload.length();
-    while (start < len) {
-        int end = payload.indexOf('\n', start);
-        String line = (end >= 0) ? payload.substring(start, end) : payload.substring(start);
-        start = (end >= 0) ? end + 1 : len;
-        line.trim();
-        if (shouldSkipPresetLine(line)) {
-            continue;
-        }
-
-        String columns[4];
-        const size_t count = splitSemicolon(line, columns, 4);
-        if (count < 2) {
-            continue;
-        }
-        if (columns[0].equalsIgnoreCase("light_show_id") || columns[0].isEmpty()) {
-            continue;
-        }
-        s_lightShowIds.push_back(columns[0]);
-    }
-
-    if (s_lightShowIds.empty()) {
-        CONDUCT_LOG_WARN("[Conduct] No light presets found in %s\n", kLightShowsCsvPath);
-        return false;
-    }
-
-    CONDUCT_LOG_INFO("[Conduct] Loaded %u light presets from %s\n",
-                     static_cast<unsigned>(s_lightShowIds.size()),
-                     kLightShowsCsvPath);
-    return true;
-}
-
-bool ensureLightShowPresets() {
-    if (s_lightShowListLoaded && !s_lightShowIds.empty()) {
-        return true;
-    }
-    s_lightShowListLoaded = loadLightShowPresets();
-    return s_lightShowListLoaded;
 }
 
 } // namespace
@@ -253,54 +154,8 @@ void ConductManager::update() {
 #endif
 }
 
-void ConductManager::intentPlayFragment() {
-    AudioFragment frag;
-    if (!SDPolicy::getRandomFragment(frag)) {
-        CONDUCT_LOG_INFO("[Conduct] intentPlayFragment: no fragment available\n");
-        return;
-    }
-    if (!AudioPolicy::requestFragment(frag)) {
-        CONDUCT_LOG_INFO("[Conduct] intentPlayFragment: request rejected\n");
-        return;
-    }
-    CONDUCT_LOG_DEBUG("[Conduct] intentPlayFragment: dir=%u file=%u\n", frag.dirIndex, frag.fileIndex);
-}
-
-void ConductManager::intentSayTime() {
-    String phrase = PRTClock::instance().buildTimeSentence();
-    if (!AudioPolicy::canPlaySentence()) {
-        CONDUCT_LOG_INFO("[Conduct] intentSayTime blocked by policy\n");
-        return;
-    }
-
-    CONDUCT_LOG_DEBUG("[Conduct] intentSayTime: %s\n", phrase.c_str());
-    AudioManager::instance().startTTS(phrase);
-}
-
-void ConductManager::intentSayNow() {
-    String phrase = PRTClock::instance().buildNowSentence();
-    if (christmasMode) phrase = "Vrolijk Kerstfeest! " + phrase;
-    if (!AudioPolicy::canPlaySentence()) {
-        CONDUCT_LOG_INFO("[Conduct] intentSayNow blocked by policy\n");
-        return;
-    }
-
-    CONDUCT_LOG_DEBUG("[Conduct] intentSayNow: %s\n", phrase.c_str());
-    AudioManager::instance().startTTS(phrase);
-}
-
-void ConductManager::intentSetBrightness(float value) {
-    float adjusted = LightPolicy::applyBrightnessRules(value, quietHours);
-    LightManager::instance().setBrightness(adjusted);
-}
-
-void ConductManager::intentSetAudioLevel(float value) {
-    float adjusted = AudioPolicy::applyVolumeRules(value, quietHours);
-    AudioManager::instance().setWebLevel(adjusted);
-}
-
 void ConductManager::intentArmOTA(uint32_t window_s) {
-    CONDUCT_LOG_INFO("[Conduct] intentArmOTA: window=%us\n", (unsigned)window_s);
+    CONDUCT_LOG_INFO("[Conduct] intentArmOTA: window=%us\n", static_cast<unsigned>(window_s));
     otaArm(window_s);
     AudioManager::instance().stop();
     LightManager::instance().showOtaPattern();
@@ -309,6 +164,50 @@ void ConductManager::intentArmOTA(uint32_t window_s) {
 bool ConductManager::intentConfirmOTA() {
     CONDUCT_LOG_INFO("[Conduct] intentConfirmOTA\n");
     return otaConfirmAndReboot();
+}
+
+void ConductManager::intentPlayFragment() {
+    AudioFragment fragment{};
+    if (!AudioDirector::selectRandomFragment(fragment)) {
+        CONDUCT_LOG_WARN("[Conduct] intentPlayFragment: no fragment available\n");
+        return;
+    }
+
+    if (!AudioPolicy::requestFragment(fragment)) {
+        CONDUCT_LOG_WARN("[Conduct] intentPlayFragment: playback rejected\n");
+    }
+}
+
+void ConductManager::intentSayTime() {
+    const String sentence = PRTClock::instance().buildTimeSentence(TimeStyle::NORMAL);
+    if (sentence.isEmpty()) {
+        CONDUCT_LOG_WARN("[Conduct] intentSayTime: clock sentence empty\n");
+        return;
+    }
+    AudioPolicy::requestSentence(sentence);
+}
+
+void ConductManager::intentSayNow() {
+    const String sentence = PRTClock::instance().buildNowSentence(TimeStyle::NORMAL);
+    if (sentence.isEmpty()) {
+        CONDUCT_LOG_WARN("[Conduct] intentSayNow: clock sentence empty\n");
+        return;
+    }
+    AudioPolicy::requestSentence(sentence);
+}
+
+void ConductManager::intentSetBrightness(float value) {
+    const float clamped = LightPolicy::applyBrightnessRules(value, quietHours);
+    LightManager::instance().setBrightness(clamped);
+    CONDUCT_LOG_INFO("[Conduct] intentSetBrightness: requested=%.1f applied=%.1f\n",
+                     static_cast<double>(value), static_cast<double>(clamped));
+}
+
+void ConductManager::intentSetAudioLevel(float value) {
+    const float applied = AudioPolicy::applyVolumeRules(value, quietHours);
+    AudioManager::instance().setWebLevel(applied);
+    CONDUCT_LOG_INFO("[Conduct] intentSetAudioLevel: requested=%.2f applied=%.2f\n",
+                     static_cast<double>(value), static_cast<double>(applied));
 }
 
 void ConductManager::intentShowTimerStatus() {
@@ -370,53 +269,6 @@ bool ConductManager::isClockRunning() {
 
 bool ConductManager::isClockInFallback() {
     return clockInFallback;
-}
-
-void ConductManager::intentNextLightShow() {
-    CONDUCT_LOG_DEBUG("[Conduct] intentNextLightShow\n");
-    if (!calendarManager.isReady()) {
-        CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: calendar manager not ready\n");
-        return;
-    }
-
-    if (!ensureLightShowPresets()) {
-        CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: no light presets available\n");
-        return;
-    }
-
-    const size_t total = s_lightShowIds.size();
-    if (total == 0) {
-        CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: light preset list empty\n");
-        return;
-    }
-
-    const size_t startIndex = s_lightShowCursor % total;
-    for (size_t offset = 0; offset < total; ++offset) {
-        const size_t index = (startIndex + offset) % total;
-        const String& presetId = s_lightShowIds[index];
-
-        CalendarLightShow show;
-        if (!calendarManager.lookupLightShow(presetId, show)) {
-            CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: failed to load preset %s\n",
-                             presetId.c_str());
-            continue;
-        }
-        if (!show.valid || !show.pattern.valid) {
-            CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: preset %s invalid\n",
-                             presetId.c_str());
-            continue;
-        }
-
-        CalendarColorRange none{};
-        LightPolicy::applyCalendarLightshow(show, none);
-        s_lightShowCursor = (index + 1) % total;
-        CONDUCT_LOG_INFO("[Conduct] intentNextLightShow: applied preset %s\n", presetId.c_str());
-        return;
-    }
-
-    CONDUCT_LOG_WARN("[Conduct] intentNextLightShow: no playable presets found\n");
-    LightPolicy::clearCalendarLightshow();
-    s_lightShowListLoaded = false;
 }
 
 void ConductManager::resumeAfterSDBoot() {

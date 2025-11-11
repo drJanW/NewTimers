@@ -2,7 +2,6 @@
 
 #include "Globals.h"
 #include "../Audio/AudioPolicy.h"
-#include "../Light/LightPolicy.h"
 #include "../../SDManager20251030/SDManager.h"
 
 #include <stdio.h>
@@ -11,12 +10,6 @@ namespace {
 
 constexpr uint32_t kMinutesToMs = 60UL * 1000UL;
 constexpr size_t   kMaxThemeDirs = 16;
-
-String formatColor(uint32_t rgb) {
-  char buf[8];
-  snprintf(buf, sizeof(buf), "#%06lX", static_cast<unsigned long>(rgb & 0x00FFFFFFUL));
-  return String(buf);
-}
 
 size_t parseThemeEntries(const String& entries, uint8_t* dirs, size_t maxCount) {
   if (!dirs || maxCount == 0) {
@@ -66,8 +59,6 @@ bool evaluate(const CalendarSnapshot& snapshot, Decision& decision) {
   }
 
   decision.hasThemeBox = snapshot.theme.valid && snapshot.theme.entries.length() > 0;
-  decision.hasLightShow = snapshot.light.valid;
-  decision.hasColorRange = snapshot.color.valid;
 
   return true;
 }
@@ -115,34 +106,6 @@ void handleThemeBox(const CalendarThemeBox& box) {
   AudioPolicy::setThemeBox(filtered, filteredCount, box.id);
   PF("[CalendarPolicy] Theme box %s applied with %u directories\n",
      box.id.c_str(), static_cast<unsigned>(filteredCount));
-}
-
-void handleLightShow(const CalendarLightShow& show, const CalendarColorRange& colors) {
-  if (!show.valid || !show.pattern.valid) {
-    if (!colors.valid) {
-      LightPolicy::clearCalendarLightshow();
-      return;
-    }
-    PF("[CalendarPolicy] Light show request missing valid pattern, clearing\n");
-    LightPolicy::clearCalendarLightshow();
-    return;
-  }
-
-  LightPolicy::applyCalendarLightshow(show, colors);
-
-  const uint32_t primary   = colors.valid ? colors.startColor
-                                          : (show.palette.valid ? show.palette.primary : 0x00FFFFFFUL);
-  const uint32_t secondary = colors.valid ? colors.endColor
-                                          : (show.palette.valid ? show.palette.secondary : 0x007F7F7FUL);
-
-  const String colorSource = colors.valid ? colors.id : show.paletteId;
-
-  PF("[CalendarPolicy] Light show %s applied (pattern %s, colors %s => %s -> %s)\n",
-     show.id.c_str(),
-     show.patternId.c_str(),
-     colorSource.c_str(),
-     formatColor(primary).c_str(),
-     formatColor(secondary).c_str());
 }
 
 } // namespace CalendarPolicy
