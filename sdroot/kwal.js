@@ -140,8 +140,8 @@
 
     // Build sentinel: update version string whenever web assets change so the device/browser can verify freshness.
     window.APP_BUILD_INFO = Object.freeze({
-        version: 'webui-patternsplit-20251109T1615Z',
-        features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit', 'splitLightModals']
+        version: 'webui-otaonebutton-20251110T1915Z',
+        features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit', 'splitLightModals', 'otaOneButton']
     });
 
     const defaultPattern = {
@@ -2110,27 +2110,63 @@
         });
     });
 
-    const otaAction = async (mode) => {
-        const cfg = mode === 'arm'
-            ? { url: '/ota/arm', method: 'GET', note: 'Armeren…' }
-            : { url: '/ota/confirm', method: 'POST', note: 'Bevestigen…' };
-        setStatus('otaStatus', cfg.note, 'pending');
+    let otaCountdownTimer = null;
+
+    const startOtaCountdown = (seconds) => {
+        if (otaCountdownTimer !== null) {
+            window.clearInterval(otaCountdownTimer);
+            otaCountdownTimer = null;
+        }
+        let remaining = seconds;
+        const render = () => {
+            if (remaining <= 0) {
+                setStatus('otaStatus', 'Reboot bezig - druk nu Enter in ota.bat', 'info');
+                if (otaCountdownTimer !== null) {
+                    window.clearInterval(otaCountdownTimer);
+                    otaCountdownTimer = null;
+                }
+                return;
+            }
+            setStatus('otaStatus', `Reboot in ${remaining}s...`, 'pending');
+        };
+        render();
+        otaCountdownTimer = window.setInterval(() => {
+            remaining -= 1;
+            render();
+        }, 1000);
+    };
+
+    const startOta = async () => {
+        setStatus('otaStatus', 'OTA voorbereiden...', 'pending');
+        if (otaStartButton) {
+            otaStartButton.disabled = true;
+        }
         try {
-            const text = await fetchText(cfg.url, { method: cfg.method });
-            setStatus('otaStatus', text || 'OK', 'success');
+            await fetchText('/ota/start', { method: 'POST' });
+            startOtaCountdown(15);
+            window.setTimeout(() => {
+                if (otaStartButton) {
+                    otaStartButton.disabled = false;
+                }
+            }, 20000);
         } catch (error) {
+            if (otaCountdownTimer !== null) {
+                window.clearInterval(otaCountdownTimer);
+                otaCountdownTimer = null;
+            }
             setStatus('otaStatus', 'Mislukt', 'error');
+            if (otaStartButton) {
+                otaStartButton.disabled = false;
+            }
         }
     };
 
-    document.querySelectorAll('[data-ota]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const action = button.getAttribute('data-ota');
-            if (action) {
-                otaAction(action);
-            }
+    const otaStartButton = document.getElementById('otaStart');
+    if (otaStartButton) {
+        otaStartButton.addEventListener('click', () => {
+            startOta();
         });
-    });
+    }
 
     const modals = {
         pattern: dom.patternModal,

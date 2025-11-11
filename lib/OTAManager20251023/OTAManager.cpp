@@ -1,23 +1,18 @@
 #include <Arduino.h>
 #include <Preferences.h>
-#include <HTTPClient.h>
-#include <Update.h>
+#include <ArduinoOTA.h>
 
 // -----------------------------------------------------------------------------
-// Why all the millis()? OTA runs as a blocking, single-purpose routine:
-//  * We stream firmware bytes directly from HTTP to flash and must detect stalls.
-//  * We enforce tight deadlines (30 s idle, 5 min total, armed window) before
-//    risking a reboot on half-flashed firmware.
-//  * TimerManager callbacks would complicate this flow: the scheduler might stop
-//    once we reboot, and splitting the stream loop across callbacks introduces
-//    more failure paths than it removes.
-// So even though the rest of the project leans on TimerManager, we keep the
-// OTA code self-contained with explicit millis() checks. It looks old-school,
-// but it is the safest pattern we have found for this critical path.
+// Why the hand-rolled loop instead of TimerManager?
+// OTA runs as a blocking, single-purpose routine where we must keep handling
+// ArduinoOTA events until either the upload completes, fails, or times out.
+// Keeping it self-contained with explicit millis() checks avoids complicated
+// scheduler interactions during this critical window.
 // -----------------------------------------------------------------------------
 
-#include "Globals.h"         // gives HWconfig (SSID/PASS/OTA_URL if you have it there)
-#include "WiFiManager.h"     // bootWiFiConnect(), waitForNetwork()
+#include "Globals.h"         // gives HWconfig (SSID/PASS/OTA_* settings)
+#include "WiFiManager.h"     // bootWiFiConnect(), isWiFiConnected()
+#include "TimerManager.h"    // keep WiFi state machine ticking during OTA
 #include "OTAManager.h"
 
 static Preferences prefs; // NVS ns="ota"
@@ -27,55 +22,71 @@ static void     nvs_set8 (const char* k,uint8_t v){ prefs.begin("ota", false); p
 static uint32_t nvs_get32(const char* k){ prefs.begin("ota", true); uint32_t v=prefs.getUInt(k,0); prefs.end(); return v; }
 static void     nvs_set32(const char* k,uint32_t v){ prefs.begin("ota", false); prefs.putUInt(k,v); prefs.end(); }
 
-static bool httpStreamToUpdate(HTTPClient& http){
-  WiFiClient *stream = http.getStreamPtr();
-  int len = http.getSize();
-  if (len <= 0) return false;
-  if (!Update.begin(len)) return false;
-
-  uint32_t start = millis(), lastData = millis();
-  uint8_t buf[2048];
-
-  while (http.connected() && (len > 0 || len == -1)) {
-    size_t avail = stream->available();
-    if (avail) {
-      size_t n = stream->readBytes(buf, avail > sizeof(buf) ? sizeof(buf) : avail);
-      if (!n) break;
-      if (Update.write(buf, n) != n) return false;
-      lastData = millis();
-      if (len > 0) len -= n;
-    } else {
-      if (millis() - lastData > 30000) return false;           // 30 s stall
-      delay(10);
-    }
-    if (millis() - start > 5UL*60UL*1000UL) return false;      // 5 min cap
-  }
-  if (!Update.end()) return false;
-  return Update.isFinished();
-}
-
 static void runOtaSetup(){
   PL("[OTA] start");
   bootWiFiConnect();
-  if (WiFi.status() != WL_CONNECTED){ PL("[OTA] no WiFi"); return; }
-
-  HTTPClient http;
-  http.setTimeout(30000);
-if (!http.begin(String(OTA_URL))) { PF("[OTA] bad URL: %s\n", OTA_URL); return; }
-  int code = http.GET();
-  if (code == HTTP_CODE_OK) {
-    if (httpStreamToUpdate(http)) {
-      PL("[OTA] OK, reboot");
-      http.end();
-      delay(100);
-      ESP.restart();
-    } else {
-      PL("[OTA] failed");
-    }
-  } else {
-    PF("[OTA] HTTP %d\n", code);
+  const uint32_t connectDeadline = millis() + 60UL * 1000UL;
+  while (!isWiFiConnected() && millis() < connectDeadline) {
+    TimerManager::instance().update();
+    delay(10);
   }
-  http.end();
+  if (!isWiFiConnected()) {
+    PL("[OTA] no WiFi");
+    return;
+  }
+
+  bool updateCompleted = false;
+  bool updateFailed = false;
+
+  ArduinoOTA.setPort(3232);
+  ArduinoOTA.setPassword(OTA_PASSWORD);
+  ArduinoOTA.setRebootOnSuccess(false);
+
+  ArduinoOTA.onStart([&]() {
+    PL("[OTA] push start");
+  });
+
+  ArduinoOTA.onProgress([&](unsigned int progress, unsigned int total) {
+    if (!total) return;
+    const unsigned int pct = (progress * 100U) / total;
+    PF("[OTA] progress %u%%\n", pct);
+  });
+
+  ArduinoOTA.onEnd([&]() {
+    PL("[OTA] push end");
+    updateCompleted = true;
+  });
+
+  ArduinoOTA.onError([&](ota_error_t error) {
+    PF("[OTA] error %u\n", static_cast<unsigned>(error));
+    updateFailed = true;
+  });
+
+  ArduinoOTA.begin();
+  PL("[OTA] listening on ArduinoOTA");
+
+  const uint32_t windowMs = 5UL * 60UL * 1000UL;
+  const uint32_t start = millis();
+  while (!updateCompleted && !updateFailed && (millis() - start) < windowMs) {
+    TimerManager::instance().update();
+    ArduinoOTA.handle();
+    delay(10);
+  }
+
+  if (updateCompleted) {
+    PL("[OTA] OK, reboot");
+    delay(100);
+    ESP.restart();
+  } else if (updateFailed) {
+    PL("[OTA] failed");
+  } else {
+    PL("[OTA] timeout");
+  }
+}
+
+cb_type restartDeviceCallback(){
+  PL("[OTA] rebooting now");
+  ESP.restart();
 }
 
 void otaArm(uint32_t window_s){
@@ -91,10 +102,14 @@ bool otaConfirmAndReboot(){
   const uint32_t arm  = nvs_get32("armed_until");
   if (mode == 1 && nowS <= arm){
     nvs_set8("mode", 2);
-    PL("[OTA] confirm -> reboot");
-    delay(50);
-    ESP.restart();
-    return true; // not reached
+    if (!TimerManager::instance().restart(15000UL, 1, restartDeviceCallback)){
+      PL("[OTA] confirm -> immediate reboot (timer fail)");
+      delay(50);
+      ESP.restart();
+      return true;
+    }
+    PL("[OTA] confirm -> reboot in 15s");
+    return true;
   }
   nvs_set8("mode", 0);
   PL("[OTA] confirm expired");

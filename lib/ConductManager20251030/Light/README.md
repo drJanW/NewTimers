@@ -7,7 +7,7 @@
 
 ## Trigger Point
 1. `CalendarConduct::cb_loadCalendar` (or `CalendarPolicy::evaluate`) detects that today has no calendar row and flips into a **DefaultProfile** branch instead of exiting early.
-2. The DefaultProfile produces `LightShowParams` and optional palette hints which are then passed into `LightPolicy::applyCalendarLightshow`, preserving the existing logging/timer flow.
+2. The DefaultProfile produces `LightShowParams` and optional palette hints which can be handed straight to `PlayLightShow`, preserving the existing logging/timer flow.
 3. If the calendar does have an entry, normal processing continues unchanged.
 
 ## Dynamic Parameter Rules

@@ -56,7 +56,7 @@ CalendarConduct calendarConduct;
 void CalendarConduct::plan() {
   timers().cancel(CalendarConduct::cb_loadCalendar);
   clearSentenceTimer();
-  cb_loadCalendar();
+  PF("[CalendarConduct] Calendar subsystem temporarily disabled\n");
 }
 
 void CalendarConduct::cb_loadCalendar() {
@@ -117,11 +117,6 @@ void CalendarConduct::cb_loadCalendar() {
     CalendarPolicy::handleThemeBox(snapshot.theme);
   } else {
     CalendarPolicy::handleThemeBox(CalendarThemeBox{});
-  }
-  if (decision.hasLightShow || decision.hasColorRange) {
-    CalendarPolicy::handleLightShow(snapshot.light, snapshot.color);
-  } else {
-    CalendarPolicy::handleLightShow(CalendarLightShow{}, CalendarColorRange{});
   }
 
   reschedule(kCalendarRefreshIntervalMs, 0);

@@ -4,12 +4,12 @@
      <meta charset="utf-8">
      <meta name="viewport" content="width=device-width, initial-scale=1">
      <title>kwal</title>
-     <link rel="stylesheet" href="styles.css?v=webui-patternsplit-20251109T1615Z">
+     <link rel="stylesheet" href="styles.css?v=webui-otaonebutton-20251110T1915Z">
 </head>
 <body>
      <main class="page" aria-labelledby="pageTitle">
           <header class="page-header">
-               <h1 id="pageTitle">kwal versie 110909B</h1>
+               <h1 id="pageTitle">kwal versie 11115A</h1>
                <button type="button" class="btn btn-small" id="refreshAll" aria-label="Ververs waarden" title="Ververs waarden">
                     <span aria-hidden="true">&#8635;</span>
                     <span class="sr-only">Ververs</span>
@@ -20,13 +20,10 @@
                <article class="panel" id="audioPanel" aria-labelledby="audioHeading">
                     <header class="panel-header">
                          <h2 id="audioHeading">Audio</h2>
+                         <span class="info-value audio-fragment" id="audioCurrent">--</span>
                     </header>
                     <p class="status" id="audioStatus">-</p>
                     <div class="panel-body">
-                         <div class="info-row">
-                              <span class="info-label">fragment</span>
-                              <span class="info-value" id="audioCurrent">--</span>
-                         </div>
                          <label class="form-label" for="audioVolume">
                               <span>Volume</span>
                               <span class="value-tag" id="audioVolumeLabel">0%</span>
@@ -247,11 +244,10 @@
           <div class="modal-dialog">
                <div class="modal-panel">
                     <h2 id="otaModalTitle">OTA</h2>
-                    <p class="hint">Gebruik deze stappen voor een update.</p>
+                    <p class="hint">Start ota.bat. Wacht op pauze.Klik dan op Start OTA, wacht tot de aftelling klaar is en druk daarna op Enter in ota.bat.</p>
                     <p class="status" id="otaStatus">Niet geactiveerd</p>
                     <div class="row">
-                         <button type="button" class="btn btn-small" data-ota="arm">Arm</button>
-                         <button type="button" class="btn btn-small" data-ota="confirm">Bevestig &amp; herstart</button>
+                         <button type="button" class="btn btn-small" id="otaStart">Start OTA</button>
                     </div>
                     <div class="modal-actions">
                          <button type="button" class="btn btn-small" data-dismiss>Sluiten</button>
@@ -260,7 +256,7 @@
           </div>
      </div>
 
-     <script src="kwal.js?v=webui-patternsplit-20251109T1615Z"></script>
+     <script src="kwal.js?v=webui-otaonebutton-20251110T1915Z"></script>
      <script>
           if (window.kwalApp && typeof window.kwalApp.boot === 'function') {
                window.kwalApp.boot();

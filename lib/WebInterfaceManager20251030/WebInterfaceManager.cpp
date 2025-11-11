@@ -889,11 +889,28 @@ void handleOtaConfirm(AsyncWebServerRequest *request)
 {
   if (ConductManager::intentConfirmOTA())
   {
-    request->send(200, "text/plain", "REBOOTING");
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "Reboot binnen 15s - druk Enter in ota.bat");
+    response->addHeader("Connection", "close");
+    request->send(response);
   }
   else
   {
     request->send(400, "text/plain", "EXPIRED");
+  }
+}
+
+void handleOtaStart(AsyncWebServerRequest *request)
+{
+  ConductManager::intentArmOTA(300);
+  if (ConductManager::intentConfirmOTA())
+  {
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "Reboot binnen 15s - druk Enter in ota.bat");
+    response->addHeader("Connection", "close");
+    request->send(response);
+  }
+  else
+  {
+    request->send(500, "text/plain", "OTA start mislukt");
   }
 }
 
@@ -921,6 +938,7 @@ void beginWebInterface()
   // OTA routes
   server.on("/ota/arm", HTTP_GET, handleOtaArm);
   server.on("/ota/confirm", HTTP_POST, handleOtaConfirm);
+  server.on("/ota/start", HTTP_POST, handleOtaStart);
 
   SDVoting::attachVoteRoute(server);
 
