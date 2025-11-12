@@ -4,7 +4,7 @@
      <meta charset="utf-8">
      <meta name="viewport" content="width=device-width, initial-scale=1">
      <title>kwal</title>
-     <link rel="stylesheet" href="styles.css?v=webui-otaonebutton-20251110T1915Z">
+     <link rel="stylesheet" href="styles.css?v=webui-otaonebutton-20251112T1209Z">
 </head>
 <body>
      <main class="page" aria-labelledby="pageTitle">
@@ -20,6 +20,7 @@
                <article class="panel" id="audioPanel" aria-labelledby="audioHeading">
                     <header class="panel-header">
                          <h2 id="audioHeading">Audio</h2>
+                         <span class="info-value audio-score" id="audioScore">Score --</span>
                          <span class="info-value audio-fragment" id="audioCurrent">--</span>
                     </header>
                     <p class="status" id="audioStatus">-</p>
@@ -256,7 +257,7 @@
           </div>
      </div>
 
-     <script src="kwal.js?v=webui-otaonebutton-20251110T1915Z"></script>
+     <script src="kwal.js?v=webui-otaonebutton-20251112T1209Z"></script>
      <script>
           if (window.kwalApp && typeof window.kwalApp.boot === 'function') {
                window.kwalApp.boot();

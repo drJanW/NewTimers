@@ -140,7 +140,7 @@
 
     // Build sentinel: update version string whenever web assets change so the device/browser can verify freshness.
     window.APP_BUILD_INFO = Object.freeze({
-        version: 'webui-otaonebutton-20251110T1915Z',
+        version: 'webui-otaonebutton-20251112T1209Z',
         features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit', 'splitLightModals', 'otaOneButton']
     });
 
@@ -170,6 +170,7 @@
 
     const dom = {
         audioCurrent: document.getElementById('audioCurrent'),
+        audioScore: document.getElementById('audioScore'),
         audioVolume: document.getElementById('audioVolume'),
         audioVolumeLabel: document.getElementById('audioVolumeLabel'),
         lightSlider: document.getElementById('lightSlider'),
@@ -333,8 +334,8 @@
     const state = {
         brightnessLive: 0,
         brightnessDraft: 0,
-        audioVolume: 0,
-        audio: { dir: 0, file: 0 },
+    audioVolume: 0,
+    audio: { dir: 0, file: 0, score: null },
         pattern: createCollectionState('Patroon geladen'),
         color: createCollectionState('Kleurset geladen'),
         previewActive: false,
@@ -2056,9 +2057,15 @@
                         await sleep(waitMs);
                         continue;
                     }
+                    const scoreMatch = /score=(\d+)/i.exec(text);
+                    const score = scoreMatch ? parseInt(scoreMatch[1], 10) : null;
                     state.audio.dir = dir;
                     state.audio.file = file;
+                    state.audio.score = Number.isFinite(score) ? score : null;
                     dom.audioCurrent.textContent = key;
+                    if (dom.audioScore) {
+                        dom.audioScore.textContent = Number.isFinite(score) ? `Score ${score}` : 'Score --';
+                    }
                     setStatus('audioStatus', 'Klaar', 'success');
                     return key;
                 }
@@ -2072,7 +2079,11 @@
 
         state.audio.dir = 0;
         state.audio.file = 0;
+        state.audio.score = null;
         dom.audioCurrent.textContent = '--';
+        if (dom.audioScore) {
+            dom.audioScore.textContent = 'Score --';
+        }
         setStatus('audioStatus', 'Geen data', 'error');
         return null;
     };

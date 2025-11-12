@@ -168,6 +168,11 @@ body.modal-open {
     color: #dde6ff;
 }
 
+.audio-score {
+    font-size: 0.95rem;
+    color: #9fd3ff;
+}
+
 .status {
     margin: 0;
     font-size: 0.85rem;
