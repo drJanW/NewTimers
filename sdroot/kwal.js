@@ -140,7 +140,7 @@
 
     // Build sentinel: update version string whenever web assets change so the device/browser can verify freshness.
     window.APP_BUILD_INFO = Object.freeze({
-        version: 'webui-otaonebutton-20251112T1209Z',
+        version: 'webui-otaonebutton-20251112T1230Z',
         features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit', 'splitLightModals', 'otaOneButton']
     });
 
@@ -2103,10 +2103,14 @@
         button.addEventListener('click', async () => {
             const vote = button.getAttribute('data-vote');
             let url = '/vote';
-            if (vote === 'up') {
-                url = `${url}?delta=5`;
+            if (vote === 'up-strong') {
+                url = `${url}?delta=8`;
+            } else if (vote === 'up') {
+                url = `${url}?delta=3`;
             } else if (vote === 'down') {
-                url = `${url}?delta=-5`;
+                url = `${url}?delta=-3`;
+            } else if (vote === 'down-strong') {
+                url = `${url}?delta=-8`;
             } else {
                 url = `${url}?ban=1`;
             }

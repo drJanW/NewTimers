@@ -134,6 +134,36 @@ if exist "include" (
     echo WARNING: include directory not found! Skipping...
 )
 
+:: NEW: Backup sdroot
+if exist "sdroot" (
+    >> "%backupfile%" echo =======================================
+    >> "%backupfile%" echo SDROOT Directory Files
+    >> "%backupfile%" echo =======================================
+    >> "%backupfile%" echo.
+
+    set "sd_count=0"
+    for %%F in ("sdroot\*.json" "sdroot\*.txt" "sdroot\*.wav" "sdroot\*.css" "sdroot\*.html" "sdroot\*.js") do (
+        if exist "%%~F" (
+            set /a sd_count+=1
+            >> "%backupfile%" echo ---------------------------------------
+            >> "%backupfile%" echo File: %%~F
+            >> "%backupfile%" echo ---------------------------------------
+            type "%%~F" >> "%backupfile%"
+            >> "%backupfile%" echo.
+        )
+    )
+
+    if !sd_count! equ 0 (
+        >> "%backupfile%" echo No sdroot files found
+        echo No sdroot files found
+    ) else (
+        echo Added !sd_count! sdroot files
+    )
+) else (
+    >> "%backupfile%" echo WARNING: sdroot directory not found! Skipping...
+    echo WARNING: sdroot directory not found! Skipping...
+)
+
 :: Summary
 >> "%backupfile%" echo =======================================
 >> "%backupfile%" echo Merge completed: %datetime%

@@ -18,9 +18,10 @@ struct CalendarEntry {
 
 struct CalendarThemeBox {
 	bool valid{false};
-	String id;
+	String id;//TODO: CONVERT TO UINT8_T   - ALSO IN EXCEL 
 	String entries;
-	String note;
+	String note;//TODO: OBSOLETE??
+	
 };
 
 struct CalendarSnapshot {

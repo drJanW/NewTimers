@@ -4,7 +4,7 @@
      <meta charset="utf-8">
      <meta name="viewport" content="width=device-width, initial-scale=1">
      <title>kwal</title>
-     <link rel="stylesheet" href="styles.css?v=webui-otaonebutton-20251112T1209Z">
+     <link rel="stylesheet" href="styles.css?v=webui-otaonebutton-20251112T1230Z">
 </head>
 <body>
      <main class="page" aria-labelledby="pageTitle">
@@ -37,8 +37,10 @@
                               </button>
                          </div>
                          <div class="row vote-row" role="group" aria-label="Stemmen">
-                              <button type="button" class="btn btn-vote" data-vote="up" aria-label="Upvote">+</button>
+                              <button type="button" class="btn btn-vote" data-vote="down-strong" aria-label="Sterk downvote">--</button>
                               <button type="button" class="btn btn-vote" data-vote="down" aria-label="Downvote">-</button>
+                              <button type="button" class="btn btn-vote" data-vote="up" aria-label="Upvote">+</button>
+                              <button type="button" class="btn btn-vote" data-vote="up-strong" aria-label="Sterk upvote">++</button>
                               <button type="button" class="btn btn-vote" data-vote="ban" aria-label="Nooit meer">0</button>
                          </div>
                     </div>
@@ -257,7 +259,7 @@
           </div>
      </div>
 
-     <script src="kwal.js?v=webui-otaonebutton-20251112T1209Z"></script>
+     <script src="kwal.js?v=webui-otaonebutton-20251112T1230Z"></script>
      <script>
           if (window.kwalApp && typeof window.kwalApp.boot === 'function') {
                window.kwalApp.boot();

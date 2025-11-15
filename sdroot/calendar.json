@@ -1,0 +1,6429 @@
+{
+  "schema": 1,
+  "timezone": "Europe/Amsterdam",
+  "generated_at": "2025-11-14T11:46:17",
+  "entries": [
+    {
+      "date": {
+        "year": 2026,
+        "month": 1,
+        "day": 1,
+        "iso": "2026-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 2,
+        "day": 1,
+        "iso": "2026-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 2,
+        "day": 15,
+        "iso": "2026-02-15"
+      },
+      "tts": {
+        "sentence": "Carnaval , Alaaf!!",
+        "interval_min": 117
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 2,
+        "day": 18,
+        "iso": "2026-02-18"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - het is  uit met de carnavalspret",
+        "interval_min": 262
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 3,
+        "day": 1,
+        "iso": "2026-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 3,
+        "day": 21,
+        "iso": "2026-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 4,
+        "day": 1,
+        "iso": "2026-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 4,
+        "day": 3,
+        "iso": "2026-04-03"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag,  - bijna Pasen",
+        "interval_min": 245
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 4,
+        "day": 5,
+        "iso": "2026-04-05"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 90
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 4,
+        "day": 30,
+        "iso": "2026-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 5,
+        "day": 1,
+        "iso": "2026-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 5,
+        "day": 5,
+        "iso": "2026-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 5,
+        "day": 10,
+        "iso": "2026-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 5,
+        "day": 14,
+        "iso": "2026-05-14"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 133
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 5,
+        "day": 24,
+        "iso": "2026-05-24"
+      },
+      "tts": {
+        "sentence": "Pinksteren,  - wat is dat ook weer??",
+        "interval_min": 164
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 6,
+        "day": 1,
+        "iso": "2026-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 7,
+        "day": 1,
+        "iso": "2026-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 8,
+        "day": 1,
+        "iso": "2026-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 9,
+        "day": 1,
+        "iso": "2026-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 10,
+        "day": 1,
+        "iso": "2026-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 10,
+        "day": 8,
+        "iso": "2026-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 11,
+        "day": 1,
+        "iso": "2026-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 12,
+        "day": 1,
+        "iso": "2026-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 12,
+        "day": 13,
+        "iso": "2026-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 12,
+        "day": 25,
+        "iso": "2026-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2026,
+        "month": 12,
+        "day": 26,
+        "iso": "2026-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 1,
+        "day": 1,
+        "iso": "2027-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 2,
+        "day": 1,
+        "iso": "2027-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 2,
+        "day": 7,
+        "iso": "2027-02-07"
+      },
+      "tts": {
+        "sentence": "Carnaval , Keiebijters!!",
+        "interval_min": 115
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 2,
+        "day": 10,
+        "iso": "2027-02-10"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - en dan nu: vasten",
+        "interval_min": 227
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 3,
+        "day": 1,
+        "iso": "2027-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 3,
+        "day": 21,
+        "iso": "2027-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 3,
+        "day": 26,
+        "iso": "2027-03-26"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag,  - geen vrije dag",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 3,
+        "day": 28,
+        "iso": "2027-03-28"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen, zoek de eitjes",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 4,
+        "day": 1,
+        "iso": "2027-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 4,
+        "day": 30,
+        "iso": "2027-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 5,
+        "day": 1,
+        "iso": "2027-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 5,
+        "day": 5,
+        "iso": "2027-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 5,
+        "day": 6,
+        "iso": "2027-05-06"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 122
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 5,
+        "day": 10,
+        "iso": "2027-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 5,
+        "day": 16,
+        "iso": "2027-05-16"
+      },
+      "tts": {
+        "sentence": "Pinksteren,  - iets met vurige tongen?",
+        "interval_min": 137
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 6,
+        "day": 1,
+        "iso": "2027-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 7,
+        "day": 1,
+        "iso": "2027-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 8,
+        "day": 1,
+        "iso": "2027-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 9,
+        "day": 1,
+        "iso": "2027-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 10,
+        "day": 1,
+        "iso": "2027-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 10,
+        "day": 8,
+        "iso": "2027-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 11,
+        "day": 1,
+        "iso": "2027-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 12,
+        "day": 1,
+        "iso": "2027-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 12,
+        "day": 13,
+        "iso": "2027-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 12,
+        "day": 25,
+        "iso": "2027-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2027,
+        "month": 12,
+        "day": 26,
+        "iso": "2027-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 1,
+        "day": 1,
+        "iso": "2028-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 2,
+        "day": 1,
+        "iso": "2028-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 2,
+        "day": 27,
+        "iso": "2028-02-27"
+      },
+      "tts": {
+        "sentence": "Carnaval , En deh hittie naw gedonn umdettie Hellemonder is",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 3,
+        "day": 1,
+        "iso": "2028-03-01"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - en nu begint de katholieke ramadan",
+        "interval_min": 187
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 3,
+        "day": 1,
+        "iso": "2028-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 3,
+        "day": 21,
+        "iso": "2028-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 4,
+        "day": 1,
+        "iso": "2028-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 4,
+        "day": 14,
+        "iso": "2028-04-14"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag",
+        "interval_min": 187
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 4,
+        "day": 16,
+        "iso": "2028-04-16"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 86
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 4,
+        "day": 30,
+        "iso": "2028-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 5,
+        "day": 1,
+        "iso": "2028-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 5,
+        "day": 5,
+        "iso": "2028-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 5,
+        "day": 10,
+        "iso": "2028-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 5,
+        "day": 25,
+        "iso": "2028-05-25"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 101
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 6,
+        "day": 1,
+        "iso": "2028-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 6,
+        "day": 4,
+        "iso": "2028-06-04"
+      },
+      "tts": {
+        "sentence": "Pinksteren,  - de Heilige Geest zien vliegen???",
+        "interval_min": 117
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 7,
+        "day": 1,
+        "iso": "2028-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 8,
+        "day": 1,
+        "iso": "2028-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 9,
+        "day": 1,
+        "iso": "2028-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 10,
+        "day": 1,
+        "iso": "2028-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 10,
+        "day": 8,
+        "iso": "2028-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 11,
+        "day": 1,
+        "iso": "2028-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 12,
+        "day": 1,
+        "iso": "2028-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 12,
+        "day": 13,
+        "iso": "2028-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 12,
+        "day": 25,
+        "iso": "2028-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2028,
+        "month": 12,
+        "day": 26,
+        "iso": "2028-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 1,
+        "day": 1,
+        "iso": "2029-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 2,
+        "day": 1,
+        "iso": "2029-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 2,
+        "day": 11,
+        "iso": "2029-02-11"
+      },
+      "tts": {
+        "sentence": "Carnaval , Agge mar let heht",
+        "interval_min": 82
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 2,
+        "day": 14,
+        "iso": "2029-02-14"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - het is  uit met de carnavalspret",
+        "interval_min": 179
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 3,
+        "day": 1,
+        "iso": "2029-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 3,
+        "day": 21,
+        "iso": "2029-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 3,
+        "day": 30,
+        "iso": "2029-03-30"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag,  tja, Goede Vrijdag?",
+        "interval_min": 215
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 4,
+        "day": 1,
+        "iso": "2029-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 4,
+        "day": 1,
+        "iso": "2029-04-01"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 71
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 4,
+        "day": 30,
+        "iso": "2029-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 5,
+        "day": 1,
+        "iso": "2029-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 5,
+        "day": 5,
+        "iso": "2029-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 5,
+        "day": 10,
+        "iso": "2029-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 5,
+        "day": 10,
+        "iso": "2029-05-10"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 88
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 5,
+        "day": 20,
+        "iso": "2029-05-20"
+      },
+      "tts": {
+        "sentence": "Pinksteren",
+        "interval_min": 124
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 6,
+        "day": 1,
+        "iso": "2029-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 7,
+        "day": 1,
+        "iso": "2029-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 8,
+        "day": 1,
+        "iso": "2029-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 9,
+        "day": 1,
+        "iso": "2029-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 10,
+        "day": 1,
+        "iso": "2029-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 10,
+        "day": 8,
+        "iso": "2029-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 11,
+        "day": 1,
+        "iso": "2029-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 12,
+        "day": 1,
+        "iso": "2029-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 12,
+        "day": 13,
+        "iso": "2029-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 12,
+        "day": 25,
+        "iso": "2029-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2029,
+        "month": 12,
+        "day": 26,
+        "iso": "2029-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 1,
+        "day": 1,
+        "iso": "2030-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 2,
+        "day": 1,
+        "iso": "2030-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 3,
+        "day": 1,
+        "iso": "2030-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 3,
+        "day": 3,
+        "iso": "2030-03-03"
+      },
+      "tts": {
+        "sentence": "Carnaval , Alaaf!!",
+        "interval_min": 81
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 3,
+        "day": 6,
+        "iso": "2030-03-06"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - en dan nu: vasten",
+        "interval_min": 210
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 3,
+        "day": 21,
+        "iso": "2030-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 4,
+        "day": 1,
+        "iso": "2030-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 4,
+        "day": 19,
+        "iso": "2030-04-19"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag",
+        "interval_min": 260
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 4,
+        "day": 21,
+        "iso": "2030-04-21"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen, waar is de paashaas??",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 4,
+        "day": 30,
+        "iso": "2030-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 5,
+        "day": 1,
+        "iso": "2030-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 5,
+        "day": 5,
+        "iso": "2030-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 5,
+        "day": 10,
+        "iso": "2030-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 5,
+        "day": 30,
+        "iso": "2030-05-30"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 96
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 6,
+        "day": 1,
+        "iso": "2030-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 6,
+        "day": 9,
+        "iso": "2030-06-09"
+      },
+      "tts": {
+        "sentence": "Pinksteren,  - wat is dat ook weer??",
+        "interval_min": 150
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 7,
+        "day": 1,
+        "iso": "2030-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 8,
+        "day": 1,
+        "iso": "2030-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 9,
+        "day": 1,
+        "iso": "2030-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 10,
+        "day": 1,
+        "iso": "2030-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 10,
+        "day": 8,
+        "iso": "2030-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 11,
+        "day": 1,
+        "iso": "2030-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 12,
+        "day": 1,
+        "iso": "2030-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 12,
+        "day": 13,
+        "iso": "2030-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 12,
+        "day": 25,
+        "iso": "2030-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2030,
+        "month": 12,
+        "day": 26,
+        "iso": "2030-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 1,
+        "day": 1,
+        "iso": "2031-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 2,
+        "day": 1,
+        "iso": "2031-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 2,
+        "day": 23,
+        "iso": "2031-02-23"
+      },
+      "tts": {
+        "sentence": "Carnaval , Keiebijters!!",
+        "interval_min": 96
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 2,
+        "day": 26,
+        "iso": "2031-02-26"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - en nu begint de katholieke ramadan",
+        "interval_min": 251
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 3,
+        "day": 1,
+        "iso": "2031-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 3,
+        "day": 21,
+        "iso": "2031-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 4,
+        "day": 1,
+        "iso": "2031-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 4,
+        "day": 11,
+        "iso": "2031-04-11"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag,  - ook zowat",
+        "interval_min": 280
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 4,
+        "day": 13,
+        "iso": "2031-04-13"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 71
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 4,
+        "day": 30,
+        "iso": "2031-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 5,
+        "day": 1,
+        "iso": "2031-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 5,
+        "day": 5,
+        "iso": "2031-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 5,
+        "day": 10,
+        "iso": "2031-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 5,
+        "day": 22,
+        "iso": "2031-05-22"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 117
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 6,
+        "day": 1,
+        "iso": "2031-06-01"
+      },
+      "tts": {
+        "sentence": "Pinksteren,  - iets met vurige tongen?",
+        "interval_min": 172
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 6,
+        "day": 1,
+        "iso": "2031-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 7,
+        "day": 1,
+        "iso": "2031-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 8,
+        "day": 1,
+        "iso": "2031-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 9,
+        "day": 1,
+        "iso": "2031-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 10,
+        "day": 1,
+        "iso": "2031-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 10,
+        "day": 8,
+        "iso": "2031-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 11,
+        "day": 1,
+        "iso": "2031-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 12,
+        "day": 1,
+        "iso": "2031-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 12,
+        "day": 13,
+        "iso": "2031-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 12,
+        "day": 25,
+        "iso": "2031-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2031,
+        "month": 12,
+        "day": 26,
+        "iso": "2031-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 1,
+        "day": 1,
+        "iso": "2032-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 2,
+        "day": 1,
+        "iso": "2032-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 2,
+        "day": 8,
+        "iso": "2032-02-08"
+      },
+      "tts": {
+        "sentence": "Carnaval , En deh hittie naw gedonn umdettie Hellemonder is",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 2,
+        "day": 11,
+        "iso": "2032-02-11"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - het is  uit met de carnavalspret",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 3,
+        "day": 1,
+        "iso": "2032-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 3,
+        "day": 21,
+        "iso": "2032-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 3,
+        "day": 26,
+        "iso": "2032-03-26"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag",
+        "interval_min": 258
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 3,
+        "day": 28,
+        "iso": "2032-03-28"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 86
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 4,
+        "day": 1,
+        "iso": "2032-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 4,
+        "day": 30,
+        "iso": "2032-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 5,
+        "day": 1,
+        "iso": "2032-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 5,
+        "day": 5,
+        "iso": "2032-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 5,
+        "day": 6,
+        "iso": "2032-05-06"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 132
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 5,
+        "day": 10,
+        "iso": "2032-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 5,
+        "day": 16,
+        "iso": "2032-05-16"
+      },
+      "tts": {
+        "sentence": "Pinksteren,  - de Heilige Geest zien vliegen???",
+        "interval_min": 170
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 6,
+        "day": 1,
+        "iso": "2032-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 7,
+        "day": 1,
+        "iso": "2032-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 8,
+        "day": 1,
+        "iso": "2032-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 9,
+        "day": 1,
+        "iso": "2032-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 10,
+        "day": 1,
+        "iso": "2032-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 10,
+        "day": 8,
+        "iso": "2032-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 11,
+        "day": 1,
+        "iso": "2032-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 12,
+        "day": 1,
+        "iso": "2032-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 12,
+        "day": 13,
+        "iso": "2032-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 12,
+        "day": 25,
+        "iso": "2032-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2032,
+        "month": 12,
+        "day": 26,
+        "iso": "2032-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 1,
+        "day": 1,
+        "iso": "2033-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 2,
+        "day": 1,
+        "iso": "2033-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 2,
+        "day": 27,
+        "iso": "2033-02-27"
+      },
+      "tts": {
+        "sentence": "Carnaval , Agge mar let heht",
+        "interval_min": 117
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 3,
+        "day": 1,
+        "iso": "2033-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 3,
+        "day": 2,
+        "iso": "2033-03-02"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - en dan nu: vasten",
+        "interval_min": 239
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 3,
+        "day": 21,
+        "iso": "2033-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 4,
+        "day": 1,
+        "iso": "2033-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 4,
+        "day": 15,
+        "iso": "2033-04-15"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag, holadiejee",
+        "interval_min": 213
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 4,
+        "day": 17,
+        "iso": "2033-04-17"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 4,
+        "day": 30,
+        "iso": "2033-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 5,
+        "day": 1,
+        "iso": "2033-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 5,
+        "day": 5,
+        "iso": "2033-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 5,
+        "day": 10,
+        "iso": "2033-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 5,
+        "day": 26,
+        "iso": "2033-05-26"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 127
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 6,
+        "day": 1,
+        "iso": "2033-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 6,
+        "day": 5,
+        "iso": "2033-06-05"
+      },
+      "tts": {
+        "sentence": "Pinksteren",
+        "interval_min": 145
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 7,
+        "day": 1,
+        "iso": "2033-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 8,
+        "day": 1,
+        "iso": "2033-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 9,
+        "day": 1,
+        "iso": "2033-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 10,
+        "day": 1,
+        "iso": "2033-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 10,
+        "day": 8,
+        "iso": "2033-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 11,
+        "day": 1,
+        "iso": "2033-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 12,
+        "day": 1,
+        "iso": "2033-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 12,
+        "day": 13,
+        "iso": "2033-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 12,
+        "day": 25,
+        "iso": "2033-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2033,
+        "month": 12,
+        "day": 26,
+        "iso": "2033-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 1,
+        "day": 1,
+        "iso": "2034-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 2,
+        "day": 1,
+        "iso": "2034-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 2,
+        "day": 19,
+        "iso": "2034-02-19"
+      },
+      "tts": {
+        "sentence": "Carnaval , Alaaf!!",
+        "interval_min": 104
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 2,
+        "day": 22,
+        "iso": "2034-02-22"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - en nu begint de katholieke ramadan",
+        "interval_min": 197
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 3,
+        "day": 1,
+        "iso": "2034-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 3,
+        "day": 21,
+        "iso": "2034-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 4,
+        "day": 1,
+        "iso": "2034-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 4,
+        "day": 7,
+        "iso": "2034-04-07"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag",
+        "interval_min": 187
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 4,
+        "day": 9,
+        "iso": "2034-04-09"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 90
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 4,
+        "day": 30,
+        "iso": "2034-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 5,
+        "day": 1,
+        "iso": "2034-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 5,
+        "day": 5,
+        "iso": "2034-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 5,
+        "day": 10,
+        "iso": "2034-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 5,
+        "day": 18,
+        "iso": "2034-05-18"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 107
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 5,
+        "day": 28,
+        "iso": "2034-05-28"
+      },
+      "tts": {
+        "sentence": "Pinksteren,  - wat is dat ook weer??",
+        "interval_min": 121
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 6,
+        "day": 1,
+        "iso": "2034-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 7,
+        "day": 1,
+        "iso": "2034-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 8,
+        "day": 1,
+        "iso": "2034-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 9,
+        "day": 1,
+        "iso": "2034-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 10,
+        "day": 1,
+        "iso": "2034-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 10,
+        "day": 8,
+        "iso": "2034-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 11,
+        "day": 1,
+        "iso": "2034-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 12,
+        "day": 1,
+        "iso": "2034-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 12,
+        "day": 13,
+        "iso": "2034-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 12,
+        "day": 25,
+        "iso": "2034-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2034,
+        "month": 12,
+        "day": 26,
+        "iso": "2034-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 1,
+        "day": 1,
+        "iso": "2035-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 2,
+        "day": 1,
+        "iso": "2035-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 2,
+        "day": 4,
+        "iso": "2035-02-04"
+      },
+      "tts": {
+        "sentence": "Carnaval , Keiebijters!!",
+        "interval_min": 85
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 2,
+        "day": 7,
+        "iso": "2035-02-07"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - het is  uit met de carnavalspret",
+        "interval_min": 177
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 3,
+        "day": 1,
+        "iso": "2035-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 3,
+        "day": 21,
+        "iso": "2035-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 3,
+        "day": 23,
+        "iso": "2035-03-23"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag",
+        "interval_min": 204
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 3,
+        "day": 25,
+        "iso": "2035-03-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 75
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 4,
+        "day": 1,
+        "iso": "2035-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 4,
+        "day": 30,
+        "iso": "2035-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 5,
+        "day": 1,
+        "iso": "2035-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 5,
+        "day": 3,
+        "iso": "2035-05-03"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 90
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 5,
+        "day": 5,
+        "iso": "2035-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 5,
+        "day": 10,
+        "iso": "2035-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 5,
+        "day": 13,
+        "iso": "2035-05-13"
+      },
+      "tts": {
+        "sentence": "Pinksteren,  - iets met vurige tongen?",
+        "interval_min": 119
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 6,
+        "day": 1,
+        "iso": "2035-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 7,
+        "day": 1,
+        "iso": "2035-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 8,
+        "day": 1,
+        "iso": "2035-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 9,
+        "day": 1,
+        "iso": "2035-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 10,
+        "day": 1,
+        "iso": "2035-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 10,
+        "day": 8,
+        "iso": "2035-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 11,
+        "day": 1,
+        "iso": "2035-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 12,
+        "day": 1,
+        "iso": "2035-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 12,
+        "day": 13,
+        "iso": "2035-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 12,
+        "day": 25,
+        "iso": "2035-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2035,
+        "month": 12,
+        "day": 26,
+        "iso": "2035-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 1,
+        "day": 1,
+        "iso": "2036-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 2,
+        "day": 1,
+        "iso": "2036-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 2,
+        "day": 24,
+        "iso": "2036-02-24"
+      },
+      "tts": {
+        "sentence": "Carnaval , En deh hittie naw gedonn umdettie Hellemonder is",
+        "interval_min": 79
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 2,
+        "day": 27,
+        "iso": "2036-02-27"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - en dan nu: vasten",
+        "interval_min": 198
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 3,
+        "day": 1,
+        "iso": "2036-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 3,
+        "day": 21,
+        "iso": "2036-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 4,
+        "day": 1,
+        "iso": "2036-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 4,
+        "day": 11,
+        "iso": "2036-04-11"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag",
+        "interval_min": 248
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 4,
+        "day": 13,
+        "iso": "2036-04-13"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 4,
+        "day": 30,
+        "iso": "2036-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 5,
+        "day": 1,
+        "iso": "2036-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 5,
+        "day": 5,
+        "iso": "2036-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 5,
+        "day": 10,
+        "iso": "2036-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 5,
+        "day": 22,
+        "iso": "2036-05-22"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 92
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 6,
+        "day": 1,
+        "iso": "2036-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 6,
+        "day": 1,
+        "iso": "2036-06-01"
+      },
+      "tts": {
+        "sentence": "Pinksteren,  - de Heilige Geest zien vliegen???",
+        "interval_min": 142
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 7,
+        "day": 1,
+        "iso": "2036-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 8,
+        "day": 1,
+        "iso": "2036-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 9,
+        "day": 1,
+        "iso": "2036-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 10,
+        "day": 1,
+        "iso": "2036-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 10,
+        "day": 8,
+        "iso": "2036-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 11,
+        "day": 1,
+        "iso": "2036-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 12,
+        "day": 1,
+        "iso": "2036-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 12,
+        "day": 13,
+        "iso": "2036-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 12,
+        "day": 25,
+        "iso": "2036-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2036,
+        "month": 12,
+        "day": 26,
+        "iso": "2036-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 1,
+        "day": 1,
+        "iso": "2037-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 2,
+        "day": 1,
+        "iso": "2037-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 2,
+        "day": 15,
+        "iso": "2037-02-15"
+      },
+      "tts": {
+        "sentence": "Carnaval , Agge mar let heht",
+        "interval_min": 91
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 2,
+        "day": 18,
+        "iso": "2037-02-18"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - en nu begint de katholieke ramadan",
+        "interval_min": 241
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 3,
+        "day": 1,
+        "iso": "2037-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 3,
+        "day": 21,
+        "iso": "2037-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 4,
+        "day": 1,
+        "iso": "2037-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 4,
+        "day": 3,
+        "iso": "2037-04-03"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag",
+        "interval_min": 279
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 4,
+        "day": 5,
+        "iso": "2037-04-05"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 67
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 4,
+        "day": 30,
+        "iso": "2037-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 5,
+        "day": 1,
+        "iso": "2037-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 5,
+        "day": 5,
+        "iso": "2037-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 5,
+        "day": 10,
+        "iso": "2037-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 5,
+        "day": 14,
+        "iso": "2037-05-14"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 111
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 5,
+        "day": 24,
+        "iso": "2037-05-24"
+      },
+      "tts": {
+        "sentence": "Pinksteren",
+        "interval_min": 168
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 6,
+        "day": 1,
+        "iso": "2037-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 7,
+        "day": 1,
+        "iso": "2037-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 8,
+        "day": 1,
+        "iso": "2037-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 9,
+        "day": 1,
+        "iso": "2037-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 10,
+        "day": 1,
+        "iso": "2037-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 10,
+        "day": 8,
+        "iso": "2037-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 11,
+        "day": 1,
+        "iso": "2037-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 12,
+        "day": 1,
+        "iso": "2037-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 12,
+        "day": 13,
+        "iso": "2037-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 12,
+        "day": 25,
+        "iso": "2037-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2037,
+        "month": 12,
+        "day": 26,
+        "iso": "2037-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 1,
+        "day": 1,
+        "iso": "2038-01-01"
+      },
+      "tts": {
+        "sentence": "Gelukkig Nieuwjaar",
+        "interval_min": 77
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 2
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 2,
+        "day": 1,
+        "iso": "2038-02-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand febuari",
+        "interval_min": 249
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 3,
+        "day": 1,
+        "iso": "2038-03-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand maart",
+        "interval_min": 287
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 3,
+        "day": 7,
+        "iso": "2038-03-07"
+      },
+      "tts": {
+        "sentence": "Carnaval , Tadaaaaah - tadaaaah",
+        "interval_min": 109
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 3,
+        "day": 10,
+        "iso": "2038-03-10"
+      },
+      "tts": {
+        "sentence": "Aswoensdag ,  - het is  uit met de carnavalspret",
+        "interval_min": 266
+      },
+      "audio": {
+        "theme_box_id": 21
+      },
+      "lights": {
+        "pattern_id": 5,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 3,
+        "day": 21,
+        "iso": "2038-03-21"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Thomas",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 4,
+        "day": 1,
+        "iso": "2038-04-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand april, een april, kikker in je bil!",
+        "interval_min": 265
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 4,
+        "day": 23,
+        "iso": "2038-04-23"
+      },
+      "tts": {
+        "sentence": "Goede Vrijdag",
+        "interval_min": 268
+      },
+      "audio": {
+        "theme_box_id": 13
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 4,
+        "day": 25,
+        "iso": "2038-04-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Pasen",
+        "interval_min": 82
+      },
+      "audio": {
+        "theme_box_id": 17
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 4,
+        "day": 30,
+        "iso": "2038-04-30"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Paul",
+        "interval_min": 98
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 5,
+        "day": 1,
+        "iso": "2038-05-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand mei- leggen alle vogeltjes een ei",
+        "interval_min": 202
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 5,
+        "day": 5,
+        "iso": "2038-05-05"
+      },
+      "tts": {
+        "sentence": "Bevrijdingsdag",
+        "interval_min": 64
+      },
+      "audio": {
+        "theme_box_id": 24
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 5,
+        "day": 10,
+        "iso": "2038-05-10"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Gaia",
+        "interval_min": 73
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 6,
+        "day": 1,
+        "iso": "2038-06-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juni",
+        "interval_min": 157
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 6,
+        "day": 3,
+        "iso": "2038-06-03"
+      },
+      "tts": {
+        "sentence": "Hemelvaart",
+        "interval_min": 129
+      },
+      "audio": {
+        "theme_box_id": 11
+      },
+      "lights": {
+        "pattern_id": 2,
+        "color_id": 6
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 6,
+        "day": 13,
+        "iso": "2038-06-13"
+      },
+      "tts": {
+        "sentence": "Pinksteren,  - wat is dat ook weer??",
+        "interval_min": 173
+      },
+      "audio": {
+        "theme_box_id": 4
+      },
+      "lights": {
+        "pattern_id": 4,
+        "color_id": 1
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 7,
+        "day": 1,
+        "iso": "2038-07-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand juli",
+        "interval_min": 171
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 8,
+        "day": 1,
+        "iso": "2038-08-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand augustus",
+        "interval_min": 231
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 9,
+        "day": 1,
+        "iso": "2038-09-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand september",
+        "interval_min": 282
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 10,
+        "day": 1,
+        "iso": "2038-10-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand oktober",
+        "interval_min": 277
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 10,
+        "day": 8,
+        "iso": "2038-10-08"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  Jan",
+        "interval_min": 105
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 11,
+        "day": 1,
+        "iso": "2038-11-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand november",
+        "interval_min": 221
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 12,
+        "day": 1,
+        "iso": "2038-12-01"
+      },
+      "tts": {
+        "sentence": "Eerste van de maand december",
+        "interval_min": 165
+      },
+      "audio": {
+        "theme_box_id": 23
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 12,
+        "day": 13,
+        "iso": "2038-12-13"
+      },
+      "tts": {
+        "sentence": "Hartelijk gefeliciteerd,  lieve Marit",
+        "interval_min": 114
+      },
+      "audio": {
+        "theme_box_id": 15
+      },
+      "lights": {
+        "pattern_id": 3,
+        "color_id": 5
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 12,
+        "day": 25,
+        "iso": "2038-12-25"
+      },
+      "tts": {
+        "sentence": "Vrolijk Kerstfeest",
+        "interval_min": 95
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 4
+      }
+    },
+    {
+      "date": {
+        "year": 2038,
+        "month": 12,
+        "day": 26,
+        "iso": "2038-12-26"
+      },
+      "tts": {
+        "sentence": "Tweede Kerstdag",
+        "interval_min": 108
+      },
+      "audio": {
+        "theme_box_id": 8
+      },
+      "lights": {
+        "pattern_id": 1,
+        "color_id": 1
+      }
+    }
+  ]
+}

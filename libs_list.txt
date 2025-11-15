@@ -7,7 +7,7 @@ OTAManager
 PRTClock
 SDManager
 SensorManager
-Speakmanager
+;Speakmanager
 TimerManager
 WebInterfaceManager
 WiFiManager
@@ -15,4 +15,4 @@ WiFiManager
 +platformio.ini
 +ota_16mb.csv
 +sdkconfig.defaults
-+index.html
++sdroot

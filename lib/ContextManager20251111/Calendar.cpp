@@ -7,9 +7,10 @@
 
 namespace {
 
-constexpr const char* kCalendarFile     = "calendar.json";
-constexpr const char* kThemeBoxJson     = "theme_boxes.json";
-constexpr size_t   kCalendarJsonCapacity = 16384;
+constexpr const char* kCalendarFile       = "calendar.json";
+constexpr const char* kThemeBoxJson       = "theme_boxes.json";
+constexpr size_t   kCalendarJsonMinBytes  = 16384;
+constexpr size_t   kCalendarJsonMaxBytes  = 196608;
 
 class ScopedSDBusy {
 public:
@@ -117,7 +118,20 @@ bool CalendarManager::loadCalendarRow(uint16_t year, uint8_t month, uint8_t day,
 		return false;
 	}
 
-	DynamicJsonDocument doc(kCalendarJsonCapacity);
+	const size_t fileSize = file.size();
+	// Scale the JSON buffer with the source file size so large calendars still parse on-device.
+	size_t capacity = fileSize > 0 ? fileSize + (fileSize / 4) + 2048 : kCalendarJsonMinBytes;
+	if (capacity < kCalendarJsonMinBytes) {
+		capacity = kCalendarJsonMinBytes;
+	}
+	if (capacity > kCalendarJsonMaxBytes) {
+		PF("[CalendarManager] calendar.json capacity clamped to %u bytes (file=%u)\n",
+		   static_cast<unsigned>(kCalendarJsonMaxBytes),
+		   static_cast<unsigned>(fileSize));
+		capacity = kCalendarJsonMaxBytes;
+	}
+	file.seek(0);
+	DynamicJsonDocument doc(capacity);
 	DeserializationError err = deserializeJson(doc, file);
 	file.close();
 	if (err) {
@@ -151,17 +165,56 @@ bool CalendarManager::loadCalendarRow(uint16_t year, uint8_t month, uint8_t day,
 
 		JsonObject tts = item["tts"].as<JsonObject>();
 		if (!tts.isNull()) {
-			out.ttsSentence = tts["sentence"].as<String>();
-			out.ttsIntervalMinutes = static_cast<uint16_t>(tts["interval_min"] | 0);
+			if (tts.containsKey("sentence")) {
+				out.ttsSentence = tts["sentence"].as<String>();
+			} else {
+				out.ttsSentence = String();
+			}
+			if (tts.containsKey("interval_min")) {
+				out.ttsIntervalMinutes = static_cast<uint16_t>(tts["interval_min"].as<int>());
+			} else {
+				out.ttsIntervalMinutes = static_cast<uint16_t>(tts["interval_minutes"] | 0);
+			}
 		} else {
 			out.ttsSentence = String();
 			out.ttsIntervalMinutes = 0;
 		}
 
-		out.themeBoxId = item["theme_box_id"].as<String>();
-		out.patternId = item["pattern_id"].as<String>();
-		out.colorId = item["color_id"].as<String>();
-		out.note = item["note"].as<String>();
+		JsonObject audio = item["audio"].as<JsonObject>();
+		if (!audio.isNull()) {
+			JsonVariant theme = audio["theme_box_id"];
+			if (!theme.isNull()) {
+				out.themeBoxId = theme.as<String>();
+			}
+		}
+		if (out.themeBoxId.isEmpty()) {
+			out.themeBoxId = item["theme_box_id"].as<String>();
+		}
+
+		JsonObject lights = item["lights"].as<JsonObject>();
+		if (!lights.isNull()) {
+			JsonVariant pattern = lights["pattern_id"];
+			if (!pattern.isNull()) {
+				out.patternId = pattern.as<String>();
+			}
+			JsonVariant color = lights["color_id"];
+			if (!color.isNull()) {
+				out.colorId = color.as<String>();
+			}
+		}
+		if (out.patternId.isEmpty()) {
+			out.patternId = item["pattern_id"].as<String>();
+		}
+		if (out.colorId.isEmpty()) {
+			out.colorId = item["color_id"].as<String>();
+		}
+
+		JsonVariant note = item["note"];
+		if (!note.isNull()) {
+			out.note = note.as<String>();
+		} else {
+			out.note = String();
+		}
 		return true;
 	}
 
