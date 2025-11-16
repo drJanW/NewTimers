@@ -4,10 +4,13 @@
 #include <algorithm>
 #include <ctype.h>
 
+#include "CsvUtils.h"
 #include "SDManager.h"
 
 namespace {
-constexpr const char* kPatternPath = "/light_patterns.json";
+constexpr const char* kPatternPath = "/light_patterns.csv";
+constexpr const char* kActivePatternPrefix = "# active_pattern=";
+constexpr size_t kActivePatternPrefixLen = sizeof("# active_pattern=") - 1;
 constexpr uint8_t kSchemaVersion = 1;
 
 struct DefaultPattern {
@@ -310,8 +313,11 @@ void PatternStore::ensureDefaults() {
     if (patterns_.empty()) {
         loadDefaults();
     }
-    if (activePatternId_.isEmpty() && !patterns_.empty()) {
-        activePatternId_ = patterns_.front().id;
+    if (!activePatternId_.isEmpty()) {
+        const PatternEntry* entry = findEntry(activePatternId_);
+        if (!entry && !patterns_.empty()) {
+            activePatternId_ = patterns_.front().id;
+        }
     }
 }
 
@@ -327,33 +333,77 @@ bool PatternStore::loadFromSD() {
     if (!file) {
         return false;
     }
-    DynamicJsonDocument doc(8192);
-    DeserializationError err = deserializeJson(doc, file);
-    file.close();
-    if (err) {
-        return false;
-    }
+
     patterns_.clear();
-    activePatternId_ = doc["active_pattern"].as<String>();
-    JsonArray arr = doc["patterns"].as<JsonArray>();
-    if (arr.isNull()) {
-        return false;
-    }
-    for (JsonObject item : arr) {
-        LightShowParams params;
-        String errMsg;
-        if (!parseParams(item["params"], params, errMsg)) {
+    activePatternId_.clear();
+
+    String line;
+    std::vector<String> columns;
+    columns.reserve(18);
+    bool headerConsumed = false;
+
+    auto toFloat = [](const String& value) -> float {
+        return value.isEmpty() ? 0.0f : value.toFloat();
+    };
+
+    while (csv::readLine(file, line)) {
+        if (line.isEmpty()) {
             continue;
         }
+        String trimmed = line;
+        trimmed.trim();
+        if (trimmed.isEmpty()) {
+            continue;
+        }
+        if (trimmed.charAt(0) == '#') {
+            if (trimmed.startsWith(F("# active_pattern="))) {
+                activePatternId_ = trimmed.substring(kActivePatternPrefixLen);
+                activePatternId_.trim();
+            }
+            continue;
+        }
+        if (!headerConsumed) {
+            headerConsumed = true;
+            if (trimmed.startsWith(F("light_pattern_id"))) {
+                continue;
+            }
+        }
+
+        csv::splitColumns(line, columns);
+        if (columns.size() < 16) {
+            continue;
+        }
+
         PatternEntry entry;
-        entry.id = item["id"].as<String>();
-        entry.label = item["label"].as<String>();
-        entry.params = params;
+        entry.id = columns[0];
+        entry.label = columns[1];
         if (entry.id.isEmpty()) {
             continue;
         }
+
+        LightShowParams params;
+        params.RGB1 = CRGB::Black;
+        params.RGB2 = CRGB::Black;
+        params.colorCycleSec  = static_cast<uint8_t>(toFloat(columns[2]));
+        params.brightCycleSec = static_cast<uint8_t>(toFloat(columns[3]));
+        params.fadeWidth      = toFloat(columns[4]);
+        params.minBrightness  = static_cast<uint8_t>(toFloat(columns[5]));
+        params.gradientSpeed  = toFloat(columns[6]);
+        params.centerX        = toFloat(columns[7]);
+        params.centerY        = toFloat(columns[8]);
+        params.radius         = toFloat(columns[9]);
+        params.windowWidth    = columns[10].toInt();
+        params.radiusOsc      = toFloat(columns[11]);
+        params.xAmp           = toFloat(columns[12]);
+        params.yAmp           = toFloat(columns[13]);
+        params.xCycleSec      = static_cast<uint8_t>(toFloat(columns[14]));
+        params.yCycleSec      = static_cast<uint8_t>(toFloat(columns[15]));
+
+        entry.params = params;
         patterns_.push_back(entry);
     }
+
+    file.close();
     return !patterns_.empty();
 }
 
@@ -386,35 +436,51 @@ bool PatternStore::saveToSD() const {
     if (!file) {
         return false;
     }
-    DynamicJsonDocument doc(8192);
-    doc["schema"] = kSchemaVersion;
-    doc["active_pattern"] = activePatternId_;
-    JsonArray arr = doc.createNestedArray("patterns");
-    for (const auto& entry : patterns_) {
-        JsonObject obj = arr.createNestedObject();
-        obj["id"] = entry.id;
-        if (!entry.label.isEmpty()) {
-            obj["label"] = entry.label;
-        }
-        JsonObject params = obj.createNestedObject("params");
-        params["color_cycle_sec"]  = entry.params.colorCycleSec;
-        params["bright_cycle_sec"] = entry.params.brightCycleSec;
-        params["fade_width"]       = entry.params.fadeWidth;
-        params["min_brightness"]   = entry.params.minBrightness;
-        params["gradient_speed"]   = entry.params.gradientSpeed;
-        params["center_x"]         = entry.params.centerX;
-        params["center_y"]         = entry.params.centerY;
-        params["radius"]           = entry.params.radius;
-        params["window_width"]     = entry.params.windowWidth;
-        params["radius_osc"]       = entry.params.radiusOsc;
-        params["x_amp"]            = entry.params.xAmp;
-        params["y_amp"]            = entry.params.yAmp;
-        params["x_cycle_sec"]      = entry.params.xCycleSec;
-        params["y_cycle_sec"]      = entry.params.yCycleSec;
+
+    if (!activePatternId_.isEmpty()) {
+        file.print(F("# active_pattern="));
+        file.println(activePatternId_);
     }
-    const size_t written = serializeJson(doc, file);
+
+    file.println(F("light_pattern_id;light_pattern_name;color_cycle_sec;bright_cycle_sec;fade_width;min_brightness;gradient_speed;center_x;center_y;radius;window_width;radius_osc;x_amp;y_amp;x_cycle_sec;y_cycle_sec"));
+
+    for (const auto& entry : patterns_) {
+        file.print(entry.id);
+        file.print(';');
+        file.print(entry.label);
+        file.print(';');
+        file.print(entry.params.colorCycleSec);
+        file.print(';');
+        file.print(entry.params.brightCycleSec);
+        file.print(';');
+        file.print(entry.params.fadeWidth, 3);
+        file.print(';');
+        file.print(entry.params.minBrightness);
+        file.print(';');
+        file.print(entry.params.gradientSpeed, 3);
+        file.print(';');
+        file.print(entry.params.centerX, 3);
+        file.print(';');
+        file.print(entry.params.centerY, 3);
+        file.print(';');
+        file.print(entry.params.radius, 3);
+        file.print(';');
+        file.print(entry.params.windowWidth);
+        file.print(';');
+        file.print(entry.params.radiusOsc, 3);
+        file.print(';');
+        file.print(entry.params.xAmp, 3);
+        file.print(';');
+        file.print(entry.params.yAmp, 3);
+        file.print(';');
+        file.print(entry.params.xCycleSec);
+        file.print(';');
+        file.print(entry.params.yCycleSec);
+        file.println();
+    }
+
     file.close();
-    return written > 0;
+    return true;
 }
 
 PatternStore::PatternEntry* PatternStore::findEntry(const String& id) {

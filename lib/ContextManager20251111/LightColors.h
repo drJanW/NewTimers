@@ -12,7 +12,7 @@ class LightColorStore {
 public:
     bool begin(fs::FS& sd, const char* rootPath = "/");
     bool ready() const;
-    const LightColor* find(const String& id) const;
+    const LightColor* find(uint8_t id) const;
     const LightColor* active() const;
     void clear();
 
@@ -24,5 +24,5 @@ private:
     String root_{"/"};
     bool loaded_{false};
     std::vector<LightColor> colors_;
-    String activeColorId_;
+    uint8_t activeColorId_{0};
 };

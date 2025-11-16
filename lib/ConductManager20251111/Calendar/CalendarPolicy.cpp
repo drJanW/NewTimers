@@ -77,10 +77,12 @@ void handleThemeBox(const CalendarThemeBox& box) {
     return;
   }
 
+  const String boxIdStr = String(box.id);
+
   uint8_t dirs[kMaxThemeDirs];
   const size_t count = parseThemeEntries(box.entries, dirs, kMaxThemeDirs);
   if (count == 0) {
-    PF("[CalendarPolicy] Theme box %s has no valid directories, clearing\n", box.id.c_str());
+    PF("[CalendarPolicy] Theme box %u has no valid directories, clearing\n", static_cast<unsigned>(box.id));
     AudioPolicy::clearThemeBox();
     return;
   }
@@ -99,14 +101,14 @@ void handleThemeBox(const CalendarThemeBox& box) {
   }
 
   if (filteredCount == 0) {
-    PF("[CalendarPolicy] Theme box %s has no populated directories, clearing\n", box.id.c_str());
+    PF("[CalendarPolicy] Theme box %u has no populated directories, clearing\n", static_cast<unsigned>(box.id));
     AudioPolicy::clearThemeBox();
     return;
   }
 
-  AudioPolicy::setThemeBox(filtered, filteredCount, box.id);
-  PF("[CalendarPolicy] Theme box %s applied with %u directories\n",
-     box.id.c_str(), static_cast<unsigned>(filteredCount));
+  AudioPolicy::setThemeBox(filtered, filteredCount, boxIdStr);
+  PF("[CalendarPolicy] Theme box %u applied with %u directories\n",
+     static_cast<unsigned>(box.id), static_cast<unsigned>(filteredCount));
 }
 
 } // namespace CalendarPolicy

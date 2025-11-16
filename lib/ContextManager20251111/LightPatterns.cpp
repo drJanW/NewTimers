@@ -3,11 +3,14 @@
 #include "Globals.h"
 #include "SDManager.h"
 
-#include <ArduinoJson.h>
+#include <vector>
+#include <ctype.h>
+
+#include "CsvUtils.h"
 
 namespace {
 
-constexpr const char* kLightPatternsFile = "light_patterns.json";
+constexpr const char* kLightPatternsFile = "light_patterns.csv";
 
 class ScopedSDBusy {
 public:
@@ -29,6 +32,23 @@ public:
 private:
     bool owns_{false};
 };
+
+bool parsePatternId(const String& value, uint8_t& out) {
+    if (value.isEmpty()) {
+        return false;
+    }
+    for (size_t i = 0; i < value.length(); ++i) {
+        if (!isdigit(static_cast<unsigned char>(value.charAt(i)))) {
+            return false;
+        }
+    }
+    const long parsed = value.toInt();
+    if (parsed <= 0 || parsed > 255) {
+        return false;
+    }
+    out = static_cast<uint8_t>(parsed);
+    return true;
+}
 
 } // namespace
 
@@ -60,8 +80,8 @@ bool LightPatternStore::ready() const {
     return loaded_ && fs_ != nullptr;
 }
 
-const LightPattern* LightPatternStore::find(const String& id) const {
-    if (!ready()) {
+const LightPattern* LightPatternStore::find(uint8_t id) const {
+    if (!ready() || id == 0) {
         return nullptr;
     }
     for (const auto& pattern : patterns_) {
@@ -76,7 +96,7 @@ const LightPattern* LightPatternStore::active() const {
     if (!ready()) {
         return nullptr;
     }
-    if (!activePatternId_.isEmpty()) {
+    if (activePatternId_ != 0) {
         const LightPattern* pattern = find(activePatternId_);
         if (pattern) {
             return pattern;
@@ -91,7 +111,7 @@ const LightPattern* LightPatternStore::active() const {
 void LightPatternStore::clear() {
     patterns_.clear();
     loaded_ = false;
-    activePatternId_.clear();
+    activePatternId_ = 0;
 }
 
 bool LightPatternStore::load() {
@@ -100,7 +120,7 @@ bool LightPatternStore::load() {
     }
 
     patterns_.clear();
-    activePatternId_.clear();
+    activePatternId_ = 0;
 
     ScopedSDBusy guard;
     const String path = pathFor(kLightPatternsFile);
@@ -110,93 +130,70 @@ bool LightPatternStore::load() {
         return false;
     }
 
-    const size_t fileSize = file.size();
-    size_t capacity = fileSize + (fileSize / 2) + 4096;
-    if (capacity < 8192) {
-        capacity = 8192;
-    }
-    file.seek(0);
+    String line;
+    std::vector<String> columns;
+    columns.reserve(18);
+    bool headerSkipped = false;
+    size_t loaded = 0;
 
-    DynamicJsonDocument doc(capacity);
-    DeserializationError err = deserializeJson(doc, file);
-    file.close();
-    if (err) {
-        PF("[LightPatternStore] JSON parse failed for %s: %s\n", path.c_str(), err.c_str());
-        return false;
-    }
-
-    auto parsePatterns = [&](JsonArrayConst items) -> size_t {
-        if (items.isNull()) {
-            PF("[LightPatternStore] patterns array missing\n");
-            return 0;
-        }
-
-        size_t added = 0;
-        patterns_.reserve(patterns_.size() + items.size());
-        for (JsonObjectConst item : items) {
-            LightPattern parsed;
-            parsed.id = item["id"].as<String>();
-            parsed.label = item["label"].as<String>();
-            JsonObjectConst params = item["params"].as<JsonObjectConst>();
-            if (parsed.id.isEmpty() || parsed.label.isEmpty() || params.isNull()) {
-                PF("[LightPatternStore] skipping invalid pattern entry\n");
-                continue;
-            }
-
-            parsed.color_cycle_sec = params["color_cycle_sec"].as<float>();
-            parsed.bright_cycle_sec = params["bright_cycle_sec"].as<float>();
-            parsed.fade_width = params["fade_width"].as<float>();
-            parsed.min_brightness = params["min_brightness"].as<float>();
-            parsed.gradient_speed = params["gradient_speed"].as<float>();
-            parsed.center_x = params["center_x"].as<float>();
-            parsed.center_y = params["center_y"].as<float>();
-            parsed.radius = params["radius"].as<float>();
-            parsed.window_width = params["window_width"].as<float>();
-            parsed.radius_osc = params["radius_osc"].as<float>();
-            parsed.x_amp = params["x_amp"].as<float>();
-            parsed.y_amp = params["y_amp"].as<float>();
-            parsed.x_cycle_sec = params["x_cycle_sec"].as<float>();
-            parsed.y_cycle_sec = params["y_cycle_sec"].as<float>();
-
-            parsed.valid = true;
-            patterns_.push_back(parsed);
-            ++added;
-        }
-        return added;
+    auto toFloat = [](const String& value) -> float {
+        return value.isEmpty() ? 0.0f : value.toFloat();
     };
 
-    bool parsed = false;
-    JsonVariantConst root = doc.as<JsonVariantConst>();
-    if (!root.isNull() && !root["schema"].isNull()) {
-        const int schema = root["schema"].as<int>();
-        if (schema != 1) {
-            PF("[LightPatternStore] Unsupported light_patterns schema=%d\n", schema);
-            return false;
+    while (csv::readLine(file, line)) {
+        if (line.isEmpty() || line.charAt(0) == '#') {
+            continue;
         }
-        activePatternId_ = root["active_pattern"].as<String>();
-        parsed = parsePatterns(root["patterns"].as<JsonArrayConst>()) > 0;
-    } else if (!root.isNull() && !root["format_version"].isNull()) {
-        const int formatVersion = root["format_version"].as<int>();
-        if (formatVersion != 1) {
-            PF("[LightPatternStore] Unsupported light_patterns format_version=%d\n", formatVersion);
-            return false;
+        if (!headerSkipped) {
+            headerSkipped = true;
+            if (line.startsWith(F("light_pattern_id"))) {
+                continue;
+            }
         }
-        parsed = parsePatterns(root["patterns"].as<JsonArrayConst>()) > 0;
-    } else {
-        PF("[LightPatternStore] Missing schema or format_version\n");
+
+        csv::splitColumns(line, columns);
+        if (columns.size() < 16) {
+            continue;
+        }
+
+        uint8_t id = 0;
+        if (!parsePatternId(columns[0], id)) {
+            continue;
+        }
+
+        LightPattern pattern;
+        pattern.id = id;
+        pattern.label = columns[1];
+
+        pattern.color_cycle_sec  = toFloat(columns[2]);
+        pattern.bright_cycle_sec = toFloat(columns[3]);
+        pattern.fade_width       = toFloat(columns[4]);
+        pattern.min_brightness   = toFloat(columns[5]);
+        pattern.gradient_speed   = toFloat(columns[6]);
+        pattern.center_x         = toFloat(columns[7]);
+        pattern.center_y         = toFloat(columns[8]);
+        pattern.radius           = toFloat(columns[9]);
+        pattern.window_width     = toFloat(columns[10]);
+        pattern.radius_osc       = toFloat(columns[11]);
+        pattern.x_amp            = toFloat(columns[12]);
+        pattern.y_amp            = toFloat(columns[13]);
+        pattern.x_cycle_sec      = toFloat(columns[14]);
+        pattern.y_cycle_sec      = toFloat(columns[15]);
+        pattern.valid = true;
+
+        patterns_.push_back(pattern);
+        ++loaded;
+    }
+
+    file.close();
+
+    if (patterns_.empty()) {
+        PF("[LightPatternStore] no valid patterns loaded from %s\n", path.c_str());
         return false;
     }
 
-    if (!parsed || patterns_.empty()) {
-        PF("[LightPatternStore] no valid patterns loaded\n");
-        return false;
-    }
-
-    if (activePatternId_.isEmpty()) {
-        activePatternId_ = patterns_.front().id;
-    }
-
-    PF("[LightPatternStore] Loaded %u light patterns\n", static_cast<unsigned>(patterns_.size()));
+    activePatternId_ = patterns_.front().id;
+    PF("[LightPatternStore] Loaded %u light patterns\n", static_cast<unsigned>(loaded));
     return true;
 }
 

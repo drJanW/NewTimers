@@ -11,20 +11,22 @@ struct CalendarEntry {
     String iso;
     String ttsSentence;
     uint16_t ttsIntervalMinutes{0};
-    String themeBoxId;
-    String patternId;
-    String colorId;
+    uint8_t themeBoxId{0};
+    uint8_t patternId{0};
+    uint8_t colorId{0};
+    String note;
 };
 
 struct ThemeBox {
     bool valid{false};
-    String id;
+    uint8_t id{0};
+    String name;
     std::vector<uint16_t> entries;
 };
 
 struct LightPattern {
     bool valid{false};
-    String id;
+    uint8_t id{0};
     String label;
     float color_cycle_sec{0.0f};
     float bright_cycle_sec{0.0f};
@@ -50,7 +52,7 @@ struct RgbColor {
 
 struct LightColor {
     bool valid{false};
-    String id;
+    uint8_t id{0};
     String label;
     RgbColor primary;
     RgbColor secondary;

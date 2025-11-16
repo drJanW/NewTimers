@@ -3,12 +3,15 @@
 #include "Globals.h"
 #include "SDManager.h"
 
-#include <ArduinoJson.h>
 #include <utility>
+#include <vector>
+#include <ctype.h>
+
+#include "CsvUtils.h"
 
 namespace {
 
-constexpr const char* kThemeBoxesFile = "theme_boxes.json";
+constexpr const char* kThemeBoxesFile = "theme_boxes.csv";
 
 class ScopedSDBusy {
 public:
@@ -30,6 +33,23 @@ public:
 private:
     bool owns_{false};
 };
+
+bool parseThemeBoxId(const String& value, uint8_t& out) {
+    if (value.isEmpty()) {
+        return false;
+    }
+    for (size_t i = 0; i < value.length(); ++i) {
+        if (!isdigit(static_cast<unsigned char>(value.charAt(i)))) {
+            return false;
+        }
+    }
+    const long parsed = value.toInt();
+    if (parsed <= 0 || parsed > 255) {
+        return false;
+    }
+    out = static_cast<uint8_t>(parsed);
+    return true;
+}
 
 } // namespace
 
@@ -61,37 +81,15 @@ bool ThemeBoxManager::ready() const {
     return loaded_ && fs_ != nullptr;
 }
 
-const ThemeBox* ThemeBoxManager::find(const String& id) const {
-    if (!ready() || id.isEmpty()) {
+const ThemeBox* ThemeBoxManager::find(uint8_t id) const {
+    if (!ready() || id == 0) {
         return nullptr;
     }
     for (const auto& box : boxes_) {
-        if (box.id.equalsIgnoreCase(id)) {
+        if (box.id == id) {
             return &box;
         }
     }
-    
-    bool numeric = true;
-    for (size_t i = 0; i < static_cast<size_t>(id.length()); ++i) {
-        const char c = id.charAt(i);
-        if (c < '0' || c > '9') {
-            numeric = false;
-            break;
-        }
-    }
-    
-    if (numeric) {
-        long value = id.toInt();
-        if (value >= 0 && value <= 65535) {
-            fallback_ = ThemeBox{};
-            fallback_.valid = true;
-            fallback_.id = id;
-            fallback_.entries.clear();
-            fallback_.entries.push_back(static_cast<uint16_t>(value));
-            return &fallback_;
-        }
-    }
-    
     return nullptr;
 }
 
@@ -99,7 +97,7 @@ const ThemeBox* ThemeBoxManager::active() const {
     if (!ready()) {
         return nullptr;
     }
-    if (!activeThemeBoxId_.isEmpty()) {
+    if (activeThemeBoxId_ != 0) {
         const ThemeBox* box = find(activeThemeBoxId_);
         if (box) {
             return box;
@@ -114,8 +112,7 @@ const ThemeBox* ThemeBoxManager::active() const {
 void ThemeBoxManager::clear() {
     boxes_.clear();
     loaded_ = false;
-    activeThemeBoxId_.clear();
-    fallback_ = ThemeBox{};
+    activeThemeBoxId_ = 0;
 }
 
 bool ThemeBoxManager::load() {
@@ -124,8 +121,7 @@ bool ThemeBoxManager::load() {
     }
 
     boxes_.clear();
-    fallback_ = ThemeBox{};
-    activeThemeBoxId_.clear();
+    activeThemeBoxId_ = 0;
 
     ScopedSDBusy guard;
     const String path = pathFor(kThemeBoxesFile);
@@ -135,114 +131,75 @@ bool ThemeBoxManager::load() {
         return false;
     }
 
-    const size_t fileSize = file.size();
-    size_t capacity = fileSize > 0 ? fileSize + (fileSize / 2) + 2048 : 4096;
-    if (capacity < 4096) {
-        capacity = 4096;
-    }
-    if (capacity > 65536) {
-        capacity = 65536;
-    }
-    file.seek(0);
-
-    DynamicJsonDocument doc(capacity);
-    DeserializationError err = deserializeJson(doc, file);
-    file.close();
-    if (err) {
-        PF("[ThemeBoxManager] JSON parse failed for %s: %s\n", path.c_str(), err.c_str());
-        return false;
-    }
-
-    auto parseBoxes = [&](JsonArrayConst array, const char* entriesKey) -> size_t {
-        if (array.isNull()) {
-            PF("[ThemeBoxManager] theme_boxes array missing\n");
-            return 0;
-        }
-
-        size_t added = 0;
-        boxes_.reserve(boxes_.size() + array.size());
-        for (JsonObjectConst box : array) {
-            ThemeBox parsed;
-            JsonVariantConst idValue = box["id"];
-            if (idValue.isNull()) {
-                PF("[ThemeBoxManager] theme box missing id, skipping\n");
-                continue;
-            }
-
-            if (idValue.is<const char*>()) {
-                parsed.id = String(idValue.as<const char*>());
-            } else if (idValue.is<String>()) {
-                parsed.id = idValue.as<String>();
-            } else if (idValue.is<long>() || idValue.is<int>()) {
-                parsed.id = String(idValue.as<long>());
-            }
-
-            JsonArrayConst entries = box[entriesKey].as<JsonArrayConst>();
-            if (parsed.id.isEmpty() || entries.isNull()) {
-                PF("[ThemeBoxManager] skipping invalid theme box entry\n");
-                continue;
-            }
-
-            parsed.entries.reserve(entries.size());
-            for (JsonVariantConst value : entries) {
-                if (!value.is<int>()) {
-                    continue;
+    auto parseEntries = [](const String& csv, std::vector<uint16_t>& out) {
+        out.clear();
+        int start = 0;
+        const int len = csv.length();
+        while (start <= len) {
+            int idx = csv.indexOf(',', start);
+            String token = (idx < 0) ? csv.substring(start) : csv.substring(start, idx);
+            token.trim();
+            if (!token.isEmpty()) {
+                long value = token.toInt();
+                if (value >= 0 && value <= 65535) {
+                    out.push_back(static_cast<uint16_t>(value));
                 }
-                int dir = value.as<int>();
-                if (dir < 0 || dir > 65535) {
-                    continue;
-                }
-                parsed.entries.push_back(static_cast<uint16_t>(dir));
             }
-
-            if (parsed.entries.empty()) {
-                PF("[ThemeBoxManager] theme box %s has no entries, skipping\n", parsed.id.c_str());
-                continue;
+            if (idx < 0) {
+                break;
             }
-
-            parsed.valid = true;
-            boxes_.push_back(std::move(parsed));
-            ++added;
+            start = idx + 1;
         }
-
-        return added;
     };
 
-    bool parsed = false;
-    JsonVariantConst root = doc.as<JsonVariantConst>();
-    if (!root.isNull() && !root["schema"].isNull()) {
-        const int schema = root["schema"].as<int>();
-        if (schema != 1) {
-            PF("[ThemeBoxManager] Unsupported theme_boxes schema=%d\n", schema);
-            return false;
+    String line;
+    std::vector<String> columns;
+    columns.reserve(4);
+    bool headerSkipped = false;
+    size_t loaded = 0;
+
+    while (csv::readLine(file, line)) {
+        if (line.isEmpty() || line.charAt(0) == '#') {
+            continue;
         }
-        activeThemeBoxId_ = root["active_theme_box"].as<String>();
-        parsed = parseBoxes(root["theme_boxes"].as<JsonArrayConst>(), "entries") > 0;
-    } else if (!root.isNull() && !root["format_version"].isNull()) {
-        const int format = root["format_version"].as<int>();
-        if (format != 1) {
-            PF("[ThemeBoxManager] Unsupported theme_boxes format_version=%d\n", format);
-            return false;
+        if (!headerSkipped) {
+            headerSkipped = true;
+            if (line.startsWith(F("theme_box_id"))) {
+                continue;
+            }
         }
-        parsed = parseBoxes(root["theme_boxes"].as<JsonArrayConst>(), "dir_ids") > 0;
-        if (parsed && activeThemeBoxId_.isEmpty() && !boxes_.empty()) {
-            activeThemeBoxId_ = boxes_.front().id;
+
+        csv::splitColumns(line, columns);
+        if (columns.size() < 3) {
+            continue;
         }
-    } else {
-        PF("[ThemeBoxManager] Missing schema or format_version\n");
+
+        uint8_t id = 0;
+        if (!parseThemeBoxId(columns[0], id)) {
+            continue;
+        }
+
+        ThemeBox box;
+        box.id = id;
+        box.name = columns[1];
+        parseEntries(columns[2], box.entries);
+        if (box.entries.empty()) {
+            continue;
+        }
+        box.valid = true;
+        boxes_.push_back(std::move(box));
+        ++loaded;
+    }
+
+    file.close();
+
+    if (boxes_.empty()) {
+        PF("[ThemeBoxManager] no valid theme boxes loaded from %s\n", path.c_str());
         return false;
     }
 
-    if (!parsed || boxes_.empty()) {
-        PF("[ThemeBoxManager] no valid theme boxes loaded\n");
-        return false;
-    }
-
-    if (activeThemeBoxId_.isEmpty()) {
-        activeThemeBoxId_ = boxes_.front().id;
-    }
-
-    PF("[ThemeBoxManager] Loaded %u theme boxes\n", static_cast<unsigned>(boxes_.size()));
+    activeThemeBoxId_ = boxes_.front().id;
+    PF("[ThemeBoxManager] Loaded %u theme boxes\n", static_cast<unsigned>(loaded));
     return true;
 }
 

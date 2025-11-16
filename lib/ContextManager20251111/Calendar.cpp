@@ -3,14 +3,16 @@
 #include "SDManager.h"
 
 #include <SD.h>
-#include <ArduinoJson.h>
+#include <vector>
+#include <ctype.h>
+
+#include "CsvUtils.h"
+#include "CalendarCsv.h"
 
 namespace {
 
-constexpr const char* kCalendarFile       = "calendar.json";
-constexpr const char* kThemeBoxJson       = "theme_boxes.json";
-constexpr size_t   kCalendarJsonMinBytes  = 16384;
-constexpr size_t   kCalendarJsonMaxBytes  = 196608;
+constexpr const char* kCalendarFile       = "calendar.csv";
+constexpr const char* kThemeBoxCsv        = "theme_boxes.csv";
 
 class ScopedSDBusy {
 public:
@@ -32,6 +34,23 @@ public:
 private:
 	bool owns_{false};
 };
+
+bool parseUint8Strict(const String& value, uint8_t& out) {
+	if (value.isEmpty()) {
+		return false;
+	}
+	for (size_t i = 0; i < value.length(); ++i) {
+		if (!isdigit(static_cast<unsigned char>(value.charAt(i)))) {
+			return false;
+		}
+	}
+	const long parsed = value.toInt();
+	if (parsed <= 0 || parsed > 255) {
+		return false;
+	}
+	out = static_cast<uint8_t>(parsed);
+	return true;
+}
 
 } // namespace
 
@@ -80,7 +99,7 @@ bool CalendarManager::loadToday(uint16_t year, uint8_t month, uint8_t day) {
 	snapshot.valid = true;
 	snapshot.day = entry;
 
-	if (!entry.themeBoxId.isEmpty()) {
+	if (entry.themeBoxId != 0) {
 		CalendarThemeBox box;
 		if (loadThemeBox(entry.themeBoxId, box)) {
 			snapshot.theme = box;
@@ -111,178 +130,109 @@ void CalendarManager::clear() {
 
 bool CalendarManager::loadCalendarRow(uint16_t year, uint8_t month, uint8_t day, CalendarEntry& out) {
 	ScopedSDBusy guard;
-	const String jsonPath = pathFor(kCalendarFile);
-	File file = fs_->open(jsonPath.c_str(), FILE_READ);
+	const String csvPath = pathFor(kCalendarFile);
+	File file = fs_->open(csvPath.c_str(), FILE_READ);
 	if (!file) {
-		PF("[CalendarManager] Failed to open %s\n", jsonPath.c_str());
+		PF("[CalendarManager] Failed to open %s\n", csvPath.c_str());
 		return false;
 	}
 
-	const size_t fileSize = file.size();
-	// Scale the JSON buffer with the source file size so large calendars still parse on-device.
-	size_t capacity = fileSize > 0 ? fileSize + (fileSize / 4) + 2048 : kCalendarJsonMinBytes;
-	if (capacity < kCalendarJsonMinBytes) {
-		capacity = kCalendarJsonMinBytes;
-	}
-	if (capacity > kCalendarJsonMaxBytes) {
-		PF("[CalendarManager] calendar.json capacity clamped to %u bytes (file=%u)\n",
-		   static_cast<unsigned>(kCalendarJsonMaxBytes),
-		   static_cast<unsigned>(fileSize));
-		capacity = kCalendarJsonMaxBytes;
-	}
-	file.seek(0);
-	DynamicJsonDocument doc(capacity);
-	DeserializationError err = deserializeJson(doc, file);
-	file.close();
-	if (err) {
-		PF("[CalendarManager] JSON parse failed for %s: %s\n", jsonPath.c_str(), err.c_str());
-		return false;
-	}
+	String line;
+	std::vector<String> columns;
+	columns.reserve(10);
+	bool headerSkipped = false;
 
-	JsonArray entries = doc["entries"].as<JsonArray>();
-	if (entries.isNull()) {
-		PF("[CalendarManager] JSON entries array missing in %s\n", jsonPath.c_str());
-		return false;
-	}
-
-	for (JsonObject item : entries) {
-		JsonObject date = item["date"].as<JsonObject>();
-		if (date.isNull()) {
+	while (csv::readLine(file, line)) {
+		if (line.isEmpty() || line.charAt(0) == '#') {
 			continue;
 		}
+		if (!headerSkipped) {
+			headerSkipped = true;
+			if (line.startsWith(F("year"))) {
+				continue;
+			}
+		}
 
-		const uint16_t rowYear = static_cast<uint16_t>(date["year"] | 0);
-		const uint8_t rowMonth = static_cast<uint8_t>(date["month"] | 0);
-		const uint8_t rowDay = static_cast<uint8_t>(date["day"] | 0);
-		if (rowYear != year || rowMonth != month || rowDay != day) {
+		csv::splitColumns(line, columns);
+		CalendarCsvRow row;
+		if (!ParseCalendarCsvRow(columns, row)) {
+			continue;
+		}
+		if (row.year != year || row.month != month || row.day != day) {
 			continue;
 		}
 
 		out.valid = true;
-		out.year = rowYear;
-		out.month = rowMonth;
-		out.day = rowDay;
-
-		JsonObject tts = item["tts"].as<JsonObject>();
-		if (!tts.isNull()) {
-			if (tts.containsKey("sentence")) {
-				out.ttsSentence = tts["sentence"].as<String>();
-			} else {
-				out.ttsSentence = String();
-			}
-			if (tts.containsKey("interval_min")) {
-				out.ttsIntervalMinutes = static_cast<uint16_t>(tts["interval_min"].as<int>());
-			} else {
-				out.ttsIntervalMinutes = static_cast<uint16_t>(tts["interval_minutes"] | 0);
-			}
-		} else {
-			out.ttsSentence = String();
-			out.ttsIntervalMinutes = 0;
-		}
-
-		JsonObject audio = item["audio"].as<JsonObject>();
-		if (!audio.isNull()) {
-			JsonVariant theme = audio["theme_box_id"];
-			if (!theme.isNull()) {
-				out.themeBoxId = theme.as<String>();
-			}
-		}
-		if (out.themeBoxId.isEmpty()) {
-			out.themeBoxId = item["theme_box_id"].as<String>();
-		}
-
-		JsonObject lights = item["lights"].as<JsonObject>();
-		if (!lights.isNull()) {
-			JsonVariant pattern = lights["pattern_id"];
-			if (!pattern.isNull()) {
-				out.patternId = pattern.as<String>();
-			}
-			JsonVariant color = lights["color_id"];
-			if (!color.isNull()) {
-				out.colorId = color.as<String>();
-			}
-		}
-		if (out.patternId.isEmpty()) {
-			out.patternId = item["pattern_id"].as<String>();
-		}
-		if (out.colorId.isEmpty()) {
-			out.colorId = item["color_id"].as<String>();
-		}
-
-		JsonVariant note = item["note"];
-		if (!note.isNull()) {
-			out.note = note.as<String>();
-		} else {
-			out.note = String();
-		}
+		out.year = row.year;
+		out.month = row.month;
+		out.day = row.day;
+		out.ttsSentence = row.sentence;
+		out.ttsIntervalMinutes = row.intervalMinutes;
+		out.themeBoxId = row.themeBoxId;
+		out.patternId = row.patternId;
+		out.colorId = row.colorId;
+		out.note = String();
+		file.close();
 		return true;
 	}
 
+	file.close();
 	return false;
 }
 
-bool CalendarManager::loadThemeBox(const String& id, CalendarThemeBox& out) {
+bool CalendarManager::loadThemeBox(uint8_t id, CalendarThemeBox& out) {
 	ScopedSDBusy guard;
-	const String jsonPath = pathFor(kThemeBoxJson);
-	File file = fs_->open(jsonPath.c_str(), FILE_READ);
+	const String csvPath = pathFor(kThemeBoxCsv);
+	File file = fs_->open(csvPath.c_str(), FILE_READ);
 	if (!file) {
-		PF("[CalendarManager] Failed to open %s\n", jsonPath.c_str());
+		PF("[CalendarManager] Failed to open %s\n", csvPath.c_str());
 		return false;
 	}
 
-	DynamicJsonDocument doc(8192);
-	DeserializationError err = deserializeJson(doc, file);
-	file.close();
-	if (err) {
-		PF("[CalendarManager] JSON parse failed for %s: %s\n", jsonPath.c_str(), err.c_str());
-		return false;
-	}
+	String line;
+	std::vector<String> columns;
+	columns.reserve(4);
+	bool headerSkipped = false;
 
-	JsonArray boxes = doc["theme_boxes"].as<JsonArray>();
-	if (boxes.isNull()) {
-		PF("[CalendarManager] JSON theme_boxes array missing in %s\n", jsonPath.c_str());
-		return false;
-	}
-
-	for (JsonObject box : boxes) {
-		const char* rawId = box["id"] | "";
-		if (!rawId || !id.equalsIgnoreCase(rawId)) {
+	while (csv::readLine(file, line)) {
+		if (line.isEmpty() || line.charAt(0) == '#') {
 			continue;
 		}
-
-		JsonArray entries = box["entries"].as<JsonArray>();
-		if (entries.isNull()) {
-			continue;
-		}
-
-		String joined;
-		bool first = true;
-		for (JsonVariant v : entries) {
-			int value = v.as<int>();
-			if (value < 0 || value > 255) {
+		if (!headerSkipped) {
+			headerSkipped = true;
+			if (line.startsWith(F("theme_box_id"))) {
 				continue;
 			}
-			if (!first) {
-				joined += ',';
-			}
-			first = false;
+		}
 
-			if (value < 10) {
-				joined += "00";
-			} else if (value < 100) {
-				joined += '0';
-			}
-			joined += String(value);
+		csv::splitColumns(line, columns);
+		if (columns.empty()) {
+			continue;
+		}
+
+		const String& rowIdStr = columns[0];
+		uint8_t rowId = 0;
+		if (!parseUint8Strict(rowIdStr, rowId)) {
+			continue;
+		}
+
+		const String name = (columns.size() > 1) ? columns[1] : String();
+		const String entries = (columns.size() > 2) ? columns[2] : String();
+
+		if (rowId != id) {
+			continue;
 		}
 
 		out.valid = true;
-		out.id = rawId;
-		out.entries = joined;
-		out.note = box["note"].as<String>();
+		out.id = rowId;
+		out.entries = entries;
+		out.note = name;
+		file.close();
 		return true;
 	}
 
-	PF("[CalendarManager] Theme box %s not found in %s\n", id.c_str(), jsonPath.c_str());
+	file.close();
+	PF("[CalendarManager] Theme box %u not found in %s\n", static_cast<unsigned>(id), csvPath.c_str());
 	return false;
 }
 

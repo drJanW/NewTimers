@@ -80,21 +80,25 @@ bool ContextRepository::loadToday(TodayContext& ctx) {
     }
 
     CalendarEntry entry;
-    if (!calendar_.findEntry(year, month, day, entry)) {
-        PF("[TodayContext] No calendar entry for %04u-%02u-%02u\n",
+    const bool hasCalendarEntry = calendar_.findEntry(year, month, day, entry);
+    if (!hasCalendarEntry) {
+        entry.valid = false;
+        entry.year = year;
+        entry.month = month;
+        entry.day = day;
+        PF("[TodayContext] No calendar entry for %04u-%02u-%02u, using defaults\n",
            static_cast<unsigned>(year), static_cast<unsigned>(month), static_cast<unsigned>(day));
-        return false;
     }
 
     const ThemeBox* theme = nullptr;
-    if (!entry.themeBoxId.isEmpty()) {
+    if (hasCalendarEntry && entry.themeBoxId != 0) {
         theme = themeBoxes_.find(entry.themeBoxId);
     }
     if (!theme) {
         const ThemeBox* fallbackTheme = themeBoxes_.active();
         if (fallbackTheme) {
-            PF("[TodayContext] Theme box %s missing, falling back to %s for %04u-%02u-%02u\n",
-               entry.themeBoxId.c_str(), fallbackTheme->id.c_str(), static_cast<unsigned>(year),
+                PF("[TodayContext] Theme box %u missing, falling back to %u for %04u-%02u-%02u\n",
+                    static_cast<unsigned>(entry.themeBoxId), static_cast<unsigned>(fallbackTheme->id),
                static_cast<unsigned>(month), static_cast<unsigned>(day));
             theme = fallbackTheme;
         }
@@ -106,14 +110,14 @@ bool ContextRepository::loadToday(TodayContext& ctx) {
     }
 
     const LightPattern* pattern = nullptr;
-    if (!entry.patternId.isEmpty()) {
+    if (hasCalendarEntry && entry.patternId != 0) {
         pattern = patterns_.find(entry.patternId);
     }
     if (!pattern) {
         const LightPattern* fallbackPattern = patterns_.active();
         if (fallbackPattern) {
-            PF("[TodayContext] Pattern %s missing, falling back to %s for %04u-%02u-%02u\n",
-               entry.patternId.c_str(), fallbackPattern->id.c_str(), static_cast<unsigned>(year),
+                PF("[TodayContext] Pattern %u missing, falling back to %u for %04u-%02u-%02u\n",
+                    static_cast<unsigned>(entry.patternId), static_cast<unsigned>(fallbackPattern->id),
                static_cast<unsigned>(month), static_cast<unsigned>(day));
             pattern = fallbackPattern;
         }
@@ -125,14 +129,14 @@ bool ContextRepository::loadToday(TodayContext& ctx) {
     }
 
     const LightColor* color = nullptr;
-    if (!entry.colorId.isEmpty()) {
+    if (hasCalendarEntry && entry.colorId != 0) {
         color = colors_.find(entry.colorId);
     }
     if (!color) {
         const LightColor* fallbackColor = colors_.active();
         if (fallbackColor) {
-            PF("[TodayContext] Color %s missing, falling back to %s for %04u-%02u-%02u\n",
-               entry.colorId.c_str(), fallbackColor->id.c_str(), static_cast<unsigned>(year),
+                PF("[TodayContext] Color %u missing, falling back to %u for %04u-%02u-%02u\n",
+                    static_cast<unsigned>(entry.colorId), static_cast<unsigned>(fallbackColor->id),
                static_cast<unsigned>(month), static_cast<unsigned>(day));
             color = fallbackColor;
         }

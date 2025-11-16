@@ -15,6 +15,10 @@ TimerManager& timers() {
   return TimerManager::instance();
 }
 
+bool clockReady() {
+  return PRTClock::instance().hasValidDate();
+}
+
 String s_sentence;
 uint32_t s_sentenceIntervalMs = 0;
 
@@ -63,6 +67,12 @@ void CalendarConduct::plan() {
     return;
   }
 
+  if (!clockReady()) {
+    PF("[CalendarConduct] Waiting for valid clock before scheduling\n");
+    scheduleLoad(kCalendarRetryIntervalMs, 1);
+    return;
+  }
+
   PF("[CalendarConduct] Calendar scheduling enabled\n");
   CalendarConduct::cb_loadCalendar();
 }
@@ -78,11 +88,17 @@ void CalendarConduct::cb_loadCalendar() {
     return;
   }
 
+  if (!clockReady()) {
+    PF("[CalendarConduct] Clock not initialised yet\n");
+    reschedule(kCalendarRetryIntervalMs, 1);
+    return;
+  }
+
   uint16_t year = 0;
   uint8_t month = 0;
   uint8_t day = 0;
   if (!ensureDate(year, month, day)) {
-    PF("[CalendarConduct] Clock not initialised yet\n");
+    PF("[CalendarConduct] Failed to resolve clock date\n");
     reschedule(kCalendarRetryIntervalMs, 1);
     return;
   }

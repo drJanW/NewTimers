@@ -7,6 +7,7 @@
 #include <Wire.h>
 #include <RTClib.h>
 
+// goal 00: clea
 // goal 01:!! sensor-sonar
 // goal 02: calendar
 // goal 03:!! lightshows-simple
@@ -51,7 +52,7 @@ void setup()
     {
         delay(10);
     }
-    PL("\n[Main] Version 11_15_02_F"); // Version MM_DD_XX_A, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation)
+    PL("\n[Main] Version 11_16_00_A"); // Version MM_DD_XX_A, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation)
                                     // version 10_30_02_C means : on oct 30, we had (at least) 3 attempts to get the second goal completed
 
     //Wire.begin(I2C_SDA, I2C_SCL);
@@ -65,5 +66,4 @@ void setup()
 void loop()
 {
     TimerManager::instance().update();
-    ConductManager::update();
-}
+    ConductManager::update();

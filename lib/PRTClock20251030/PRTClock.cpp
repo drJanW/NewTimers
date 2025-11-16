@@ -89,6 +89,10 @@ void    PRTClock::setMonth(uint8_t v){ setMux(v, &_valMonth); }
 uint8_t PRTClock::getDay() const    { return getMux(&_valDay); }
 void    PRTClock::setDay(uint8_t v) { setMux(v, &_valDay); }
 
+bool PRTClock::hasValidDate() const {
+  return getYear() != 0 && getMonth() != 0 && getDay() != 0;
+}
+
 uint8_t PRTClock::getDoW() const    { return getMux(&_valDoW); }
 void    PRTClock::setDoW(uint8_t v) { setMux(v, &_valDoW); }
 

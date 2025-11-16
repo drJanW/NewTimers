@@ -311,7 +311,7 @@
     const MAX_LIGHT_PATTERNS = 100;
     const MAX_LIGHT_COLORS = 100;
 
-    const createCollectionState = (defaultText) => ({
+    const createCollectionState = (defaultText, defaultSource = 'context') => ({
         store: null,
         items: [],
         map: new Map(),
@@ -327,8 +327,17 @@
         activeSnapshot: null,
         lastLoadStatus: { text: defaultText, tone: 'info' },
         currentId: '',
-        currentSource: 'context',
-        overrideActive: false
+        currentSource: defaultSource,
+        overrideActive: false,
+        automation: {
+            id: '',
+            label: '',
+            source: defaultSource,
+            rgb1_hex: '',
+            rgb2_hex: '',
+            updatedAt: 0,
+            calendarManaged: false
+        }
     });
 
     const state = {
@@ -336,8 +345,8 @@
         brightnessDraft: 0,
     audioVolume: 0,
     audio: { dir: 0, file: 0, score: null },
-        pattern: createCollectionState('Patroon geladen'),
-        color: createCollectionState('Kleurset geladen'),
+        pattern: createCollectionState('Patroon geladen', 'context'),
+        color: createCollectionState('Kleurset geladen', 'default'),
         previewActive: false,
         sd: {
             status: null,
@@ -348,6 +357,9 @@
             truncated: false
         }
     };
+
+    let automationLoadingPromise = null;
+    let automationRefreshTimer = null;
 
     const percentFrom255 = (value) => Math.round((value / 255) * 100);
     const valueFromPercent = (value) => Math.round((value / 100) * 255);
@@ -376,6 +388,30 @@
         return formatIdLabel(id);
     };
 
+    const applyAutomationPatternState = () => {
+        if (state.pattern.overrideActive) {
+            return;
+        }
+        state.pattern.currentId = state.pattern.automation.id || '';
+        if (state.pattern.automation.calendarManaged) {
+            state.pattern.currentSource = 'calendar';
+        } else {
+            state.pattern.currentSource = state.pattern.automation.source || 'context';
+        }
+    };
+
+    const applyAutomationColorState = () => {
+        if (state.color.overrideActive) {
+            return;
+        }
+        state.color.currentId = state.color.automation.id || '';
+        if (state.color.automation.calendarManaged) {
+            state.color.currentSource = 'calendar';
+        } else {
+            state.color.currentSource = state.color.automation.source || 'default';
+        }
+    };
+
     const resolveColorLabel = (id) => {
         if (typeof id !== 'string' || id.length === 0) {
             return '';
@@ -397,8 +433,13 @@
             if (!state.pattern.loaded && !state.pattern.overrideActive && !state.pattern.currentId) {
                 text = 'Laden…';
             } else {
-                const label = resolvePatternLabel(state.pattern.currentId);
-                const effectiveSource = state.pattern.overrideActive ? 'manual' : (state.pattern.currentSource || 'context');
+                const automationLabel = !state.pattern.overrideActive ? (state.pattern.automation.label || formatIdLabel(state.pattern.automation.id)) : '';
+                const label = resolvePatternLabel(state.pattern.currentId) || automationLabel;
+                const effectiveSource = state.pattern.overrideActive
+                    ? 'manual'
+                    : (state.pattern.automation.calendarManaged
+                        ? 'calendar'
+                        : (state.pattern.currentSource || state.pattern.automation.source || 'context'));
                 switch (effectiveSource) {
                 case 'manual':
                     text = label ? `Handmatig • ${label}` : 'Handmatig';
@@ -421,11 +462,28 @@
             let text;
             if (!state.color.loaded && !state.color.overrideActive && !state.color.currentId) {
                 text = 'Laden…';
-            } else if (state.color.overrideActive || state.color.currentId) {
-                const label = resolveColorLabel(state.color.currentId);
-                text = label ? `Handmatig • ${label}` : 'Handmatig';
             } else {
-                text = 'Standaardkleuren';
+                const automationLabel = !state.color.overrideActive ? (state.color.automation.label || formatIdLabel(state.color.automation.id)) : '';
+                const label = resolveColorLabel(state.color.currentId) || automationLabel;
+                const effectiveSource = state.color.overrideActive
+                    ? 'manual'
+                    : (state.color.automation.calendarManaged
+                        ? 'calendar'
+                        : (state.color.currentSource || state.color.automation.source || 'default'));
+                switch (effectiveSource) {
+                case 'manual':
+                    text = label ? `Handmatig • ${label}` : 'Handmatig';
+                    break;
+                case 'calendar':
+                    text = label ? `Kalender • ${label}` : 'Kalender';
+                    break;
+                case 'context':
+                    text = label ? `Context • ${label}` : 'Context';
+                    break;
+                default:
+                    text = label ? `Standaard • ${label}` : 'Standaardkleuren';
+                    break;
+                }
             }
             dom.lightColorLabel.textContent = text;
         }
@@ -1079,6 +1137,7 @@
             state.pattern.currentId = '';
         }
         state.previewActive = false;
+        applyAutomationPatternState();
 
         syncActiveSnapshot();
 
@@ -1137,6 +1196,7 @@
             state.color.currentSource = 'default';
             state.color.currentId = '';
         }
+        applyAutomationColorState();
 
         let nextSelected = options.selectedId || state.color.selectedId;
         if (nextSelected && nextSelected !== COLOR_DEFAULT && !state.color.map.has(nextSelected)) {
@@ -1196,10 +1256,6 @@
                     const data = await response.json();
                     state.pattern.loaded = true;
                     processPatternStore(data, { statusText: 'Patronen geladen', statusTone: 'success' });
-                    if (dom.lightPatternLabel) {
-                        const label = resolvePatternLabel(state.pattern.currentId);
-                        dom.lightPatternLabel.textContent = label ? `Handmatig • ${label}` : 'Handmatig';
-                    }
                 } catch (error) {
                     console.error('[patterns] ensurePatterns failed', error);
                     state.pattern.loaded = false;
@@ -1241,10 +1297,6 @@
                     const data = await response.json();
                     state.color.loaded = true;
                     processColorStore(data, { skipStatus: true });
-                    if (dom.lightColorLabel) {
-                        const label = resolveColorLabel(state.color.currentId);
-                        dom.lightColorLabel.textContent = label ? `Handmatig • ${label}` : 'Handmatig';
-                    }
                 } catch (error) {
                     console.error('[colors] ensureColors failed', error);
                     state.color.loaded = false;
@@ -1262,6 +1314,71 @@
         } catch (error) {
             // status reeds gezet
         }
+    };
+
+    const refreshAutomationContext = async (options = {}) => {
+        if (!automationLoadingPromise) {
+            automationLoadingPromise = (async () => {
+                const response = await fetch('/api/context/today', { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                const data = await response.json();
+                const calendarManaged = data && data.calendar_entry === true;
+                const patternData = data.pattern || {};
+                const colorData = data.color || {};
+                const now = Date.now();
+                const normalizeId = (value) => {
+                    if (typeof value === 'string') {
+                        return value;
+                    }
+                    if (typeof value === 'number' && Number.isFinite(value)) {
+                        return String(value);
+                    }
+                    return '';
+                };
+                state.pattern.automation = {
+                    id: normalizeId(patternData.id),
+                    label: typeof patternData.label === 'string' ? patternData.label : '',
+                    source: patternData.source || (calendarManaged ? 'calendar' : 'context'),
+                    rgb1_hex: '',
+                    rgb2_hex: '',
+                    updatedAt: now,
+                    calendarManaged
+                };
+                state.color.automation = {
+                    id: normalizeId(colorData.id),
+                    label: typeof colorData.label === 'string' ? colorData.label : '',
+                    source: colorData.source || (calendarManaged ? 'calendar' : 'default'),
+                    rgb1_hex: typeof colorData.rgb1_hex === 'string' ? colorData.rgb1_hex : '',
+                    rgb2_hex: typeof colorData.rgb2_hex === 'string' ? colorData.rgb2_hex : '',
+                    updatedAt: now,
+                    calendarManaged
+                };
+                applyAutomationPatternState();
+                applyAutomationColorState();
+                updateLightSummary();
+            })();
+        }
+        try {
+            await automationLoadingPromise;
+        } catch (error) {
+            if (!options.silent) {
+                setStatus('lightStatus', error && error.message ? error.message : 'Kalenderstatus mislukt', 'error');
+            }
+            throw error;
+        } finally {
+            automationLoadingPromise = null;
+        }
+    };
+
+    const scheduleAutomationRefresh = () => {
+        if (automationRefreshTimer !== null) {
+            return;
+        }
+        automationRefreshTimer = window.setInterval(() => {
+            refreshAutomationContext({ silent: true }).catch(() => {});
+        }, 60000);
     };
 
     const selectPatternOnServer = async (patternId) => {
@@ -1825,6 +1942,9 @@
 
             state.previewActive = false;
             updatePreviewState();
+            if (!patternPayload.id || !colorPayload.id) {
+                await refreshAutomationContext({ silent: true }).catch(() => {});
+            }
             return true;
         } catch (error) {
             setLightSettingsStatus(error.message || 'Activeren mislukt', 'error', 'both');
@@ -2328,11 +2448,16 @@
             getAudioLevel(),
             refreshPlaybackInfo({ retries: 3, delay: 150 }),
             ensurePatterns().catch(() => null),
-            ensureColors().catch(() => null)
+            ensureColors().catch(() => null),
+            refreshAutomationContext({ silent: true }).catch(() => null)
         ]);
     };
 
     document.getElementById('refreshAll').addEventListener('click', refreshAll);
 
-    refreshAll();
+    refreshAll()
+        .catch(() => {})
+        .finally(() => {
+            scheduleAutomationRefresh();
+        });
 })();

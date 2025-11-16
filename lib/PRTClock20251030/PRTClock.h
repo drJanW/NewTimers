@@ -36,6 +36,7 @@ public:
   void     setMonth(uint8_t v);
   uint8_t  getDay()    const;
   void     setDay(uint8_t v);
+  bool     hasValidDate() const;
   uint8_t  getDoW()    const;
   void     setDoW(uint8_t v);
   void     setDoW(uint8_t y, uint8_t m, uint8_t d);

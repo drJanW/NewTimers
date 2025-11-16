@@ -8,20 +8,21 @@ struct CalendarEntry {
 	uint16_t year{0};
 	uint8_t month{0};
 	uint8_t day{0};
+	String iso;
 	String ttsSentence;
 	uint16_t ttsIntervalMinutes{0};
-	String themeBoxId;
-	String patternId;
-	String colorId;
+	uint8_t themeBoxId{0};
+	uint8_t patternId{0};
+	uint8_t colorId{0};
 	String note;
 };
 
 struct CalendarThemeBox {
 	bool valid{false};
-	String id;//TODO: CONVERT TO UINT8_T   - ALSO IN EXCEL 
+	uint8_t id{0};
 	String entries;
 	String note;//TODO: OBSOLETE??
-	
+
 };
 
 struct CalendarSnapshot {
@@ -41,7 +42,7 @@ public:
 
 private:
 	bool loadCalendarRow(uint16_t year, uint8_t month, uint8_t day, CalendarEntry& out);
-	bool loadThemeBox(const String& id, CalendarThemeBox& out);
+	bool loadThemeBox(uint8_t id, CalendarThemeBox& out);
 
 	String pathFor(const char* file) const;
 

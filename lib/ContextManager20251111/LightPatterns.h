@@ -10,7 +10,7 @@ class LightPatternStore {
 public:
     bool begin(fs::FS& sd, const char* rootPath = "/");
     bool ready() const;
-    const LightPattern* find(const String& id) const;
+    const LightPattern* find(uint8_t id) const;
     const LightPattern* active() const;
     void clear();
 
@@ -22,5 +22,5 @@ private:
     String root_{"/"};
     bool loaded_{false};
     std::vector<LightPattern> patterns_;
-    String activePatternId_;
+    uint8_t activePatternId_{0};
 };

@@ -10,7 +10,7 @@ class ThemeBoxManager {
 public:
     bool begin(fs::FS& sd, const char* rootPath = "/");
     bool ready() const;
-    const ThemeBox* find(const String& id) const;
+    const ThemeBox* find(uint8_t id) const;
     const ThemeBox* active() const;
     void clear();
 
@@ -22,6 +22,5 @@ private:
     String root_{"/"};
     bool loaded_{false};
     std::vector<ThemeBox> boxes_;
-    String activeThemeBoxId_;
-    mutable ThemeBox fallback_;
+    uint8_t activeThemeBoxId_{0};
 };

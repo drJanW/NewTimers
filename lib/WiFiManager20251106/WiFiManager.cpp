@@ -14,9 +14,9 @@ namespace
 
     static constexpr uint32_t POLL_INTERVAL_MS = 250;               // how often we sample WiFi status
     static constexpr uint32_t HEALTH_INTERVAL_MS = 5000;             // watchdog interval after connect
-    static constexpr uint32_t INITIAL_RETRY_WINDOW_MS = 1000;        // first connection window
-    static constexpr uint32_t RETRY_WINDOW_STEP_MS = 1000;           // growth per failed window
-    static constexpr int MAX_RETRIES = 20;
+    static constexpr uint32_t INITIAL_RETRY_WINDOW_MS = 2000;        // first connection window
+    static constexpr uint32_t RETRY_WINDOW_STEP_MS = 2000;           // growth per failed window
+    static constexpr int MAX_RETRIES = 50;
 
     struct WiFiConnectState {
         bool connected = false;

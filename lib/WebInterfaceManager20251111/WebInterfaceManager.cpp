@@ -7,6 +7,7 @@
 #include "AudioManager.h"
 #include "SDVoting.h"
 #include "ColorsStore.h"
+#include "TodayContext.h"
 #include "Web/WebDirector.h"
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
@@ -14,6 +15,7 @@
 #include <WiFi.h>
 #include <memory>
 #include <cstring>
+#include <cstdio>
 
 #ifndef WEBIF_LOG_LEVEL
 #define WEBIF_LOG_LEVEL 1
@@ -351,6 +353,112 @@ void handleSdList(AsyncWebServerRequest *request)
   payload += entries;
   payload += F("]}");
 
+  sendJsonResponse(request, payload);
+}
+
+String rgbToHex(const RgbColor &rgb)
+{
+  char buffer[8];
+  snprintf(buffer, sizeof(buffer), "#%02X%02X%02X",
+           static_cast<unsigned>(rgb.r),
+           static_cast<unsigned>(rgb.g),
+           static_cast<unsigned>(rgb.b));
+  return String(buffer);
+}
+
+String toIdString(uint8_t id)
+{
+  if (id == 0)
+  {
+    return String();
+  }
+  char buffer[6];
+  snprintf(buffer, sizeof(buffer), "%u", static_cast<unsigned>(id));
+  return String(buffer);
+}
+
+void handleTodayContext(AsyncWebServerRequest *request)
+{
+  if (!SDManager::isReady())
+  {
+    sendError(request, 503, F("SD not ready"));
+    return;
+  }
+
+  if (!TodayContextReady())
+  {
+    if (!InitTodayContext(SD))
+    {
+      sendError(request, 500, F("Context init failed"));
+      return;
+    }
+  }
+
+  TodayContext ctx;
+  if (!LoadTodayContext(ctx) || !ctx.valid)
+  {
+    sendError(request, 503, F("Context unavailable"));
+    return;
+  }
+
+  const bool calendarManaged = ctx.entry.valid;
+  const bool patternFromCalendar = ctx.entry.valid && ctx.entry.patternId != 0;
+  const bool colorFromCalendar = ctx.entry.valid && ctx.entry.colorId != 0;
+
+  DynamicJsonDocument doc(1024);
+  doc["valid"] = ctx.valid;
+  if (ctx.entry.iso.length())
+  {
+    doc["date_iso"] = ctx.entry.iso;
+  }
+  doc["calendar_entry"] = ctx.entry.valid;
+  if (ctx.entry.note.length())
+  {
+    doc["note"] = ctx.entry.note;
+  }
+
+  JsonObject patternObj = doc.createNestedObject("pattern");
+  if (ctx.pattern.valid)
+  {
+    const String resolvedId = toIdString(ctx.pattern.id);
+    if (resolvedId.length())
+    {
+      patternObj["id"] = resolvedId;
+    }
+    if (ctx.pattern.label.length())
+    {
+      patternObj["label"] = ctx.pattern.label;
+    }
+  }
+  if (ctx.entry.patternId != 0)
+  {
+    patternObj["calendar_id"] = static_cast<uint32_t>(ctx.entry.patternId);
+  }
+  patternObj["source"] = calendarManaged ? "calendar" : "context";
+
+  JsonObject colorObj = doc.createNestedObject("color");
+  if (ctx.colors.valid)
+  {
+    const String resolvedId = toIdString(ctx.colors.id);
+    if (resolvedId.length())
+    {
+      colorObj["id"] = resolvedId;
+    }
+    if (ctx.colors.label.length())
+    {
+      colorObj["label"] = ctx.colors.label;
+    }
+    colorObj["rgb1_hex"] = rgbToHex(ctx.colors.primary);
+    colorObj["rgb2_hex"] = rgbToHex(ctx.colors.secondary);
+  }
+  if (ctx.entry.colorId != 0)
+  {
+    colorObj["calendar_id"] = static_cast<uint32_t>(ctx.entry.colorId);
+  }
+  colorObj["source"] = calendarManaged ? "calendar" : "default";
+
+  String payload;
+  serializeJson(doc, payload);
   sendJsonResponse(request, payload);
 }
 
@@ -928,6 +1036,7 @@ void beginWebInterface()
   server.on("/api/sd/status", HTTP_GET, sendSdStatus);
   server.on("/api/sd/list", HTTP_GET, handleSdList);
   server.on("/api/sd/upload", HTTP_POST, handleSdUploadRequest, handleSdUploadData);
+  server.on("/api/context/today", HTTP_GET, handleTodayContext);
 
   // Serve the monolithic UI assets directly from the SD card so the browser can load styling and logic.
   server.serveStatic("/styles.css", SD, "/styles.css");

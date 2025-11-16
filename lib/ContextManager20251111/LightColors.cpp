@@ -3,11 +3,14 @@
 #include "Globals.h"
 #include "SDManager.h"
 
-#include <ArduinoJson.h>
+#include <vector>
+#include <ctype.h>
+
+#include "CsvUtils.h"
 
 namespace {
 
-constexpr const char* kLightColorsFile = "light_colors.json";
+constexpr const char* kLightColorsFile = "light_colors.csv";
 
 class ScopedSDBusy {
 public:
@@ -50,6 +53,24 @@ uint8_t parseByte(const String& hex, size_t offset) {
         return 0;
     }
     return static_cast<uint8_t>((hi << 4) | lo);
+}
+
+bool parseColorId(const String& value, uint8_t& out) {
+    if (value.isEmpty()) {
+        return false;
+    }
+    for (size_t i = 0; i < value.length(); ++i) {
+        const char c = value.charAt(i);
+        if (c < '0' || c > '9') {
+            return false;
+        }
+    }
+    const long parsed = value.toInt();
+    if (parsed <= 0 || parsed > 255) {
+        return false;
+    }
+    out = static_cast<uint8_t>(parsed);
+    return true;
 }
 
 } // namespace
@@ -97,8 +118,8 @@ bool LightColorStore::ready() const {
     return loaded_ && fs_ != nullptr;
 }
 
-const LightColor* LightColorStore::find(const String& id) const {
-    if (!ready()) {
+const LightColor* LightColorStore::find(uint8_t id) const {
+    if (!ready() || id == 0) {
         return nullptr;
     }
     for (const auto& color : colors_) {
@@ -113,7 +134,7 @@ const LightColor* LightColorStore::active() const {
     if (!ready()) {
         return nullptr;
     }
-    if (!activeColorId_.isEmpty()) {
+    if (activeColorId_ != 0) {
         const LightColor* color = find(activeColorId_);
         if (color) {
             return color;
@@ -128,7 +149,7 @@ const LightColor* LightColorStore::active() const {
 void LightColorStore::clear() {
     colors_.clear();
     loaded_ = false;
-    activeColorId_.clear();
+    activeColorId_ = 0;
 }
 
 bool LightColorStore::load() {
@@ -137,7 +158,7 @@ bool LightColorStore::load() {
     }
 
     colors_.clear();
-    activeColorId_.clear();
+    activeColorId_ = 0;
 
     ScopedSDBusy guard;
     const String path = pathFor(kLightColorsFile);
@@ -147,83 +168,59 @@ bool LightColorStore::load() {
         return false;
     }
 
-    const size_t fileSize = file.size();
-    size_t capacity = fileSize + (fileSize / 2) + 2048;
-    if (capacity < 4096) {
-        capacity = 4096;
-    }
-    file.seek(0);
+    String line;
+    std::vector<String> columns;
+    columns.reserve(8);
+    bool headerSkipped = false;
+    size_t loaded = 0;
 
-    DynamicJsonDocument doc(capacity);
-    DeserializationError err = deserializeJson(doc, file);
+    while (csv::readLine(file, line)) {
+        if (line.isEmpty() || line.charAt(0) == '#') {
+            continue;
+        }
+        if (!headerSkipped) {
+            headerSkipped = true;
+            if (line.startsWith(F("light_colors_id"))) {
+                continue;
+            }
+        }
+
+        csv::splitColumns(line, columns);
+        if (columns.size() < 4) {
+            continue;
+        }
+
+        uint8_t id = 0;
+        if (!parseColorId(columns[0], id)) {
+            continue;
+        }
+
+        LightColor color;
+        color.id = id;
+        color.label = columns[1];
+        const String rgb1 = columns[2];
+        const String rgb2 = columns[3];
+        if (color.label.isEmpty() || rgb1.isEmpty() || rgb2.isEmpty()) {
+            continue;
+        }
+        if (!HexToRgb(rgb1, color.primary) || !HexToRgb(rgb2, color.secondary)) {
+            PF("[LightColorStore] invalid hex colors for id=%u\n", static_cast<unsigned>(color.id));
+            continue;
+        }
+        color.valid = true;
+        colors_.push_back(color);
+        ++loaded;
+    }
+
     file.close();
-    if (err) {
-        PF("[LightColorStore] JSON parse failed for %s: %s\n", path.c_str(), err.c_str());
+
+    if (colors_.empty()) {
+        PF("[LightColorStore] no valid colors loaded from %s\n", path.c_str());
         return false;
     }
 
-    auto parseColors = [&](JsonArrayConst colors) -> size_t {
-        if (colors.isNull()) {
-            PF("[LightColorStore] colors array missing\n");
-            return 0;
-        }
-
-        size_t added = 0;
-        colors_.reserve(colors_.size() + colors.size());
-        for (JsonObjectConst item : colors) {
-            LightColor parsed;
-            parsed.id = item["id"].as<String>();
-            parsed.label = item["label"].as<String>();
-            const String rgb1 = item["rgb1_hex"].as<String>();
-            const String rgb2 = item["rgb2_hex"].as<String>();
-            if (parsed.id.isEmpty() || parsed.label.isEmpty() || rgb1.isEmpty() || rgb2.isEmpty()) {
-                PF("[LightColorStore] skipping invalid color entry\n");
-                continue;
-            }
-            if (!HexToRgb(rgb1, parsed.primary) || !HexToRgb(rgb2, parsed.secondary)) {
-                PF("[LightColorStore] invalid hex colors for id=%s\n", parsed.id.c_str());
-                continue;
-            }
-            parsed.valid = true;
-            colors_.push_back(parsed);
-            ++added;
-        }
-
-        return added;
-    };
-
-    bool parsed = false;
-    JsonVariantConst root = doc.as<JsonVariantConst>();
-    if (!root.isNull() && !root["schema"].isNull()) {
-        const int schema = root["schema"].as<int>();
-        if (schema != 1) {
-            PF("[LightColorStore] Unsupported light_colors schema=%d\n", schema);
-            return false;
-        }
-        activeColorId_ = root["active_color"].as<String>();
-        parsed = parseColors(root["colors"].as<JsonArrayConst>()) > 0;
-    } else if (!root.isNull() && !root["format_version"].isNull()) {
-        const int formatVersion = root["format_version"].as<int>();
-        if (formatVersion != 1) {
-            PF("[LightColorStore] Unsupported light_colors format_version=%d\n", formatVersion);
-            return false;
-        }
-        parsed = parseColors(root["colors"].as<JsonArrayConst>()) > 0;
-    } else {
-        PF("[LightColorStore] Missing schema or format_version\n");
-        return false;
-    }
-
-    if (!parsed || colors_.empty()) {
-        PF("[LightColorStore] no valid colors loaded\n");
-        return false;
-    }
-
-    if (activeColorId_.isEmpty()) {
-        activeColorId_ = colors_.front().id;
-    }
-
-    PF("[LightColorStore] Loaded %u light colors\n", static_cast<unsigned>(colors_.size()));
+    activeColorId_ = colors_.front().id;
+    PF("[LightColorStore] Loaded %u light colors\n", static_cast<unsigned>(loaded));
     return true;
 }
 

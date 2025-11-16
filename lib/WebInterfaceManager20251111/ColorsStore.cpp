@@ -6,9 +6,12 @@
 
 #include "PatternStore.h"
 #include "SDManager.h"
+#include "CsvUtils.h"
 
 namespace {
-constexpr const char* kColorPath = "/light_colors.json";
+constexpr const char* kColorPath = "/light_colors.csv";
+constexpr const char* kActiveColorPrefix = "# active_color=";
+constexpr size_t kActiveColorPrefixLen = sizeof("# active_color=") - 1;
 constexpr uint8_t kSchemaVersion = 1;
 
 struct DefaultColor {
@@ -366,34 +369,59 @@ bool ColorsStore::loadColorsFromSD() {
     if (!file) {
         return false;
     }
-    DynamicJsonDocument doc(4096);
-    DeserializationError err = deserializeJson(doc, file);
-    file.close();
-    if (err) {
-        return false;
-    }
+
     colors_.clear();
-    activeColorId_ = doc["active_color"].as<String>();
-    JsonArray arr = doc["colors"].as<JsonArray>();
-    if (arr.isNull()) {
-        return false;
-    }
-    for (JsonObject item : arr) {
-        CRGB primary, secondary;
-        String errMsg;
-        if (!parseColorPayload(item, primary, secondary, errMsg)) {
+    activeColorId_.clear();
+
+    String line;
+    std::vector<String> columns;
+    columns.reserve(8);
+    bool headerConsumed = false;
+
+    while (csv::readLine(file, line)) {
+        if (line.isEmpty()) {
             continue;
         }
+        String trimmed = line;
+        trimmed.trim();
+        if (trimmed.isEmpty()) {
+            continue;
+        }
+        if (trimmed.charAt(0) == '#') {
+            if (trimmed.startsWith(F("# active_color="))) {
+                activeColorId_ = trimmed.substring(kActiveColorPrefixLen);
+                activeColorId_.trim();
+            }
+            continue;
+        }
+        if (!headerConsumed) {
+            headerConsumed = true;
+            if (trimmed.startsWith(F("light_colors_id"))) {
+                continue;
+            }
+        }
+
+        csv::splitColumns(line, columns);
+        if (columns.size() < 4) {
+            continue;
+        }
+
         ColorEntry entry;
-        entry.id = item["id"].as<String>();
-        entry.label = item["label"].as<String>();
-        entry.primary = primary;
-        entry.secondary = secondary;
-        if (entry.id.isEmpty()) {
+        entry.id = columns[0];
+        entry.label = columns[1];
+        const String rgb1 = columns[2];
+        const String rgb2 = columns[3];
+        if (entry.id.isEmpty() || rgb1.isEmpty() || rgb2.isEmpty()) {
+            continue;
+        }
+        if (!parseHexColor(rgb1, entry.primary) || !parseHexColor(rgb2, entry.secondary)) {
+            PF("[ColorsStore] invalid hex in CSV id=%s\n", entry.id.c_str());
             continue;
         }
         colors_.push_back(entry);
     }
+
+    file.close();
     return !colors_.empty();
 }
 
@@ -424,25 +452,31 @@ bool ColorsStore::saveColorsToSD() const {
     if (!file) {
         return false;
     }
-    DynamicJsonDocument doc(4096);
-    doc["schema"] = kSchemaVersion;
-    doc["active_color"] = activeColorId_;
-    JsonArray arr = doc.createNestedArray("colors");
-    for (const auto& entry : colors_) {
-        JsonObject obj = arr.createNestedObject();
-        obj["id"] = entry.id;
-        if (!entry.label.isEmpty()) {
-            obj["label"] = entry.label;
-        }
-        char buff[8];
-        snprintf(buff, sizeof(buff), "#%02X%02X%02X", entry.primary.r, entry.primary.g, entry.primary.b);
-        obj["rgb1_hex"] = buff;
-        snprintf(buff, sizeof(buff), "#%02X%02X%02X", entry.secondary.r, entry.secondary.g, entry.secondary.b);
-        obj["rgb2_hex"] = buff;
+
+    if (!activeColorId_.isEmpty()) {
+        file.print(F("# active_color="));
+        file.println(activeColorId_);
     }
-    const size_t written = serializeJson(doc, file);
+
+    file.println(F("light_colors_id;light_colors_name;rgb1_hex;rgb2_hex"));
+    for (const auto& entry : colors_) {
+        file.print(entry.id);
+        file.print(';');
+        file.print(entry.label);
+        file.print(';');
+        char buff[7];
+        snprintf(buff, sizeof(buff), "%02X%02X%02X", entry.primary.r, entry.primary.g, entry.primary.b);
+        file.print('#');
+        file.print(buff);
+        file.print(';');
+        snprintf(buff, sizeof(buff), "%02X%02X%02X", entry.secondary.r, entry.secondary.g, entry.secondary.b);
+        file.print('#');
+        file.print(buff);
+        file.println();
+    }
+
     file.close();
-    return written > 0;
+    return true;
 }
 
 const ColorsStore::ColorEntry* ColorsStore::findColor(const String& id) const {
@@ -540,15 +574,23 @@ void ColorsStore::applyActiveToLights() {
     const ColorEntry* color = nullptr;
     if (!activeColorId_.isEmpty()) {
         color = findColor(activeColorId_);
+        if (!color) {
+            PF("[ColorsStore] Active color '%s' missing, clearing override\n", activeColorId_.c_str());
+            activeColorId_.clear();
+        }
     }
+
+    const ColorEntry* fallbackColor = nullptr;
     if (!color && !colors_.empty()) {
-        color = &colors_.front();
-        activeColorId_ = color->id;
+        fallbackColor = &colors_.front();
     }
 
     if (color) {
         params.RGB1 = color->primary;
         params.RGB2 = color->secondary;
+    } else if (fallbackColor) {
+        params.RGB1 = fallbackColor->primary;
+        params.RGB2 = fallbackColor->secondary;
     } else {
         params.RGB1 = toCRGB(kDefaultColors[0].rgb1);
         params.RGB2 = toCRGB(kDefaultColors[0].rgb2);
@@ -556,7 +598,7 @@ void ColorsStore::applyActiveToLights() {
 
     PF("[ColorsStore] Apply pattern=%s color=%s rgb1=%02X%02X%02X rgb2=%02X%02X%02X\n",
        patternId.c_str(),
-       color ? color->id.c_str() : "<default>",
+       color ? color->id.c_str() : (fallbackColor ? fallbackColor->id.c_str() : "<default>"),
        params.RGB1.r, params.RGB1.g, params.RGB1.b,
        params.RGB2.r, params.RGB2.g, params.RGB2.b);
     PlayLightShow(params);
