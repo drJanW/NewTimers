@@ -2,6 +2,7 @@
 #include "Globals.h"
 #include "AudioState.h"
 #include "ContextManager.h"
+#include "SDBusyGuard.h"
 
 #include <ESPAsyncWebServer.h>
 #ifdef ARDUINO_ARCH_ESP32
@@ -21,6 +22,13 @@
 namespace {
 
 bool readCurrentScore(uint8_t dir, uint8_t file, uint8_t& scoreOut) {
+  SDBusyGuard guard;
+  if (!guard.acquired()) {
+    PF("[SDVoting] Busy while reading score %03u/%03u\n", dir, file);
+    scoreOut = 0;
+    return false;
+  }
+
   auto& sdMgr = SDManager::instance();
   FileEntry fe;
   if (!sdMgr.readFileEntry(dir, file, &fe)) {
@@ -34,6 +42,12 @@ bool readCurrentScore(uint8_t dir, uint8_t file, uint8_t& scoreOut) {
 } // namespace
 
 uint8_t SDVoting::getRandomFile(uint8_t dir_num) {
+  SDBusyGuard guard;
+  if (!guard.acquired()) {
+    PF("[SDVoting] Busy while selecting file from dir %03u\n", dir_num);
+    return 0;
+  }
+
   auto& sdMgr = SDManager::instance();
   DirEntry dir;
   if (!sdMgr.readDirEntry(dir_num, &dir) || dir.file_count == 0) return 0;
@@ -63,6 +77,12 @@ uint8_t SDVoting::getRandomFile(uint8_t dir_num) {
 }
 
 void SDVoting::applyVote(uint8_t dir_num, uint8_t file_num, int8_t delta) {
+  SDBusyGuard guard;
+  if (!guard.acquired()) {
+    PF("[SDVoting] Busy while applying vote %03u/%03u\n", dir_num, file_num);
+    return;
+  }
+
   auto& sdMgr = SDManager::instance();
   FileEntry fe; DirEntry dir;
   if (!sdMgr.readFileEntry(dir_num, file_num, &fe)) return;
@@ -84,6 +104,12 @@ void SDVoting::applyVote(uint8_t dir_num, uint8_t file_num, int8_t delta) {
 }
 
 void SDVoting::banFile(uint8_t dir_num, uint8_t file_num) {
+  SDBusyGuard guard;
+  if (!guard.acquired()) {
+    PF("[SDVoting] Busy while banning %03u/%03u\n", dir_num, file_num);
+    return;
+  }
+
   auto& sdMgr = SDManager::instance();
   FileEntry fe; DirEntry dir;
   if (!sdMgr.readFileEntry(dir_num, file_num, &fe)) return;
@@ -99,6 +125,12 @@ void SDVoting::banFile(uint8_t dir_num, uint8_t file_num) {
 }
 
 void SDVoting::deleteIndexedFile(uint8_t dir_num, uint8_t file_num) {
+  SDBusyGuard guard;
+  if (!guard.acquired()) {
+    PF("[SDVoting] Busy while deleting %03u/%03u\n", dir_num, file_num);
+    return;
+  }
+
   auto& sdMgr = SDManager::instance();
   FileEntry fe; DirEntry dir;
   if (!sdMgr.readFileEntry(dir_num, file_num, &fe)) return;

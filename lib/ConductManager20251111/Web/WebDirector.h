@@ -3,7 +3,10 @@
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 #include <FS.h>
+#include <memory>
 #include <vector>
+
+#include "SDBusyGuard.h"
 
 class WebDirector {
 public:
@@ -45,6 +48,8 @@ private:
     void failJob(Job &job, int statusCode, const String &message);
     void releaseJob(Job &job);
     Job *findJobByRequest(AsyncWebServerRequest *request);
+    static bool tryAcquireBusyGuard(Job &job);
+    static void releaseBusyGuard(Job &job);
 
     static constexpr size_t kMaxJobs = 4U;
     static constexpr size_t kSdEntriesPerSlice = 4U;
@@ -73,8 +78,8 @@ private:
     String headerName;
     String headerValue;
         size_t entryCount = 0;
-        bool truncated = false;
-        bool busyOwned = false;
+    bool truncated = false;
+    std::unique_ptr<SDBusyGuard> busyGuard;
         int statusCode = 200;
         String errorMessage;
 

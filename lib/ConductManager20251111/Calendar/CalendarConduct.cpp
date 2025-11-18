@@ -5,6 +5,7 @@
 #include "Globals.h"
 #include "TimerManager.h"
 #include "PRTClock.h"
+#include "SDBusyGuard.h"
 
 namespace {
 
@@ -99,6 +100,13 @@ void CalendarConduct::cb_loadCalendar() {
   uint8_t day = 0;
   if (!ensureDate(year, month, day)) {
     PF("[CalendarConduct] Failed to resolve clock date\n");
+    reschedule(kCalendarRetryIntervalMs, 1);
+    return;
+  }
+
+  SDBusyGuard guard;
+  if (!guard.acquired()) {
+    PF("[CalendarConduct] SD busy, postponing calendar load\n");
     reschedule(kCalendarRetryIntervalMs, 1);
     return;
   }

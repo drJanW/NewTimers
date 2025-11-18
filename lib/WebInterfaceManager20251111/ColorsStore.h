@@ -27,6 +27,7 @@ public:
     bool deleteColor(JsonVariantConst body, String& affectedId, String& errorMessage);
 
     bool preview(JsonVariantConst body, String& errorMessage);
+    bool previewColors(JsonVariantConst body, String& errorMessage);
 
     String getActivePatternId() const;
     const String& getActiveColorId() const { return activeColorId_; }

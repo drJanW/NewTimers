@@ -1,7 +1,9 @@
 #include "AudioDirector.h"
 
+#define LOCAL_LOG_LEVEL LOG_LEVEL_NONE
 #include "Globals.h"
 #include "SDManager.h"
+#include "SDBusyGuard.h"
 #include "AudioPolicy.h"
 #include <SD.h>
 
@@ -186,6 +188,12 @@ void AudioDirector::plan() {
 }
 
 bool AudioDirector::selectRandomFragment(AudioFragment& outFrag) {
+    SDBusyGuard guard;
+    if (!guard.acquired()) {
+        PF("[AudioDirector] SD busy, deferring fragment selection\n");
+        return false;
+    }
+
     DirPick dirPick{};
 
     size_t themeCount = 0;

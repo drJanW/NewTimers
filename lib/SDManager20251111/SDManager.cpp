@@ -1,10 +1,14 @@
 #include "SDManager.h"
+#include "SdPathUtils.h"
 #include <cstring>
 
 // forward
 static bool versionStringsEqual(const String& a, const char* b);
 
 namespace {
+
+using SdPathUtils::extractBaseName;
+using SdPathUtils::removeSdPath;
 
 // non-reentrant guard around long SD operations
 class ScopedSDBusy {
@@ -278,51 +282,6 @@ bool SDManager::renameFile(const char* oldPath,const char* newPath){
     return SD.rename(oldPath,newPath);
 }
 
-namespace {
-
-bool removeRecursive(const String& path)
-{
-    if (path.length() == 0) {
-        return false;
-    }
-    File entry = SD.open(path.c_str(), FILE_READ);
-    if (!entry) {
-        return false;
-    }
-    if (!entry.isDirectory()) {
-        entry.close();
-        return SD.remove(path.c_str());
-    }
-
-    File dir = SD.open(path.c_str(), FILE_READ);
-    if (!dir) {
-        entry.close();
-        return false;
-    }
-    for (File child = dir.openNextFile(); child; child = dir.openNextFile()) {
-        const char* childName = child.name();
-        String childPath = path;
-        if (!childPath.endsWith("/")) {
-            childPath += '/';
-        }
-        if (childName) {
-            const char* slash = strrchr(childName, '/');
-            childPath += (slash && slash[1] != '\0') ? slash + 1 : childName;
-        }
-        child.close();
-        if (!removeRecursive(childPath)) {
-            dir.close();
-            entry.close();
-            return false;
-        }
-    }
-    dir.close();
-    entry.close();
-    return SD.rmdir(path.c_str());
-}
-
-} // namespace
-
 bool SDManager::removePath(const char* path)
 {
     if (!path || path[0] != '/') {
@@ -332,7 +291,8 @@ bool SDManager::removePath(const char* path)
     if (!SD.exists(path)) {
         return false;
     }
-    return removeRecursive(String(path));
+    String errorMessage;
+    return removeSdPath(String(path), errorMessage);
 }
 
 bool SDManager::listDirectory(const char* path,
@@ -368,14 +328,8 @@ bool SDManager::listDirectory(const char* path,
         const bool isDir = entry.isDirectory();
         const uint32_t sizeBytes = isDir ? 0U : static_cast<uint32_t>(entry.size());
         const char* rawName = entry.name();
-        const char* baseName = rawName;
-        if (rawName) {
-            const char* slash = std::strrchr(rawName, '/');
-            if (slash && slash[1] != '\0') {
-                baseName = slash + 1;
-            }
-        }
-        callback(baseName ? baseName : "", isDir, sizeBytes, context);
+        String baseName = rawName ? extractBaseName(rawName) : String();
+        callback(baseName.length() ? baseName.c_str() : "", isDir, sizeBytes, context);
         entry.close();
         ++count;
     }

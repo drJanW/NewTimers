@@ -1,6 +1,7 @@
 #include "LightManager.h"
 #include <FastLED.h>
 #include "AudioState.h"
+#include "MathUtils.h"
 #include "SensorManager.h"
 #include "TimerManager.h"
 #include <math.h>
@@ -18,15 +19,11 @@ int iv_updateLightManager = LOOPCYCLE;
 
 float getWebBrightness() {
   float value = s_webBrightness.load(std::memory_order_relaxed);
-  if (value < 0.0f) value = 0.0f;
-  if (value > 1.0f) value = 1.0f;
-  return value;
+  return MathUtils::clamp01(value);
 }
 
 void setWebBrightness(float value) {
-  if (value < 0.0f) value = 0.0f;
-  if (value > 1.0f) value = 1.0f;
-  s_webBrightness.store(value, std::memory_order_relaxed);
+  s_webBrightness.store(MathUtils::clamp01(value), std::memory_order_relaxed);
 }
 
 bool isWebInterfaceActive() {
@@ -193,9 +190,7 @@ void updateLightManager() {
     float dy = pos.y - centerY;
     float dist = sqrtf(dx * dx + dy * dy);
 
-    float blend = fabsf(dist - animRadius) / showParams.fadeWidth;
-    if (blend > 1.0f) blend = 1.0f;
-    if (blend < 0.0f) blend = 0.0f;
+  float blend = MathUtils::clamp(fabsf(dist - animRadius) / showParams.fadeWidth, 0.0f, 1.0f);
 
     float fade = 1.0f - blend;
     fade = fade * fade;
@@ -237,9 +232,8 @@ void updateDynamicBrightness() {
     uint16_t raw = getAudioLevelRaw();
     if (raw) {
       float n = raw / 32768.0f;
-      float adj = sqrtf(n) * 1.2f;
-      if (adj > 1.0f) adj = 1.0f;
-      factor = adj * wb;
+  float adj = MathUtils::clamp01(sqrtf(n) * 1.2f);
+  factor = adj * wb;
     }
   }
 
@@ -254,9 +248,7 @@ void updateDynamicBrightness() {
 void updateBaseBrightness() {
   float luxFactor = 1.0f - SensorManager::ambientLux();
   float webFactor = getWebBrightness();
-  float total = luxFactor * webFactor;
-  if (total < 0.0f) total = 0.0f;
-  if (total > 1.0f) total = 1.0f;
+  float total = MathUtils::clamp(luxFactor * webFactor, 0.0f, 1.0f);
 
   uint8_t base = (uint8_t)(MAX_BRIGHTNESS * total);
   setBaseBrightness(base);
@@ -323,9 +315,8 @@ void LightManager::update() {
 }
 
 void LightManager::setBrightness(float value) {
-  if (value < 0.0f) value = 0.0f;
-  if (value > MAX_BRIGHTNESS) value = MAX_BRIGHTNESS;
-  uint8_t target = static_cast<uint8_t>(value + 0.5f);
+  float clamped = MathUtils::clamp(value, 0.0f, static_cast<float>(MAX_BRIGHTNESS));
+  uint8_t target = static_cast<uint8_t>(clamped + 0.5f);
   setBaseBrightness(target);
   updateDynamicBrightness();
   showDue = true;
@@ -336,9 +327,8 @@ float LightManager::getBrightness() const {
 }
 
 void LightManager::capBrightness(float maxValue) {
-  if (maxValue < 0.0f) maxValue = 0.0f;
-  if (maxValue > MAX_BRIGHTNESS) maxValue = MAX_BRIGHTNESS;
-  uint8_t cap = static_cast<uint8_t>(maxValue + 0.5f);
+  float clamped = MathUtils::clamp(maxValue, 0.0f, static_cast<float>(MAX_BRIGHTNESS));
+  uint8_t cap = static_cast<uint8_t>(clamped + 0.5f);
   uint8_t current = getBaseBrightness();
   if (current > cap) {
     setBaseBrightness(cap);

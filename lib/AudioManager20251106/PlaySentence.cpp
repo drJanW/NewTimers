@@ -12,6 +12,7 @@
 #include "Globals.h"
 #include "AudioState.h"
 #include "WiFiManager.h"
+#include "MathUtils.h"
 
 // --------- forward declarations om link-/scope-fouten te voorkomen ----------
 namespace PlayAudioFragment {
@@ -146,8 +147,7 @@ void startTTS(const String &text)
     setWordPlaying(false);
     setCurrentWordId(END_OF_SENTENCE);
 
-    float g = getBaseGain() * 1.8f; // tweak naar smaak (1.2–1.8)
-    if (g > 1.0f) g = 1.0f;
+    float g = MathUtils::clamp(getBaseGain() * 1.8f, 0.0f, 1.0f); // tweak naar smaak (1.2–1.8)
     audio().audioOutput.SetGain(g);
 
     // Eerst checken op ERROR-respons van VoiceRSS

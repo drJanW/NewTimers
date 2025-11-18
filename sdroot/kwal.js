@@ -301,8 +301,10 @@
     buildPatternControls();
     applyPatternBoundsToInputs();
 
-    const previewButtons = Array.from(document.querySelectorAll('[data-light-action="preview"]'));
-    const activateButtons = Array.from(document.querySelectorAll('[data-light-action="activate"]'));
+    const patternPreviewButtons = Array.from(document.querySelectorAll('[data-pattern-action="preview"]'));
+    const patternActivateButtons = Array.from(document.querySelectorAll('[data-pattern-action="activate"]'));
+    const colorPreviewButtons = Array.from(document.querySelectorAll('[data-color-action="preview"]'));
+    const colorActivateButtons = Array.from(document.querySelectorAll('[data-color-action="activate"]'));
 
     const lightRangeInputs = Array.from(dom.lightSettingsList.querySelectorAll('[data-setting-range]'));
 
@@ -345,9 +347,10 @@
         brightnessDraft: 0,
     audioVolume: 0,
     audio: { dir: 0, file: 0, score: null },
-        pattern: createCollectionState('Patroon geladen', 'context'),
-        color: createCollectionState('Kleurset geladen', 'default'),
-        previewActive: false,
+    pattern: createCollectionState('Patroon geladen', 'context'),
+    color: createCollectionState('Kleurset geladen', 'default'),
+    previewActive: false,
+    colorPreviewActive: false,
         sd: {
             status: null,
             loadingPromise: null,
@@ -959,14 +962,18 @@
     };
 
     const updatePreviewState = () => {
-        if (!previewButtons.length) {
-            return;
-        }
-        const disabled = !state.pattern.draft || !state.color.draft;
-        const label = state.previewActive ? 'Voorbeeld actief' : 'Voorbeeld';
-        previewButtons.forEach((button) => {
-            button.disabled = disabled;
-            button.textContent = label;
+        const patternDisabled = !state.pattern.draft || !state.color.draft;
+        const patternLabel = state.previewActive ? 'Voorbeeld actief' : 'Voorbeeld';
+        patternPreviewButtons.forEach((button) => {
+            button.disabled = patternDisabled;
+            button.textContent = patternLabel;
+        });
+
+        const colorDisabled = !state.color.draft;
+        const colorLabel = state.colorPreviewActive ? 'Voorbeeld actief' : 'Voorbeeld';
+        colorPreviewButtons.forEach((button) => {
+            button.disabled = colorDisabled;
+            button.textContent = colorLabel;
         });
     };
 
@@ -1031,8 +1038,8 @@
             dom.patternName.value = selectedPatternLabel;
         }
 
-        updatePreviewState();
-        updateActivateButton();
+    updatePreviewState();
+    updateActivateButtons();
     };
 
     const updateColorControls = () => {
@@ -1088,34 +1095,47 @@
             dom.colorName.value = !isDefault && entry ? (entry.label && entry.label.trim() ? entry.label : entry.id) : '';
         }
 
-        updatePreviewState();
-        updateActivateButton();
+    updatePreviewState();
+    updateActivateButtons();
     };
 
-    const updateActivateButton = () => {
-        if (!activateButtons.length) {
-            return;
+    const updateActivateButtons = () => {
+        if (patternActivateButtons.length) {
+            const selectedPattern = state.pattern.selectedId || PATTERN_CONTEXT;
+            const activePattern = state.pattern.activeId || PATTERN_CONTEXT;
+            const selectedColor = state.color.selectedId || COLOR_DEFAULT;
+            const activeColor = state.color.activeId || COLOR_DEFAULT;
+
+            const patternMatches = selectedPattern === activePattern;
+            const colorMatches = selectedColor === activeColor;
+            const anyDirty = state.pattern.dirty || state.pattern.labelDirty || state.color.dirty || state.color.labelDirty;
+
+            if (selectedPattern === PATTERN_CONTEXT) {
+                const label = activePattern === PATTERN_CONTEXT ? 'Context actief' : 'Activeer context';
+                const disabled = activePattern === PATTERN_CONTEXT && !anyDirty && selectedColor === activeColor;
+                patternActivateButtons.forEach((button) => {
+                    button.textContent = label;
+                    button.disabled = disabled;
+                });
+            } else {
+                const disabled = patternMatches && colorMatches && !anyDirty;
+                patternActivateButtons.forEach((button) => {
+                    button.textContent = 'Activeer';
+                    button.disabled = disabled;
+                });
+            }
         }
-        const selectedPattern = state.pattern.selectedId || PATTERN_CONTEXT;
-        const activePattern = state.pattern.activeId || PATTERN_CONTEXT;
-        const selectedColor = state.color.selectedId || COLOR_DEFAULT;
-        const activeColor = state.color.activeId || COLOR_DEFAULT;
 
-        const patternMatches = selectedPattern === activePattern;
-        const colorMatches = selectedColor === activeColor;
-        const anyDirty = state.pattern.dirty || state.pattern.labelDirty || state.color.dirty || state.color.labelDirty;
-
-        if (selectedPattern === PATTERN_CONTEXT) {
-            const label = activePattern === PATTERN_CONTEXT ? 'Context actief' : 'Activeer context';
-            const disabled = activePattern === PATTERN_CONTEXT && !anyDirty && selectedColor === activeColor;
-            activateButtons.forEach((button) => {
+        if (colorActivateButtons.length) {
+            const selectedColor = state.color.selectedId || COLOR_DEFAULT;
+            const activeColor = state.color.activeId || COLOR_DEFAULT;
+            const colorDirty = state.color.dirty || state.color.labelDirty;
+            const label = selectedColor === COLOR_DEFAULT
+                ? (activeColor === COLOR_DEFAULT ? 'Standaard actief' : 'Activeer standaard')
+                : 'Activeer';
+            const disabled = (selectedColor === activeColor) && !colorDirty;
+            colorActivateButtons.forEach((button) => {
                 button.textContent = label;
-                button.disabled = disabled;
-            });
-        } else {
-            const disabled = patternMatches && colorMatches && !anyDirty;
-            activateButtons.forEach((button) => {
-                button.textContent = 'Activeer';
                 button.disabled = disabled;
             });
         }
@@ -1219,6 +1239,7 @@
         state.color.dirty = false;
         state.color.labelDirty = false;
         state.color.originalLabel = source && typeof source.label === 'string' ? source.label.trim() : '';
+    state.colorPreviewActive = false;
 
         applyColorDraftToUI(draft);
 
@@ -1495,6 +1516,7 @@
         }
         state.pattern.dirty = true;
         state.previewActive = false;
+        state.colorPreviewActive = false;
         setLightSettingsStatus('Wijzigingen niet opgeslagen', 'pending');
         updatePatternControls();
         updatePreviewState();
@@ -1506,6 +1528,7 @@
         }
         state.color.dirty = true;
         state.previewActive = false;
+        state.colorPreviewActive = false;
         setLightSettingsStatus('Wijzigingen niet opgeslagen', 'pending', 'color');
         updateColorControls();
         updatePreviewState();
@@ -1794,7 +1817,7 @@
         }
     };
 
-    const previewSelection = async () => {
+    const previewPatternSelection = async () => {
         if (!state.pattern.draft || !state.color.draft) {
             return false;
         }
@@ -1882,12 +1905,71 @@
                 throw new Error(message || response.statusText);
             }
             state.previewActive = true;
+            state.colorPreviewActive = false;
             setLightSettingsStatus('Voorbeeld actief (niet opgeslagen)', 'info', 'both');
             updatePreviewState();
             return true;
         } catch (error) {
             state.previewActive = false;
+            state.colorPreviewActive = false;
             setLightSettingsStatus(error.message || 'Voorbeeld mislukt', 'error', 'both');
+            updatePreviewState();
+            return false;
+        }
+    };
+
+    const previewColorSelection = async () => {
+        if (!state.color.draft) {
+            return false;
+        }
+
+        const selectedColor = state.color.selectedId || '';
+        const activeColor = state.color.activeId || '';
+        const lastColor = state.color.lastAppliedId || '';
+
+        const colorIdForPreview = (() => {
+            if (selectedColor && selectedColor !== COLOR_DEFAULT) {
+                return selectedColor;
+            }
+            if (activeColor && activeColor !== COLOR_DEFAULT) {
+                return activeColor;
+            }
+            if (lastColor) {
+                return lastColor;
+            }
+            return '';
+        })();
+
+        const colorPayload = {
+            rgb1_hex: state.color.draft.rgb1_hex,
+            rgb2_hex: state.color.draft.rgb2_hex
+        };
+        const body = { color: colorPayload };
+
+        if (colorIdForPreview) {
+            body.color_id = colorIdForPreview;
+            body.color.id = colorIdForPreview;
+        }
+
+        const colorLabel = colorIdForPreview || 'default';
+        setLightSettingsStatus(`Voorbeeld kleuren: ${colorLabel}`, 'pending', 'color');
+        try {
+            const response = await fetch('/api/colors/preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!response.ok) {
+                const message = await response.text();
+                throw new Error(message || response.statusText);
+            }
+            state.colorPreviewActive = true;
+            setLightSettingsStatus('Voorbeeld actief (niet opgeslagen)', 'info', 'color');
+            updatePreviewState();
+            return true;
+        } catch (error) {
+            state.colorPreviewActive = false;
+            setLightSettingsStatus(error.message || 'Voorbeeld mislukt', 'error', 'color');
             updatePreviewState();
             return false;
         }
@@ -1941,6 +2023,7 @@
             }
 
             state.previewActive = false;
+            state.colorPreviewActive = false;
             updatePreviewState();
             if (!patternPayload.id || !colorPayload.id) {
                 await refreshAutomationContext({ silent: true }).catch(() => {});
@@ -1948,6 +2031,32 @@
             return true;
         } catch (error) {
             setLightSettingsStatus(error.message || 'Activeren mislukt', 'error', 'both');
+            return false;
+        }
+    };
+
+    const activateColorSelection = async (colorId) => {
+        const selectedColor = typeof colorId === 'string' ? colorId : state.color.selectedId || COLOR_DEFAULT;
+        const colorPayloadId = selectedColor === COLOR_DEFAULT ? '' : selectedColor;
+
+        setLightSettingsStatus('Kleuren activeren…', 'pending', 'color');
+        try {
+            await selectColorOnServer(colorPayloadId);
+            if (colorPayloadId) {
+                state.color.lastAppliedId = colorPayloadId;
+            } else {
+                state.color.lastAppliedId = '';
+            }
+            state.colorPreviewActive = false;
+            updatePreviewState();
+            updateActivateButtons();
+            if (!colorPayloadId) {
+                await refreshAutomationContext({ silent: true }).catch(() => {});
+            }
+            setLightSettingsStatus(colorPayloadId ? 'Kleuren actief' : 'Standaardkleuren actief', colorPayloadId ? 'success' : 'info', 'color');
+            return true;
+        } catch (error) {
+            setLightSettingsStatus(error.message || 'Activeren mislukt', 'error', 'color');
             return false;
         }
     };
@@ -1967,6 +2076,7 @@
             });
         }
         state.previewActive = false;
+        state.colorPreviewActive = false;
         updatePreviewState();
     };
 
@@ -2002,15 +2112,27 @@
         });
     }
 
-    previewButtons.forEach((button) => {
+    patternPreviewButtons.forEach((button) => {
         button.addEventListener('click', () => {
-            previewSelection().catch(() => {});//!!
+            previewPatternSelection().catch(() => {});
         });
     });
 
-    activateButtons.forEach((button) => {
+    patternActivateButtons.forEach((button) => {
         button.addEventListener('click', () => {
             activateSelection().catch(() => {});
+        });
+    });
+
+    colorPreviewButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            previewColorSelection().catch(() => {});
+        });
+    });
+
+    colorActivateButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            activateColorSelection().catch(() => {});
         });
     });
 
@@ -2351,6 +2473,9 @@
         if (openKey === 'pattern' || openKey === 'color') {
             if (state.previewActive) {
                 await activateSelection(state.pattern.activeId || PATTERN_CONTEXT, state.color.activeId || COLOR_DEFAULT);
+            }
+            if (state.colorPreviewActive) {
+                await activateColorSelection(state.color.activeId || COLOR_DEFAULT);
             }
             restoreDrafts();
         }

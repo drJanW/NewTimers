@@ -7,6 +7,7 @@
 #include "PatternStore.h"
 #include "SDManager.h"
 #include "CsvUtils.h"
+#include "SDBusyGuard.h"
 
 namespace {
 constexpr const char* kColorPath = "/light_colors.csv";
@@ -47,23 +48,6 @@ bool isNumericId(const String& id) {
     }
     return true;
 }
-
-class SDBusyGuard {
-public:
-    SDBusyGuard() : owns_(!SDManager::isBusy()) {
-        if (owns_) {
-            SDManager::setBusy(true);
-        }
-    }
-    ~SDBusyGuard() {
-        if (owns_) {
-            SDManager::setBusy(false);
-        }
-    }
-    bool acquired() const { return owns_; }
-private:
-    bool owns_;
-};
 
 } // namespace
 
@@ -212,17 +196,39 @@ bool ColorsStore::updateColor(JsonVariantConst body, String& affectedId, String&
     PF("[ColorsStore] updateColor payload=%s\n", rawBody.c_str());
     CRGB primary, secondary;
     JsonVariantConst colorVariant = obj;
+    if (obj.containsKey("color")) {
+        colorVariant = obj["color"];
+    }
     if (!parseColorPayload(colorVariant, primary, secondary, errorMessage)) {
         return false;
     }
+    JsonObjectConst colorObj = colorVariant.as<JsonObjectConst>();
     String label = obj["label"].as<String>();
+    if (label.isEmpty() && !colorObj.isNull() && colorObj.containsKey("label")) {
+        label = colorObj["label"].as<String>();
+    }
     if (label.length() > 48) {
         label = label.substring(0, 48);
     }
     bool select = obj["select"].as<bool>();
 
-    if (obj.containsKey("id")) {
-        String id = obj["id"].as<String>();
+    auto resolveId = [&]() -> String {
+        if (obj.containsKey("id")) {
+            return obj["id"].as<String>();
+        }
+        if (obj.containsKey("color_id")) {
+            return obj["color_id"].as<String>();
+        }
+        if (!colorObj.isNull() && colorObj.containsKey("id")) {
+            return colorObj["id"].as<String>();
+        }
+        return String();
+    };
+
+    const String resolvedId = resolveId();
+
+    if (!resolvedId.isEmpty()) {
+        String id = resolvedId;
         ColorEntry* existing = findColor(id);
         if (!existing) {
             errorMessage = F("color not found");
@@ -351,6 +357,52 @@ bool ColorsStore::preview(JsonVariantConst body, String& errorMessage) {
     return true;
 }
 
+bool ColorsStore::previewColors(JsonVariantConst body, String& errorMessage)
+{
+    PatternStore& patternStore = PatternStore::instance();
+    if (!patternStore.isReady())
+    {
+        patternStore.begin();
+    }
+
+    JsonObjectConst obj = body.as<JsonObjectConst>();
+    if (obj.isNull())
+    {
+        errorMessage = F("invalid payload");
+        PF("[ColorsStore] previewColors reject: body not object\n");
+        return false;
+    }
+
+    JsonVariantConst colorVariant = obj.containsKey("color") ? obj["color"] : body;
+    CRGB primary;
+    CRGB secondary;
+    if (!parseColorPayload(colorVariant, primary, secondary, errorMessage))
+    {
+        PF("[ColorsStore] previewColors reject: color parse failed: %s\n",
+           errorMessage.isEmpty() ? "<no message>" : errorMessage.c_str());
+        return false;
+    }
+
+    LightShowParams params = patternStore.getActiveParams();
+
+    String colorJson;
+    serializeJson(colorVariant, colorJson);
+    const char *colorId = obj["color_id"] | obj["id"] | "";
+    PF("[ColorsStore] previewColors request colorId='%s' color=%s\n",
+       colorId,
+       colorJson.c_str());
+
+    previewBackupParams_ = params;
+    previewBackupColorA_ = primary;
+    previewBackupColorB_ = secondary;
+    params.RGB1 = primary;
+    params.RGB2 = secondary;
+    PlayLightShow(params);
+    previewActive_ = true;
+    PF("[ColorsStore] previewColors applied\n");
+    return true;
+}
+
 void ColorsStore::ensureColorDefaults() {
     if (colors_.empty()) {
         loadDefaultColors();
@@ -358,11 +410,14 @@ void ColorsStore::ensureColorDefaults() {
 }
 
 bool ColorsStore::loadColorsFromSD() {
-    if (!SDManager::isReady() || !SD.exists(kColorPath)) {
+    if (!SDManager::isReady()) {
         return false;
     }
     SDBusyGuard guard;
     if (!guard.acquired()) {
+        return false;
+    }
+    if (!SD.exists(kColorPath)) {
         return false;
     }
     File file = SD.open(kColorPath, FILE_READ);

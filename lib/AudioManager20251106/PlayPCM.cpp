@@ -5,6 +5,8 @@
 #include "SDManager.h"
 #include "SDVoting.h"
 #include "TimerManager.h"
+#include "SDBusyGuard.h"
+#include "MathUtils.h"
 #include <SD.h>
 #include <cstring>
 #include <new>
@@ -47,12 +49,6 @@ constexpr uint16_t kExpectedChannels = 1;
 constexpr uint16_t kExpectedBitsPerSample = 16;
 // Policy: see AudioManager README §6 – ping.wav must stay fixed-format PCM.
 
-float clamp01(float value) {
-  if (value < 0.0f) return 0.0f;
-  if (value > 1.0f) return 1.0f;
-  return value;
-}
-
 bool isValidClip(const PCM* clip) {
   return clip && clip->samples && clip->sampleCount > 0 && clip->sampleRate > 0;
 }
@@ -63,7 +59,7 @@ bool playInternal(const PCM* clip, float volume) {
     return false;
   }
 
-  const float clamped = clamp01(volume);
+  const float clamped = MathUtils::clamp01(volume);
   const bool started = AudioManager::instance().playPCMClip(*clip, clamped);
   if (!started) {
     PCM_LOG_WARN("[PlayPCM] playInternal failed (vol=%.2f samples=%lu sr=%lu)\n",
@@ -84,6 +80,12 @@ bool loadClip(const char* path, PCM& outClip, std::unique_ptr<int16_t[]>& storag
   }
   if (!path) {
     PCM_LOG_WARN("[PlayPCM] Invalid path (null)\n");
+    return false;
+  }
+
+  SDBusyGuard guard;
+  if (!guard.acquired()) {
+    PCM_LOG_WARN("[PlayPCM] SD busy, delaying load for %s\n", path);
     return false;
   }
 

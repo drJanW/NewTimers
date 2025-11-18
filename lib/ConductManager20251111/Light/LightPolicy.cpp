@@ -6,10 +6,11 @@
 namespace LightPolicy {
 
 float applyBrightnessRules(float requested, bool quietHours) {
-    float v = requested;
-    if (v < 0.0f) v = 0.0f;
-    if (v > MAX_BRIGHTNESS) v = MAX_BRIGHTNESS;
-    if (quietHours && v > 50) v = 50; // cap brightness at night
+    constexpr float kQuietHoursCap = 50.0f;
+    float v = clamp(requested, 0.0f, static_cast<float>(MAX_BRIGHTNESS));
+    if (quietHours) {
+        v = clamp(v, 0.0f, kQuietHoursCap);
+    }
     return v;
 }
 

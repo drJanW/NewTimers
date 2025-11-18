@@ -2,6 +2,8 @@
 
 #include "Globals.h"
 #include "SDManager.h"
+#include "SDBusyGuard.h"
+#include "SdPathUtils.h"
 
 #include <vector>
 #include <ctype.h>
@@ -12,26 +14,9 @@ namespace {
 
 constexpr const char* kLightColorsFile = "light_colors.csv";
 
-class ScopedSDBusy {
-public:
-    ScopedSDBusy() : owns_(!SDManager::isBusy()) {
-        if (owns_) {
-            SDManager::setBusy(true);
-        }
-    }
-
-    ~ScopedSDBusy() {
-        if (owns_) {
-            SDManager::setBusy(false);
-        }
-    }
-
-    ScopedSDBusy(const ScopedSDBusy&) = delete;
-    ScopedSDBusy& operator=(const ScopedSDBusy&) = delete;
-
-private:
-    bool owns_{false};
-};
+using SdPathUtils::buildUploadTarget;
+using SdPathUtils::sanitizeSdFilename;
+using SdPathUtils::sanitizeSdPath;
 
 int hexValue(char c) {
     if (c >= '0' && c <= '9') {
@@ -92,21 +77,13 @@ bool HexToRgb(const String& hex, RgbColor& out) {
 
 bool LightColorStore::begin(fs::FS& sd, const char* rootPath) {
     fs_ = &sd;
-    if (rootPath && *rootPath) {
-        root_ = rootPath;
+    const String desiredRoot = (rootPath && *rootPath) ? String(rootPath) : String("/");
+    const String sanitized = sanitizeSdPath(desiredRoot);
+    if (sanitized.isEmpty()) {
+        PF("[LightColorStore] Invalid root '%s', falling back to '/'\n", desiredRoot.c_str());
+        root_ = "/";
     } else {
-        root_ = "/";
-    }
-
-    root_.trim();
-    if (root_.isEmpty()) {
-        root_ = "/";
-    }
-    if (!root_.startsWith("/")) {
-        root_ = String("/") + root_;
-    }
-    if (root_.length() > 1 && root_.endsWith("/")) {
-        root_.remove(root_.length() - 1);
+        root_ = sanitized;
     }
 
     clear();
@@ -160,7 +137,11 @@ bool LightColorStore::load() {
     colors_.clear();
     activeColorId_ = 0;
 
-    ScopedSDBusy guard;
+    SDBusyGuard guard;
+    if (!guard.acquired()) {
+        PF("[LightColorStore] SD busy, cannot load colors\n");
+        return false;
+    }
     const String path = pathFor(kLightColorsFile);
     File file = fs_->open(path.c_str(), FILE_READ);
     if (!file) {
@@ -228,8 +209,16 @@ String LightColorStore::pathFor(const char* file) const {
     if (!file || !*file) {
         return String();
     }
-    if (root_.length() <= 1) {
-        return String("/") + file;
+    const String sanitizedFile = sanitizeSdFilename(String(file));
+    if (sanitizedFile.isEmpty()) {
+        return String();
     }
-    return root_ + "/" + file;
+    String combined = buildUploadTarget(root_, sanitizedFile);
+    if (!combined.isEmpty()) {
+        return combined;
+    }
+    if (root_ == "/") {
+        return String("/") + sanitizedFile;
+    }
+    return root_ + "/" + sanitizedFile;
 }

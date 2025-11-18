@@ -1,5 +1,6 @@
 #include "LEDMap.h"
 #include <SDManager.h>
+#include "SDBusyGuard.h"
 #include "HWconfig.h"  // voor NUM_LEDS
 #include "Globals.h"
 #include <math.h>
@@ -24,6 +25,19 @@ LEDPos getLEDPos(int index) {
 bool loadLEDMapFromSD(const char* path) {
     buildFallbackLEDMap();
     int loaded = 0;
+    if (!path || !*path) {
+        PF("[LEDMap] Invalid path\n");
+        return false;
+    }
+    if (!SDManager::isReady()) {
+        PF("[LEDMap] SD not ready for %s\n", path);
+        return false;
+    }
+    SDBusyGuard guard;
+    if (!guard.acquired()) {
+        PF("[LEDMap] SD busy, cannot load %s\n", path);
+        return false;
+    }
     File f = SD.open(path);
     if (!f) {
         PF("[LEDMap] %s not found, using fallback layout\n", path);

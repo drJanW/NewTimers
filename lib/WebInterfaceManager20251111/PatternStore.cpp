@@ -6,6 +6,7 @@
 
 #include "CsvUtils.h"
 #include "SDManager.h"
+#include "SDBusyGuard.h"
 
 namespace {
 constexpr const char* kPatternPath = "/light_patterns.csv";
@@ -51,23 +52,6 @@ bool isNumericId(const String& id) {
     }
     return true;
 }
-
-class SDBusyGuard {
-public:
-    SDBusyGuard() : owns_(!SDManager::isBusy()) {
-        if (owns_) {
-            SDManager::setBusy(true);
-        }
-    }
-    ~SDBusyGuard() {
-        if (owns_) {
-            SDManager::setBusy(false);
-        }
-    }
-    bool acquired() const { return owns_; }
-private:
-    bool owns_;
-};
 
 LightShowParams makeParams(const DefaultPattern& src) {
     LightShowParams p;
@@ -175,7 +159,17 @@ bool PatternStore::update(JsonVariantConst body, String& affectedId, String& err
     }
 
     LightShowParams params;
-    if (!parseParams(obj["params"], params, errorMessage)) {
+    JsonObjectConst patternObj = obj.containsKey("pattern") ? obj["pattern"].as<JsonObjectConst>() : JsonObjectConst();
+    JsonVariantConst paramsVariant = obj["params"];
+    if ((paramsVariant.isNull() || paramsVariant.is<JsonArrayConst>()) && !patternObj.isNull()) {
+        if (patternObj.containsKey("params")) {
+            paramsVariant = patternObj["params"];
+        } else {
+            paramsVariant = patternObj;
+        }
+    }
+
+    if (!parseParams(paramsVariant, params, errorMessage)) {
         if (errorMessage.isEmpty()) {
             errorMessage = F("params missing");
         }
@@ -183,13 +177,39 @@ bool PatternStore::update(JsonVariantConst body, String& affectedId, String& err
     }
 
     String label = obj["label"].as<String>();
+    if (label.isEmpty() && !patternObj.isNull() && patternObj.containsKey("label")) {
+        label = patternObj["label"].as<String>();
+    }
     if (label.length() > 48) {
         label = label.substring(0, 48);
     }
     bool selectEntry = obj["select"].as<bool>();
+    if (!selectEntry && !patternObj.isNull() && patternObj.containsKey("select")) {
+        selectEntry = patternObj["select"].as<bool>();
+    }
 
-    if (obj.containsKey("id")) {
-        String id = obj["id"].as<String>();
+    auto resolveId = [&]() -> String {
+        if (obj.containsKey("id")) {
+            return obj["id"].as<String>();
+        }
+        if (obj.containsKey("pattern_id")) {
+            return obj["pattern_id"].as<String>();
+        }
+        if (!patternObj.isNull()) {
+            if (patternObj.containsKey("id")) {
+                return patternObj["id"].as<String>();
+            }
+            if (patternObj.containsKey("pattern_id")) {
+                return patternObj["pattern_id"].as<String>();
+            }
+        }
+        return String();
+    };
+
+    const String resolvedId = resolveId();
+
+    if (!resolvedId.isEmpty()) {
+        String id = resolvedId;
         PatternEntry* existing = findEntry(id);
         if (!existing) {
             errorMessage = F("pattern not found");
@@ -202,7 +222,7 @@ bool PatternStore::update(JsonVariantConst body, String& affectedId, String& err
             activePatternId_ = existing->id;
         }
         PF("[PatternStore] Updated %s%s\n", affectedId.c_str(), selectEntry ? " (selected)" : "");
-    } else {
+        } else {
         PatternEntry entry;
         entry.id = generateId();
         entry.label = label;
@@ -322,11 +342,14 @@ void PatternStore::ensureDefaults() {
 }
 
 bool PatternStore::loadFromSD() {
-    if (!SDManager::isReady() || !SD.exists(kPatternPath)) {
+    if (!SDManager::isReady()) {
         return false;
     }
     SDBusyGuard guard;
     if (!guard.acquired()) {
+        return false;
+    }
+    if (!SD.exists(kPatternPath)) {
         return false;
     }
     File file = SD.open(kPatternPath, FILE_READ);

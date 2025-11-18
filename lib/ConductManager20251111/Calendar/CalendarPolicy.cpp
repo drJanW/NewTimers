@@ -3,6 +3,7 @@
 #include "Globals.h"
 #include "../Audio/AudioPolicy.h"
 #include "SDManager.h"
+#include "SDBusyGuard.h"
 
 #include <stdio.h>
 
@@ -83,6 +84,13 @@ void handleThemeBox(const CalendarThemeBox& box) {
   const size_t count = parseThemeEntries(box.entries, dirs, kMaxThemeDirs);
   if (count == 0) {
     PF("[CalendarPolicy] Theme box %u has no valid directories, clearing\n", static_cast<unsigned>(box.id));
+    AudioPolicy::clearThemeBox();
+    return;
+  }
+
+  SDBusyGuard guard;
+  if (!guard.acquired()) {
+    PF("[CalendarPolicy] SD busy, deferring theme box %u\n", static_cast<unsigned>(box.id));
     AudioPolicy::clearThemeBox();
     return;
   }

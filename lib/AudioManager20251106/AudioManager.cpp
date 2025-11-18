@@ -4,6 +4,7 @@
 #include "PlayFragment.h"
 #include "PlaySentence.h"
 #include "TimerManager.h"
+#include "MathUtils.h"
 #include <math.h>
 
 #ifndef LOG_AUDIO_VERBOSE
@@ -134,8 +135,7 @@ bool AudioManager::playPCMClip(const PCMClipDesc& clip, float amplitude)
 		return false;
 	}
 
-	if (amplitude < 0.0f) amplitude = 0.0f;
-	if (amplitude > 1.0f) amplitude = 1.0f;
+	amplitude = MathUtils::clamp01(amplitude);
 
 	pcmPlayback_.active = true;
 	pcmPlayback_.amplitude = amplitude;
@@ -249,9 +249,7 @@ void AudioManager::stopFragment() {
 }
 
 void AudioManager::setWebLevel(float value) {
-	if (value < 0.0f) value = 0.0f;
-	if (value > 1.0f) value = 1.0f;
-	setWebAudioLevel(value);
+	setWebAudioLevel(MathUtils::clamp01(value));
 	updateGain();
 }
 
@@ -260,8 +258,7 @@ float AudioManager::getWebLevel() const {
 }
 
 void AudioManager::capVolume(float maxValue) {
-	if (maxValue < 0.0f) maxValue = 0.0f;
-	if (maxValue > 1.0f) maxValue = 1.0f;
+	maxValue = MathUtils::clamp01(maxValue);
 	float current = getWebAudioLevel();
 	if (current > maxValue) {
 		setWebAudioLevel(maxValue);

@@ -2,6 +2,7 @@
 
 #include "Globals.h"
 #include "PRTClock.h"
+#include "SdPathUtils.h"
 
 namespace {
 
@@ -18,6 +19,7 @@ private:
     ThemeBoxManager themeBoxes_;
     LightPatternStore patterns_;
     LightColorStore colors_;
+    String root_{"/"};
     bool ready_{false};
 };
 
@@ -25,19 +27,30 @@ ContextRepository g_repo;
 
 bool ContextRepository::init(fs::FS& sd, const char* rootPath) {
     ready_ = false;
-    if (!calendar_.begin(sd, rootPath)) {
+    const String desiredRoot = (rootPath && *rootPath) ? String(rootPath) : String("/");
+    const String sanitized = SdPathUtils::sanitizeSdPath(desiredRoot);
+    if (sanitized.isEmpty()) {
+        PF("[TodayContext] Invalid root '%s', falling back to '/'\n", desiredRoot.c_str());
+        root_ = "/";
+    } else {
+        root_ = sanitized;
+    }
+
+    const char* rootCStr = root_.c_str();
+
+    if (!calendar_.begin(sd, rootCStr)) {
         PF("[TodayContext] CalendarManager init failed\n");
         return false;
     }
-    if (!themeBoxes_.begin(sd, rootPath)) {
+    if (!themeBoxes_.begin(sd, rootCStr)) {
         PF("[TodayContext] ThemeBoxManager init failed\n");
         return false;
     }
-    if (!patterns_.begin(sd, rootPath)) {
+    if (!patterns_.begin(sd, rootCStr)) {
         PF("[TodayContext] LightPatternStore init failed\n");
         return false;
     }
-    if (!colors_.begin(sd, rootPath)) {
+    if (!colors_.begin(sd, rootCStr)) {
         PF("[TodayContext] LightColorStore init failed\n");
         return false;
     }

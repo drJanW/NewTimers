@@ -9,6 +9,7 @@
 #include "PRTClock.h"
 #include "ContextManager.h"
 #include "SDManager.h"
+#include "SDBusyGuard.h"
 
 #include <WiFiUdp.h>
 #include <NTPClient.h>
@@ -309,6 +310,12 @@ static void persistClockSnapshot() {
         return;
     }
 
+    SDBusyGuard guard;
+    if (!guard.acquired()) {
+        PL("[Fetch] Skipping clock snapshot, SD busy\n");
+        return;
+    }
+
     auto &clk = clockSvc();
     uint16_t year = 2000u + clk.getYear();
     uint8_t month = clk.getMonth();
@@ -342,6 +349,12 @@ static void persistClockSnapshotFromTm(const struct tm &t) {
         return;
     }
 
+    SDBusyGuard guard;
+    if (!guard.acquired()) {
+        PL("[Fetch] Skipping cached TM snapshot, SD busy\n");
+        return;
+    }
+
     char payload[48];
     int written = snprintf(payload, sizeof(payload), "%04d-%02d-%02dT%02d:%02d:%02d\n",
                            t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
@@ -357,6 +370,12 @@ static void persistClockSnapshotFromTm(const struct tm &t) {
 
 static bool loadPersistedClockSnapshot(PRTClock &clock) {
     if (!SDManager::isReady()) {
+        return false;
+    }
+
+    SDBusyGuard guard;
+    if (!guard.acquired()) {
+        PL("[Fetch] Skipping cached clock load, SD busy\n");
         return false;
     }
 

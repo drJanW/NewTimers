@@ -4,12 +4,18 @@
 #include "TimerManager.h"
 #include "SDManager.h"
 #include "ColorsStore.h"
+#include "SdPathUtils.h"
+#include "SDBusyGuard.h"
 
 #include <ArduinoJson.h>
 #include <SD.h>
 #include <cstring>
 
 namespace {
+
+using SdPathUtils::extractBaseName;
+using SdPathUtils::parentPath;
+using SdPathUtils::sanitizeSdPath;
 
 constexpr uint32_t kJobTickIntervalMs = 5U;
 constexpr size_t kMaxSdEntries = 256U;
@@ -77,32 +83,6 @@ void appendJsonEscaped(String &out, const char *value) {
     }
 }
 
-String buildParentPath(const String &path) {
-    if (path.length() <= 1U) {
-        return String("/");
-    }
-    int lastSlash = path.lastIndexOf('/');
-    if (lastSlash <= 0) {
-        return String("/");
-    }
-    String parent = path.substring(0, lastSlash);
-    if (parent.length() == 0) {
-        return String("/");
-    }
-    return parent;
-}
-
-const char *extractBaseName(const char *fullPath) {
-    if (!fullPath) {
-        return "";
-    }
-    const char *slash = strrchr(fullPath, '/');
-    if (slash && slash[1] != '\0') {
-        return slash + 1;
-    }
-    return fullPath;
-}
-
 } // namespace
 
 WebDirector &WebDirector::instance() {
@@ -120,12 +100,19 @@ void WebDirector::plan() {
         }
     }
     for (auto &job : jobs_) {
+        releaseBusyGuard(job);
         job.reset();
     }
 }
 
 bool WebDirector::submitSdList(AsyncWebServerRequest *request, const String &path) {
     if (!request) {
+        return false;
+    }
+
+    const String sanitizedPath = sanitizeSdPath(path);
+    if (sanitizedPath.isEmpty()) {
+        sendErrorResponse(request, 400, String(F("Invalid path")));
         return false;
     }
 
@@ -139,20 +126,26 @@ bool WebDirector::submitSdList(AsyncWebServerRequest *request, const String &pat
     slot->type = Job::Type::SdList;
     slot->state = Job::State::Pending;
     slot->request = request;
-    slot->path = path;
-    slot->parentPath = buildParentPath(path);
+    slot->path = sanitizedPath;
+    slot->parentPath = parentPath(sanitizedPath);
     slot->entriesBuffer.reserve(256);
     slot->payloadBuffer.reserve(256);
     slot->firstEntry = true;
     slot->headerPrepared = false;
 
-    WD_LOG("[WebDirector] Enqueued SD list for '%s'\n", path.c_str());
+    WD_LOG("[WebDirector] Enqueued SD list for '%s'\n", sanitizedPath.c_str());
 
     return true;
 }
 
 bool WebDirector::submitSdDelete(AsyncWebServerRequest *request, const String &path) {
     if (!request) {
+        return false;
+    }
+
+    const String sanitizedPath = sanitizeSdPath(path);
+    if (sanitizedPath.isEmpty()) {
+        sendErrorResponse(request, 400, String(F("Invalid path")));
         return false;
     }
 
@@ -166,9 +159,9 @@ bool WebDirector::submitSdDelete(AsyncWebServerRequest *request, const String &p
     slot->type = Job::Type::SdDelete;
     slot->state = Job::State::Pending;
     slot->request = request;
-    slot->path = path;
+    slot->path = sanitizedPath;
 
-    WD_LOG("[WebDirector] Enqueued SD delete for '%s'\n", path.c_str());
+    WD_LOG("[WebDirector] Enqueued SD delete for '%s'\n", sanitizedPath.c_str());
 
     return true;
 }
@@ -368,6 +361,26 @@ void WebDirector::processJobs() {
     }
 }
 
+bool WebDirector::tryAcquireBusyGuard(Job &job) {
+    if (job.busyGuard && job.busyGuard->acquired()) {
+        return true;
+    }
+
+    job.busyGuard.reset(new SDBusyGuard());
+    if (!job.busyGuard->acquired()) {
+        job.busyGuard.reset();
+        return false;
+    }
+    return true;
+}
+
+void WebDirector::releaseBusyGuard(Job &job) {
+    if (job.busyGuard) {
+        job.busyGuard->release();
+        job.busyGuard.reset();
+    }
+}
+
 void WebDirector::startJob(Job &job) {
     if (job.state != Job::State::Pending) {
         return;
@@ -375,19 +388,15 @@ void WebDirector::startJob(Job &job) {
 
     switch (job.type) {
     case Job::Type::SdList:
-        if (job.busyOwned && !job.dirOpen) {
+        if (job.busyGuard && !job.dirOpen) {
             job.state = Job::State::Failed;
             job.statusCode = 500;
             job.errorMessage = String(F("SD busy state invalid"));
             return;
         }
 
-        if (!job.busyOwned) {
-            if (SDManager::isBusy()) {
-                return;
-            }
-            SDManager::setBusy(true);
-            job.busyOwned = true;
+        if (!tryAcquireBusyGuard(job)) {
+            return;
         }
 
         job.dirHandle = SD.open(job.path.c_str(), FILE_READ);
@@ -410,12 +419,8 @@ void WebDirector::startJob(Job &job) {
             return;
         }
 
-        if (!job.busyOwned) {
-            if (SDManager::isBusy()) {
-                return;
-            }
-            SDManager::setBusy(true);
-            job.busyOwned = true;
+        if (!tryAcquireBusyGuard(job)) {
+            return;
         }
 
         if (!SD.exists(job.path.c_str())) {
@@ -466,7 +471,7 @@ void WebDirector::runSdListJob(Job &job) {
 
         const bool isDir = entry.isDirectory();
         const uint32_t sizeBytes = isDir ? 0U : static_cast<uint32_t>(entry.size());
-        const char *baseName = extractBaseName(entry.name());
+    const String baseName = extractBaseName(entry.name());
 
         if (!job.firstEntry) {
             job.entriesBuffer += ',';
@@ -474,7 +479,7 @@ void WebDirector::runSdListJob(Job &job) {
         job.firstEntry = false;
 
         job.entriesBuffer += F("{\"name\":\"");
-        appendJsonEscaped(job.entriesBuffer, baseName);
+    appendJsonEscaped(job.entriesBuffer, baseName.c_str());
         job.entriesBuffer += F("\",\"type\":\"");
         job.entriesBuffer += isDir ? F("dir") : F("file");
         job.entriesBuffer += F("\",\"size\":");
@@ -550,8 +555,7 @@ void WebDirector::runSdDeleteJob(Job &job) {
                 childPath += '/';
             }
             if (childName) {
-                const char *baseName = extractBaseName(childName);
-                childPath += baseName;
+                childPath += extractBaseName(childName);
             }
             Job::SdDeleteEntry childEntry;
             childEntry.path = childPath;
@@ -821,10 +825,7 @@ void WebDirector::finalizeJob(Job &job) {
         job.dirOpen = false;
     }
 
-    if (job.busyOwned) {
-        SDManager::setBusy(false);
-        job.busyOwned = false;
-    }
+    releaseBusyGuard(job);
 
     if (!job.request) {
         releaseJob(job);
@@ -880,10 +881,7 @@ void WebDirector::releaseJob(Job &job) {
         job.dirHandle.close();
         job.dirOpen = false;
     }
-    if (job.busyOwned) {
-        SDManager::setBusy(false);
-        job.busyOwned = false;
-    }
+    releaseBusyGuard(job);
     job.reset();
 }
 
@@ -918,7 +916,6 @@ void WebDirector::Job::reset() {
     headerValue = String();
     entryCount = 0;
     truncated = false;
-    busyOwned = false;
     statusCode = 200;
     errorMessage = String();
     dirHandle = File();

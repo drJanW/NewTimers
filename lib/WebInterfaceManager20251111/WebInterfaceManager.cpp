@@ -9,6 +9,8 @@
 #include "ColorsStore.h"
 #include "TodayContext.h"
 #include "Web/WebDirector.h"
+#include "SdPathUtils.h"
+#include "SDBusyGuard.h"
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
@@ -30,6 +32,8 @@
 static AsyncWebServer server(80);
 
 namespace {
+
+using namespace SdPathUtils;
 
 void ensureColorsStoreReady()
 {
@@ -95,43 +99,6 @@ void appendJsonEscaped(String &out, const char *value)
   }
 }
 
-String sanitizeSdPath(const String &raw)
-{
-  if (raw.length() == 0)
-  {
-    return String("/");
-  }
-
-  String path = raw;
-  path.trim();
-  if (path.length() == 0)
-  {
-    return String("/");
-  }
-
-  if (path[0] != '/')
-  {
-    path = "/" + path;
-  }
-
-  while (path.length() > 1 && path.endsWith("/"))
-  {
-    path.remove(path.length() - 1);
-  }
-
-  if (path.indexOf("..") >= 0)
-  {
-    return String();
-  }
-
-  if (path.length() >= SDPATHLENGTH)
-  {
-    return String();
-  }
-
-  return path;
-}
-
 void sendSdStatus(AsyncWebServerRequest *request)
 {
   const bool ready = SDManager::isReady();
@@ -152,116 +119,6 @@ void sendSdStatus(AsyncWebServerRequest *request)
 
 namespace {
 
-class SdBusyLock {
-public:
-  SdBusyLock()
-  {
-    acquired_ = !SDManager::isBusy();
-    if (acquired_)
-    {
-      SDManager::setBusy(true);
-    }
-  }
-
-  ~SdBusyLock()
-  {
-    release();
-  }
-
-  bool acquired() const { return acquired_; }
-
-  void release()
-  {
-    if (acquired_)
-    {
-      SDManager::setBusy(false);
-      acquired_ = false;
-    }
-  }
-
-private:
-  bool acquired_{false};
-};
-
-String parentPath(const String &path)
-{
-  if (path.length() <= 1)
-  {
-    return String("/");
-  }
-  int lastSlash = path.lastIndexOf('/');
-  if (lastSlash <= 0)
-  {
-    return String("/");
-  }
-  return path.substring(0, lastSlash);
-}
-
-String extractBaseName(const char *fullPath)
-{
-  if (!fullPath)
-  {
-    return String();
-  }
-  const char *slash = strrchr(fullPath, '/');
-  if (slash && slash[1] != '\0')
-  {
-    return String(slash + 1);
-  }
-  return String(fullPath);
-}
-
-bool removeSdPath(const String &targetPath, String &errorMessage)
-{
-  File node = SD.open(targetPath.c_str(), FILE_READ);
-  if (!node)
-  {
-    errorMessage = F("Path not found");
-    return false;
-  }
-  const bool isDir = node.isDirectory();
-  node.close();
-
-  if (!isDir)
-  {
-    if (!SD.remove(targetPath.c_str()))
-    {
-      errorMessage = F("Delete failed");
-      return false;
-    }
-    return true;
-  }
-
-  File dir = SD.open(targetPath.c_str(), FILE_READ);
-  if (!dir)
-  {
-    errorMessage = F("Open directory failed");
-    return false;
-  }
-  for (File child = dir.openNextFile(); child; child = dir.openNextFile())
-  {
-    String childPath = targetPath;
-    if (!childPath.endsWith("/"))
-    {
-      childPath += '/';
-    }
-    childPath += extractBaseName(child.name());
-    child.close();
-    if (!removeSdPath(childPath, errorMessage))
-    {
-      dir.close();
-      return false;
-    }
-  }
-  dir.close();
-  if (!SD.rmdir(targetPath.c_str()))
-  {
-    errorMessage = F("Remove directory failed");
-    return false;
-  }
-  return true;
-}
-
 } // namespace
 
 void handleSdList(AsyncWebServerRequest *request)
@@ -280,7 +137,7 @@ void handleSdList(AsyncWebServerRequest *request)
     return;
   }
 
-  SdBusyLock lock;
+  SDBusyGuard lock;
   if (!lock.acquired())
   {
     sendError(request, 503, F("SD busy"));
@@ -502,54 +359,13 @@ void handleColorsList(AsyncWebServerRequest *request)
   request->send(response);
 }
 
-String sanitizeSdFilename(const String &raw)
-{
-  if (raw.length() == 0)
-  {
-    return String();
-  }
-  String trimmed = raw;
-  trimmed.trim();
-  if (trimmed.length() == 0)
-  {
-    return String();
-  }
-  if (trimmed.indexOf('/') >= 0 || trimmed.indexOf('\\') >= 0)
-  {
-    return String();
-  }
-  if (trimmed.indexOf("..") >= 0)
-  {
-    return String();
-  }
-  return trimmed;
-}
-
-String buildUploadTarget(const String &directory, const String &filename)
-{
-  String dir = sanitizeSdPath(directory);
-  String name = sanitizeSdFilename(filename);
-  if (dir.length() == 0 || name.length() == 0)
-  {
-    return String();
-  }
-  if (dir == "/")
-  {
-    return String("/") + name;
-  }
-  if (dir.endsWith("/"))
-  {
-    return dir + name;
-  }
-  return dir + "/" + name;
-}
-
 struct SdUploadContext
 {
   File file;
   String target;
   bool failed = false;
   String error;
+  std::unique_ptr<SDBusyGuard> guard;
 };
 
 void handleSdUploadRequest(AsyncWebServerRequest *request)
@@ -598,7 +414,7 @@ void handleSdUploadData(AsyncWebServerRequest *request, const String &filename, 
     if (final && ctx->file)
     {
       ctx->file.close();
-      SDManager::setBusy(false);
+      ctx->guard.reset();
     }
     return;
   }
@@ -613,13 +429,20 @@ void handleSdUploadData(AsyncWebServerRequest *request, const String &filename, 
       ctx->error = F("Invalid upload path");
       return;
     }
-    SDManager::setBusy(true);
+    ctx->guard.reset(new SDBusyGuard());
+    if (!ctx->guard->acquired())
+    {
+      ctx->failed = true;
+      ctx->error = F("SD busy");
+      ctx->guard.reset();
+      return;
+    }
     ctx->file = SD.open(ctx->target.c_str(), FILE_WRITE);
     if (!ctx->file)
     {
       ctx->failed = true;
       ctx->error = F("Cannot open target file");
-      SDManager::setBusy(false);
+      ctx->guard.reset();
       return;
     }
   }
@@ -630,6 +453,8 @@ void handleSdUploadData(AsyncWebServerRequest *request, const String &filename, 
     {
       ctx->failed = true;
       ctx->error = F("Write failed");
+      ctx->file.close();
+      ctx->guard.reset();
     }
   }
 
@@ -639,7 +464,7 @@ void handleSdUploadData(AsyncWebServerRequest *request, const String &filename, 
     {
       ctx->file.close();
     }
-    SDManager::setBusy(false);
+    ctx->guard.reset();
   }
 }
 
@@ -672,7 +497,7 @@ void handleSdDelete(AsyncWebServerRequest *request, JsonVariant &json)
     return;
   }
 
-  SdBusyLock lock;
+  SDBusyGuard lock;
   if (!lock.acquired())
   {
     sendError(request, 503, F("SD busy"));
@@ -915,6 +740,22 @@ void attachPatternColorRoutes()
   });
   previewHandler->setMethod(HTTP_POST);
   server.addHandler(previewHandler);
+
+  auto *colorPreviewHandler = new AsyncCallbackJsonWebHandler("/api/colors/preview", nullptr, 2048);
+  colorPreviewHandler->setMaxContentLength(1024);
+  colorPreviewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    ensureColorsStoreReady();
+    String error;
+    JsonVariantConst body = json;
+    if (!ColorsStore::instance().previewColors(body, error))
+    {
+      sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
+      return;
+    }
+    sendJsonResponse(request, String("{\"status\":\"ok\"}"));
+  });
+  colorPreviewHandler->setMethod(HTTP_POST);
+  server.addHandler(colorPreviewHandler);
 
   auto *sdDeleteHandler = new AsyncCallbackJsonWebHandler("/api/sd/delete");
   sdDeleteHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {

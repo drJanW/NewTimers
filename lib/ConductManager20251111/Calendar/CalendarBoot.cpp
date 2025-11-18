@@ -15,6 +15,7 @@ CalendarBoot calendarBoot;
 namespace {
 
 constexpr uint32_t kCalendarBootRetryMs = 60UL * 1000UL;
+bool s_clockWaitLogged = false;
 
 void scheduleRetry();
 void cancelRetry();
@@ -48,18 +49,23 @@ void CalendarBoot::plan() {
     return;
   }
 
+  auto &clock = PRTClock::instance();
+  if (!clock.hasValidDate()) {
+    if (!s_clockWaitLogged) {
+      PF("[CalendarBoot] Waiting for valid clock (Wi-Fi or DS3231) before calendar init\n");
+      s_clockWaitLogged = true;
+    }
+    scheduleRetry();
+    return;
+  }
+  s_clockWaitLogged = false;
+
   if (!calendarManager.isReady()) {
     if (!calendarManager.begin(SD)) {
       PF("[CalendarBoot] Calendar manager init failed\n");
       return;
     }
     PF("[CalendarBoot] Calendar manager initialised\n");
-  }
-
-  if (!PRTClock::instance().hasValidDate()) {
-    PF("[CalendarBoot] Clock not ready; deferring TodayContext init\n");
-    scheduleRetry();
-    return;
   }
 
   if (!InitTodayContext(SD)) {

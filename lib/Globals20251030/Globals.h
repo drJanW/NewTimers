@@ -1,7 +1,8 @@
 
-#include <Arduino.h>
-
 #pragma once
+
+#include <Arduino.h>
+#include "MathUtils.h"
 #include "macros.inc"
 #include "HWconfig.h"
 #include <atomic>
@@ -25,34 +26,8 @@ inline T getMux(const std::atomic<T>* ptr) {
     return ptr->load(std::memory_order_relaxed);
 }
 
-
-template <typename T,
-          typename = typename std::enable_if<std::is_arithmetic<T>::value>::type>
-inline T map(T x, T xmin, T xmax, T ymin, T ymax) {
-    if (xmin == xmax) {
-        return ymin;
-    }
-    const T t = (x - xmin) / (xmax - xmin);
-    return ymin + t * (ymax - ymin);
-}
-
-template <typename T,
-          typename = typename std::enable_if<std::is_arithmetic<T>::value>::type>
-inline T clamp(T x, T xmin, T xmax) {
-    if (xmin > xmax) {
-        const T tmp = xmin;
-        xmin = xmax;
-        xmax = tmp;
-    }
-
-    if (x < xmin) {
-        return xmin;
-    }
-    if (x > xmax) {
-        return xmax;
-    }
-    return x;
-}
+using MathUtils::clamp;
+using MathUtils::map;
 
 
 // === Existing Globals ===

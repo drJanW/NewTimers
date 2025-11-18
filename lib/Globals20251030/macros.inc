@@ -2,16 +2,21 @@
 #define LOG_LEVEL_WARN  1
 #define LOG_LEVEL_INFO  2
 #define LOG_LEVEL_DEBUG 3
+#define LOG_LEVEL_NONE (-1)
 
 #ifndef LOG_LEVEL
 #define LOG_LEVEL LOG_LEVEL_INFO
+#endif
+
+#ifndef LOCAL_LOG_LEVEL
+#define LOCAL_LOG_LEVEL LOG_LEVEL
 #endif
 
 #ifndef LOG_HEARTBEAT
 #define LOG_HEARTBEAT 0
 #endif
 
-#define LOG_LEVEL_ACTIVE(lvl) ((lvl) <= LOG_LEVEL)
+#define LOG_LEVEL_ACTIVE(lvl) ((lvl) <= LOCAL_LOG_LEVEL)
 
 #define LOG_PRINT(level, ...)   do { if (LOG_LEVEL_ACTIVE(level)) Serial.printf(__VA_ARGS__); } while (0)
 #define LOG_PRINTLN(level, msg) do { if (LOG_LEVEL_ACTIVE(level)) Serial.println(msg); } while (0)

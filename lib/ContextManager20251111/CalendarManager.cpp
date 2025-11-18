@@ -2,6 +2,8 @@
 
 #include "Globals.h"
 #include "SDManager.h"
+#include "SDBusyGuard.h"
+#include "SdPathUtils.h"
 #include "PRTClock.h"
 
 #include <ctype.h>
@@ -14,26 +16,9 @@ namespace {
 
 constexpr const char* kCalendarFile = "calendar.csv";
 
-class ScopedSDBusy {
-public:
-    ScopedSDBusy() : owns_(!SDManager::isBusy()) {
-        if (owns_) {
-            SDManager::setBusy(true);
-        }
-    }
-
-    ~ScopedSDBusy() {
-        if (owns_) {
-            SDManager::setBusy(false);
-        }
-    }
-
-    ScopedSDBusy(const ScopedSDBusy&) = delete;
-    ScopedSDBusy& operator=(const ScopedSDBusy&) = delete;
-
-private:
-    bool owns_{false};
-};
+using SdPathUtils::buildUploadTarget;
+using SdPathUtils::sanitizeSdFilename;
+using SdPathUtils::sanitizeSdPath;
 
 bool resolveToday(uint16_t& year, uint8_t& month, uint8_t& day) {
     auto& clock = PRTClock::instance();
@@ -79,21 +64,13 @@ namespace Context {
 
 bool CalendarManager::begin(fs::FS& sd, const char* rootPath) {
     fs_ = &sd;
-    if (rootPath && *rootPath) {
-        root_ = rootPath;
+    const String desiredRoot = (rootPath && *rootPath) ? String(rootPath) : String("/");
+    const String sanitized = sanitizeSdPath(desiredRoot);
+    if (sanitized.isEmpty()) {
+        PF("[CalendarManager] Invalid root '%s', falling back to '/'\n", desiredRoot.c_str());
+        root_ = "/";
     } else {
-        root_ = "/";
-    }
-
-    root_.trim();
-    if (root_.isEmpty()) {
-        root_ = "/";
-    }
-    if (!root_.startsWith("/")) {
-        root_ = String("/") + root_;
-    }
-    if (root_.length() > 1 && root_.endsWith("/")) {
-        root_.remove(root_.length() - 1);
+        root_ = sanitized;
     }
 
     entries_.clear();
@@ -129,7 +106,11 @@ bool CalendarManager::load() {
         return false;
     }
 
-    ScopedSDBusy guard;
+    SDBusyGuard guard;
+    if (!guard.acquired()) {
+        PF("[CalendarManager] SD busy, cannot load calendar\n");
+        return false;
+    }
     const String path = pathFor(kCalendarFile);
     File file = fs_->open(path.c_str(), FILE_READ);
     if (!file) {
@@ -221,10 +202,18 @@ String CalendarManager::pathFor(const char* file) const {
     if (!file || !*file) {
         return String();
     }
-    if (root_.length() <= 1) {
-        return String("/") + file;
+    const String sanitizedFile = sanitizeSdFilename(String(file));
+    if (sanitizedFile.isEmpty()) {
+        return String();
     }
-    return root_ + "/" + file;
+    String combined = buildUploadTarget(root_, sanitizedFile);
+    if (!combined.isEmpty()) {
+        return combined;
+    }
+    if (root_ == "/") {
+        return String("/") + sanitizedFile;
+    }
+    return root_ + "/" + sanitizedFile;
 }
 
 } // namespace Context
