@@ -53,7 +53,7 @@ void setup()
     {
         delay(10);
     }
-    PL("\n[Main] Version 11_18_00_B"); // Version MM_DD_XX_A, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation)
+    PL("\n[Main] Version 11_20_00_A"); // Version MM_DD_XX_A, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation)
                                     // version 10_30_02_C means : on oct 30, we had (at least) 3 attempts to get the second goal completed
 
     //Wire.begin(I2C_SDA, I2C_SCL);
