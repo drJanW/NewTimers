@@ -113,12 +113,18 @@ void BootMaster::fallbackTimeout() {
 
     if (!fallback.seedAttempted) {
         fallback.seedAttempted = true;
-        if (fetchLoadCachedTime(clock)) {
+        if (ConductManager::intentSeedClockFromRtc()) {
+            fallback.seededFromRtc = true;
+            fallback.seededFromCache = false;
+            PL("[Conduct] Seeded clock from RTC snapshot");
+        } else if (fetchLoadCachedTime(clock)) {
             fallback.seededFromCache = true;
+            fallback.seededFromRtc = false;
             PL("[Conduct] Seeded clock from cached SD snapshot");
         } else {
             fallback.seededFromCache = false;
-            PL("[Conduct] No cached clock snapshot available for fallback");
+            fallback.seededFromRtc = false;
+            PL("[Conduct] No RTC or cached clock snapshot available for fallback");
         }
     }
 
@@ -126,7 +132,9 @@ void BootMaster::fallbackTimeout() {
     if (ConductManager::intentStartClockTick(true)) {
         fallback.stateAnnounced = false;
         if (!wasFallback) {
-            if (fallback.seededFromCache) {
+            if (fallback.seededFromRtc) {
+                PL("[Conduct] Clock tick running in fallback mode (RTC)");
+            } else if (fallback.seededFromCache) {
                 PL("[Conduct] Clock tick running in fallback mode (seeded)");
             } else {
                 PL("[Conduct] Clock tick running in fallback mode");

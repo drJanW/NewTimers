@@ -56,15 +56,17 @@ _Last updated: 2025-11-16_
       }
     }
     ```
-  - `503` if no valid context cached yet; `500` if `InitTodayContext` fails.
+  - `503` if the conduct layer has not cached a valid context yet; `500` for unexpected internal errors.
 
 ## 6. Pattern & color collections
-1. `GET /api/patterns` → JSON array of patterns (mirrors `ColorsStore::buildPatternsJson`). Includes header `X-Pattern: <activeId>`.
-2. `POST /api/patterns` → body must match `ColorsStore::updatePattern` schema (id, label, params). Returns the refreshed list plus `X-Pattern` header pointing at the affected/active pattern.
-3. `POST /api/patterns/select` → `{ "id": "<patternId>" }` or `id` query param. Sets active pattern; response is the same JSON list.
-4. `POST /api/patterns/delete` → `{ "id": "<patternId>" }`. Removes and returns remaining list.
-5. `POST /api/patterns/preview` → transient preview (not persisted) with up to 2 KB JSON (params plus optional label). Returns `{ "status": "ok" }` on success.
-6. Color endpoints mirror the pattern routes: replace `/api/patterns` with `/api/colors`, `X-Pattern` header with `X-Color`, and payload schema with the color store contract (`rgb1_hex`, `rgb2_hex`, etc.).
+Light patterns/colors are now owned by `LightConduct`. Every web handler calls the conduct layer, which in turn keeps `ColorsStore`/`PatternStore` ready and applies changes to the live light show.
+
+1. `GET /api/patterns` → JSON array of patterns (`LightConduct::patternSnapshot`). Includes header `X-Pattern: <activeId>`.
+2. `POST /api/patterns` → body must match the pattern schema (id, label, params). The request is validated/applied through `LightConduct::updatePattern`, and the refreshed list plus `X-Pattern` header is returned.
+3. `POST /api/patterns/select` → `{ "id": "<patternId>" }` or `id` query param. Routed via `LightConduct::selectPattern`; response is the same JSON list snapshot.
+4. `POST /api/patterns/delete` → `{ "id": "<patternId>" }`. Uses `LightConduct::deletePattern` and returns the updated list.
+5. `POST /api/patterns/preview` → transient preview (not persisted). Payload contains `pattern` + `color` sections just like before; handled by `LightConduct::previewPattern`. Success returns `{ "status": "ok" }`.
+6. Color endpoints mirror the pattern routes: replace `/api/patterns` with `/api/colors`, `X-Pattern` header with `X-Color`, and note that mutations go through `LightConduct::updateColor` / `deleteColor` while previews call `LightConduct::previewColor`.
 
 _All payloads are validated server-side; failures return `400` plus a plain-text reason._
 

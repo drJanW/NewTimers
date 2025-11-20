@@ -61,7 +61,6 @@ bool CalendarManager::begin(fs::FS& sd, const char* rootPath) {
 
 bool CalendarManager::loadToday(uint16_t year, uint8_t month, uint8_t day) {
 	if (!ready_ || !fs_ || !SDManager::isReady()) {
-		PF("[CalendarManager] Cannot load calendar: SD not ready\n");
 		return false;
 	}
 
@@ -108,7 +107,6 @@ void CalendarManager::clear() {
 bool CalendarManager::loadCalendarRow(uint16_t year, uint8_t month, uint8_t day, CalendarEntry& out) {
 	SDBusyGuard guard;
 	if (!guard.acquired()) {
-		PF("[CalendarManager] SD busy, cannot read calendar\n");
 		return false;
 	}
 	const String csvPath = pathFor(kCalendarFile);
@@ -164,7 +162,6 @@ bool CalendarManager::loadCalendarRow(uint16_t year, uint8_t month, uint8_t day,
 bool CalendarManager::loadThemeBox(uint8_t id, CalendarThemeBox& out) {
 	SDBusyGuard guard;
 	if (!guard.acquired()) {
-		PF("[CalendarManager] SD busy, cannot read theme boxes\n");
 		return false;
 	}
 	const String csvPath = pathFor(kThemeBoxCsv);

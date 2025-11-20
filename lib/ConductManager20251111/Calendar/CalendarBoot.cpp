@@ -16,6 +16,9 @@ namespace {
 
 constexpr uint32_t kCalendarBootRetryMs = 60UL * 1000UL;
 bool s_clockWaitLogged = false;
+bool s_sdWaitLogged = false;
+bool s_calendarInitFailedLogged = false;
+bool s_todayContextFailedLogged = false;
 
 void scheduleRetry();
 void cancelRetry();
@@ -44,10 +47,14 @@ void cancelRetry() {
 
 void CalendarBoot::plan() {
   if (!SDManager::isReady()) {
-    PF("[CalendarBoot] SD not ready, delaying calendar init\n");
+    if (!s_sdWaitLogged) {
+      PF("[CalendarBoot] SD not ready, delaying calendar init\n");
+      s_sdWaitLogged = true;
+    }
     scheduleRetry();
     return;
   }
+  s_sdWaitLogged = false;
 
   auto &clock = PRTClock::instance();
   if (!clock.hasValidDate()) {
@@ -62,17 +69,25 @@ void CalendarBoot::plan() {
 
   if (!calendarManager.isReady()) {
     if (!calendarManager.begin(SD)) {
-      PF("[CalendarBoot] Calendar manager init failed\n");
+      if (!s_calendarInitFailedLogged) {
+        PF("[CalendarBoot] Calendar manager init failed\n");
+        s_calendarInitFailedLogged = true;
+      }
       return;
     }
+    s_calendarInitFailedLogged = false;
     PF("[CalendarBoot] Calendar manager initialised\n");
   }
 
   if (!InitTodayContext(SD)) {
-    PF("[CalendarBoot] Today context init failed\n");
+    if (!s_todayContextFailedLogged) {
+      PF("[CalendarBoot] Today context init failed\n");
+      s_todayContextFailedLogged = true;
+    }
     scheduleRetry();
     return;
   }
+  s_todayContextFailedLogged = false;
 
   PF("[CalendarBoot] Today context initialised\n");
   cancelRetry();

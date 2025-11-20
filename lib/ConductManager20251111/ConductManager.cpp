@@ -54,6 +54,8 @@
 
 #include "FetchManager.h"
 #include "WiFiManager.h"
+#include "Clock/ClockBoot.h"
+#include "Clock/ClockConduct.h"
 
 #ifndef LOG_CONDUCT_VERBOSE
 #define LOG_CONDUCT_VERBOSE 0
@@ -85,8 +87,6 @@ void clockTick() {
 
 } // namespace
 
-bool ConductManager::christmasMode = false;
-bool ConductManager::quietHours = false;
 
 static TimerCallback clockCb = clockTick;
 static bool clockRunning = false;
@@ -94,6 +94,8 @@ static bool clockInFallback = false;
 
 static ConductBoot bootPlanner;
 static StatusConduct statusConduct;
+static ClockBoot clockBoot;
+static ClockConduct clockConduct;
 static SDBoot sdBoot;
 static SDConduct sdConduct;
 static WiFiBoot wifiBoot;
@@ -133,6 +135,8 @@ void ConductManager::begin() {
     heartbeatConduct.plan();
     statusBoot.plan();
     statusConduct.plan();
+    clockBoot.plan();
+    clockConduct.plan();
 
     if (!sdBoot.plan()) {
         return;
@@ -143,7 +147,6 @@ void ConductManager::begin() {
 
 void ConductManager::update() {
     AudioManager::instance().update();
-    applyContextOverrides();
 #if LOG_HEARTBEAT
     static uint32_t lastHeartbeatMs = 0;
     uint32_t now = millis();
@@ -197,14 +200,14 @@ void ConductManager::intentSayNow() {
 }
 
 void ConductManager::intentSetBrightness(float value) {
-    const float clamped = LightPolicy::applyBrightnessRules(value, quietHours);
+    const float clamped = LightPolicy::applyBrightnessRules(value);
     LightManager::instance().setBrightness(clamped);
     CONDUCT_LOG_INFO("[Conduct] intentSetBrightness: requested=%.1f applied=%.1f\n",
                      static_cast<double>(value), static_cast<double>(clamped));
 }
 
 void ConductManager::intentSetAudioLevel(float value) {
-    const float applied = AudioPolicy::applyVolumeRules(value, quietHours);
+    const float applied = AudioPolicy::applyVolumeRules(value);
     AudioManager::instance().setWebLevel(applied);
     CONDUCT_LOG_INFO("[Conduct] intentSetAudioLevel: requested=%.2f applied=%.2f\n",
                      static_cast<double>(value), static_cast<double>(applied));
@@ -212,33 +215,6 @@ void ConductManager::intentSetAudioLevel(float value) {
 
 void ConductManager::intentShowTimerStatus() {
     TimerManager::instance().showAvailableTimers(true);
-}
-
-void ConductManager::setChristmasMode(bool enabled) {
-    christmasMode = enabled;
-}
-
-void ConductManager::setQuietHours(bool enabled) {
-    quietHours = enabled;
-}
-
-bool ConductManager::isQuietHoursActive() {
-    return quietHours;
-}
-
-void ConductManager::applyContextOverrides() {
-    static bool quietLogged = false;
-    if (quietHours) {
-        LightManager::instance().capBrightness(50);
-        AudioManager::instance().capVolume(0.3f);
-        if (!quietLogged) {
-            CONDUCT_LOG_INFO("[Conduct] applyContextOverrides: quiet hours active\n");
-            quietLogged = true;
-        }
-    } else if (quietLogged) {
-        CONDUCT_LOG_INFO("[Conduct] applyContextOverrides: quiet hours cleared\n");
-        quietLogged = false;
-    }
 }
 
 bool ConductManager::intentStartClockTick(bool fallbackMode) {
@@ -269,6 +245,18 @@ bool ConductManager::isClockRunning() {
 
 bool ConductManager::isClockInFallback() {
     return clockInFallback;
+}
+
+bool ConductManager::intentSeedClockFromRtc() {
+    return clockConduct.seedClockFromRtc(PRTClock::instance());
+}
+
+void ConductManager::intentSyncRtcFromClock() {
+    clockConduct.syncRtcFromClock(PRTClock::instance());
+}
+
+bool ConductManager::hasRtcHardware() {
+    return clockConduct.hasRtc();
 }
 
 void ConductManager::resumeAfterSDBoot() {

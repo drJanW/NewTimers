@@ -3,7 +3,7 @@
 #include "Globals.h"
 #include "TimerManager.h"
 #include "SDManager.h"
-#include "ColorsStore.h"
+#include "../Light/LightConduct.h"
 #include "SdPathUtils.h"
 #include "SDBusyGuard.h"
 
@@ -578,20 +578,15 @@ void WebDirector::runLightPatternsGetJob(Job &job) {
         return;
     }
 
-    ColorsStore &store = ColorsStore::instance();
-    if (!store.isReady()) {
-        store.begin();
-    }
-
-    job.payloadBuffer = store.buildPatternsJson();
-    if (job.payloadBuffer.length() == 0) {
-        PF("[WebDirector] LightPatternsDump: empty payload (ready=%d)\n", store.isReady() ? 1 : 0);
+    String activeId;
+    if (!LightConduct::patternSnapshot(job.payloadBuffer, activeId)) {
+        PF("[WebDirector] LightPatternsDump: empty payload\n");
         failJob(job, 500, String(F("Pattern export failed")));
         return;
     }
 
     job.headerName = F("X-Pattern");
-    job.headerValue = store.getActivePatternId();
+    job.headerValue = activeId;
     job.useHeader = true;
     const unsigned patternBytes = static_cast<unsigned>(job.payloadBuffer.length());
     const unsigned patternPreviewLen = patternBytes > 120U ? 120U : patternBytes;
@@ -609,20 +604,15 @@ void WebDirector::runLightColorsGetJob(Job &job) {
         return;
     }
 
-    ColorsStore &store = ColorsStore::instance();
-    if (!store.isReady()) {
-        store.begin();
-    }
-
-    job.payloadBuffer = store.buildColorsJson();
-    if (job.payloadBuffer.length() == 0) {
-        PF("[WebDirector] LightColorsDump: empty payload (ready=%d)\n", store.isReady() ? 1 : 0);
+    String activeId;
+    if (!LightConduct::colorSnapshot(job.payloadBuffer, activeId)) {
+        PF("[WebDirector] LightColorsDump: empty payload\n");
         failJob(job, 500, String(F("Color export failed")));
         return;
     }
 
     job.headerName = F("X-Color");
-    job.headerValue = store.getActiveColorId();
+    job.headerValue = activeId;
     job.useHeader = true;
     const unsigned colorBytes = static_cast<unsigned>(job.payloadBuffer.length());
     const unsigned colorPreviewLen = colorBytes > 120U ? 120U : colorBytes;
@@ -652,15 +642,10 @@ void WebDirector::runLightPatternUpdateJob(Job &job) {
         return;
     }
 
-    ColorsStore &store = ColorsStore::instance();
-    if (!store.isReady()) {
-        store.begin();
-    }
-
     String affected;
     String errorMessage;
     JsonVariantConst body = doc.as<JsonVariantConst>();
-    if (!store.updatePattern(body, affected, errorMessage)) {
+    if (!LightConduct::updatePattern(body, affected, errorMessage)) {
         if (errorMessage.length() == 0) {
             errorMessage = F("Update failed");
         }
@@ -668,14 +653,14 @@ void WebDirector::runLightPatternUpdateJob(Job &job) {
         return;
     }
 
-    job.payloadBuffer = store.buildPatternsJson();
-    if (job.payloadBuffer.length() == 0) {
+    String activeId;
+    if (!LightConduct::patternSnapshot(job.payloadBuffer, activeId)) {
         failJob(job, 500, String(F("Pattern export failed")));
         return;
     }
 
     job.headerName = F("X-Pattern");
-    job.headerValue = affected.length() ? affected : store.getActivePatternId();
+    job.headerValue = affected.length() ? affected : activeId;
     job.useHeader = true;
     job.jsonPayload = String();
     job.state = Job::State::Finishing;
@@ -698,15 +683,10 @@ void WebDirector::runLightPatternDeleteJob(Job &job) {
         return;
     }
 
-    ColorsStore &store = ColorsStore::instance();
-    if (!store.isReady()) {
-        store.begin();
-    }
-
     String affected;
     String errorMessage;
     JsonVariantConst body = doc.as<JsonVariantConst>();
-    if (!store.deletePattern(body, affected, errorMessage)) {
+    if (!LightConduct::deletePattern(body, affected, errorMessage)) {
         if (errorMessage.length() == 0) {
             errorMessage = F("Delete failed");
         }
@@ -714,14 +694,14 @@ void WebDirector::runLightPatternDeleteJob(Job &job) {
         return;
     }
 
-    job.payloadBuffer = store.buildPatternsJson();
-    if (job.payloadBuffer.length() == 0) {
+    String activeId;
+    if (!LightConduct::patternSnapshot(job.payloadBuffer, activeId)) {
         failJob(job, 500, String(F("Pattern export failed")));
         return;
     }
 
     job.headerName = F("X-Pattern");
-    job.headerValue = affected.length() ? affected : store.getActivePatternId();
+    job.headerValue = affected.length() ? affected : activeId;
     job.useHeader = true;
     job.jsonPayload = String();
     job.state = Job::State::Finishing;
@@ -744,15 +724,10 @@ void WebDirector::runLightColorUpdateJob(Job &job) {
         return;
     }
 
-    ColorsStore &store = ColorsStore::instance();
-    if (!store.isReady()) {
-        store.begin();
-    }
-
     String affected;
     String errorMessage;
     JsonVariantConst body = doc.as<JsonVariantConst>();
-    if (!store.updateColor(body, affected, errorMessage)) {
+    if (!LightConduct::updateColor(body, affected, errorMessage)) {
         if (errorMessage.length() == 0) {
             errorMessage = F("Update failed");
         }
@@ -760,14 +735,14 @@ void WebDirector::runLightColorUpdateJob(Job &job) {
         return;
     }
 
-    job.payloadBuffer = store.buildColorsJson();
-    if (job.payloadBuffer.length() == 0) {
+    String activeId;
+    if (!LightConduct::colorSnapshot(job.payloadBuffer, activeId)) {
         failJob(job, 500, String(F("Color export failed")));
         return;
     }
 
     job.headerName = F("X-Color");
-    job.headerValue = affected.length() ? affected : store.getActiveColorId();
+    job.headerValue = affected.length() ? affected : activeId;
     job.useHeader = true;
     job.jsonPayload = String();
     job.state = Job::State::Finishing;
@@ -790,15 +765,10 @@ void WebDirector::runLightColorDeleteJob(Job &job) {
         return;
     }
 
-    ColorsStore &store = ColorsStore::instance();
-    if (!store.isReady()) {
-        store.begin();
-    }
-
     String affected;
     String errorMessage;
     JsonVariantConst body = doc.as<JsonVariantConst>();
-    if (!store.deleteColor(body, affected, errorMessage)) {
+    if (!LightConduct::deleteColor(body, affected, errorMessage)) {
         if (errorMessage.length() == 0) {
             errorMessage = F("Delete failed");
         }
@@ -806,14 +776,14 @@ void WebDirector::runLightColorDeleteJob(Job &job) {
         return;
     }
 
-    job.payloadBuffer = store.buildColorsJson();
-    if (job.payloadBuffer.length() == 0) {
+    String activeId;
+    if (!LightConduct::colorSnapshot(job.payloadBuffer, activeId)) {
         failJob(job, 500, String(F("Color export failed")));
         return;
     }
 
     job.headerName = F("X-Color");
-    job.headerValue = affected.length() ? affected : store.getActiveColorId();
+    job.headerValue = affected.length() ? affected : activeId;
     job.useHeader = true;
     job.jsonPayload = String();
     job.state = Job::State::Finishing;

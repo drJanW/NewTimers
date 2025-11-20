@@ -26,18 +26,12 @@ public:
     static bool intentStartClockTick(bool fallbackMode);
     static bool isClockRunning();
     static bool isClockInFallback();
-
-    // Context profiles
-    static void setChristmasMode(bool enabled);
-    static void setQuietHours(bool enabled);
-
-    static bool isQuietHoursActive();
+    static bool intentSeedClockFromRtc();
+    static void intentSyncRtcFromClock();
+    static bool hasRtcHardware();
 
 private:
     friend class SDBoot;
     // Internal helpers
-    static void applyContextOverrides();
     static void resumeAfterSDBoot();
-    static bool christmasMode;
-    static bool quietHours;
 };

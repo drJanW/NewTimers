@@ -24,10 +24,25 @@ bool deleteFile(uint8_t dirIndex, uint8_t fileIndex) {
     return false;
 }
 
-void showStatus() {
-    PF("[SDPolicy] SD ready=%d busy=%d\n",
-       SDManager::isReady(),
-       SDManager::isBusy());
+namespace {
+bool s_stateInitialized = false;
+bool s_lastReady = false;
+bool s_lastBusy = false;
+}
+
+void showStatus(bool forceLog) {
+    const bool ready = SDManager::isReady();
+    const bool busy = SDManager::isBusy();
+
+    if (!forceLog && s_stateInitialized && ready == s_lastReady && busy == s_lastBusy) {
+        return;
+    }
+
+    s_stateInitialized = true;
+    s_lastReady = ready;
+    s_lastBusy = busy;
+
+    PF("[SDPolicy] SD ready=%d busy=%d\n", ready, busy);
     // Could add more diagnostics here (e.g. number of indexed files)
 }
 

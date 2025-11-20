@@ -1,0 +1,37 @@
+priority todo list
+
+1. Finish layered conduct scaffolding (`lib/ConductManager20251111/**`)
+	- Replace every `PL("[Conduct][Plan] TODO: ...")` stub in Audio/Light/WiFi/Web/Sensors/Speak/Status/OTA/SD boot, conduct, director, and policy files with real orchestration logic.
+	- Keep responsibilities aligned with the Conduct README: managers normalize input → conduct modules coordinate → output policies drive hardware managers.
+
+2. Dynamic light backbone (`lib/ConductManager20251111/Light/README.md`)
+	- Implement the DefaultProfile branch when the calendar has no show and emit deterministic `LightShowParams`.
+	- Add pseudo-environment helpers for temp/humidity/ambient light so values stay stable across boots until hardware sensors land.
+	- Document the mapping formulas once tuned.
+
+3. Audio pipeline polish
+	- Move orchestration + fade-length rules into `AudioDirector.cpp` and `AudioPolicy.cpp`; stop depending on monolithic conduct code.
+
+4. Light conduct + policy glue
+	- Wire `LightConduct.cpp` and `LightPolicy.cpp` to route intents and modulate RGB shows based on distance/context inputs, leveraging the new pattern/color stores.
+
+5. OTA sequencing
+	- Flesh out OTA boot/conduct/director/policy placeholders so OTA windows, arming, and fallback visuals live entirely in the OTA module instead of `ConductManager.cpp`.
+
+6. Web + Wi-Fi orchestration
+	- Finish `WiFiConduct`, `WebConduct`, `WebDirector`, `WebPolicy` intent handling and expose “silence/dark for X hours” controls noted in `src/main.cpp`.
+
+7. Sensor + Speak coordination
+	- Implement the TODO stubs in `SensorsConduct`, `SensorDirector`, and the Speak boot/conduct/director/policy set so normalization and speech priorities are encapsulated.
+
+8. Status + diagnostics
+	- Build the diagnostic conduct + policy layers for status LEDs/logging, ensuring timer-driven health reporting runs through conduct rather than direct singletons.
+
+9. Context/calendar cleanup
+	- Resolve `//TODO OBSOLETE??` in `ContextModels.h` and replace the placeholder README/TODO files under `ContextManager20251111` with up-to-date docs matching the conduct workflow.
+
+10. TimerManager dump cleanup
+	 - Remove or guard the debug `TimerManager::dump()` noted with “get rid of this unwanted shit.”
+
+11. Doc follow-ups
+	 - Keep `docs/web_interface_api.md` in sync with any new intents and update `docs/system_flowchart.md` as modules stabilize.

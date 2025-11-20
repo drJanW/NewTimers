@@ -6,6 +6,78 @@
 
 namespace {
 
+struct TodayContextLogLimiter {
+    uint32_t lastNoCalendar{0};
+    uint32_t lastThemeFallback{0};
+    uint32_t lastThemeUnavailable{0};
+    uint32_t lastPatternFallback{0};
+    uint32_t lastPatternUnavailable{0};
+    uint32_t lastColorFallback{0};
+    uint32_t lastColorUnavailable{0};
+
+    static uint32_t makeKey(uint16_t year, uint8_t month, uint8_t day) {
+        return (static_cast<uint32_t>(year) << 16) |
+               (static_cast<uint32_t>(month) << 8) |
+               static_cast<uint32_t>(day);
+    }
+
+    static bool shouldLog(uint32_t &slot, uint16_t year, uint8_t month, uint8_t day) {
+        const uint32_t key = makeKey(year, month, day);
+        if (slot == key) {
+            return false;
+        }
+        slot = key;
+        return true;
+    }
+
+    bool logNoCalendar(uint16_t year, uint8_t month, uint8_t day) {
+        return shouldLog(lastNoCalendar, year, month, day);
+    }
+
+    bool logThemeFallback(uint16_t year, uint8_t month, uint8_t day) {
+        return shouldLog(lastThemeFallback, year, month, day);
+    }
+
+    bool logThemeUnavailable(uint16_t year, uint8_t month, uint8_t day) {
+        return shouldLog(lastThemeUnavailable, year, month, day);
+    }
+
+    bool logPatternFallback(uint16_t year, uint8_t month, uint8_t day) {
+        return shouldLog(lastPatternFallback, year, month, day);
+    }
+
+    bool logPatternUnavailable(uint16_t year, uint8_t month, uint8_t day) {
+        return shouldLog(lastPatternUnavailable, year, month, day);
+    }
+
+    bool logColorFallback(uint16_t year, uint8_t month, uint8_t day) {
+        return shouldLog(lastColorFallback, year, month, day);
+    }
+
+    bool logColorUnavailable(uint16_t year, uint8_t month, uint8_t day) {
+        return shouldLog(lastColorUnavailable, year, month, day);
+    }
+};
+
+TodayContextLogLimiter g_logLimiter;
+
+enum class RepositoryLogState : uint8_t {
+    Unknown,
+    Ready,
+    NotReady
+};
+
+struct RepositoryInitLogState {
+    bool invalidRoot = false;
+    bool calendarInitFailed = false;
+    bool themeBoxInitFailed = false;
+    bool patternInitFailed = false;
+    bool colorInitFailed = false;
+};
+
+RepositoryLogState g_repoLogState = RepositoryLogState::Unknown;
+RepositoryInitLogState g_repoInitLogs;
+
 class ContextRepository {
 public:
     bool init(fs::FS& sd, const char* rootPath);
@@ -30,33 +102,56 @@ bool ContextRepository::init(fs::FS& sd, const char* rootPath) {
     const String desiredRoot = (rootPath && *rootPath) ? String(rootPath) : String("/");
     const String sanitized = SdPathUtils::sanitizeSdPath(desiredRoot);
     if (sanitized.isEmpty()) {
-        PF("[TodayContext] Invalid root '%s', falling back to '/'\n", desiredRoot.c_str());
+        if (!g_repoInitLogs.invalidRoot) {
+            PF("[TodayContext] Invalid root '%s', falling back to '/'\n", desiredRoot.c_str());
+            g_repoInitLogs.invalidRoot = true;
+        }
         root_ = "/";
     } else {
+        g_repoInitLogs.invalidRoot = false;
         root_ = sanitized;
     }
 
     const char* rootCStr = root_.c_str();
 
     if (!calendar_.begin(sd, rootCStr)) {
-        PF("[TodayContext] CalendarManager init failed\n");
+        if (!g_repoInitLogs.calendarInitFailed) {
+            PF("[TodayContext] CalendarManager init failed\n");
+            g_repoInitLogs.calendarInitFailed = true;
+        }
         return false;
     }
+    g_repoInitLogs.calendarInitFailed = false;
     if (!themeBoxes_.begin(sd, rootCStr)) {
-        PF("[TodayContext] ThemeBoxManager init failed\n");
+        if (!g_repoInitLogs.themeBoxInitFailed) {
+            PF("[TodayContext] ThemeBoxManager init failed\n");
+            g_repoInitLogs.themeBoxInitFailed = true;
+        }
         return false;
     }
+    g_repoInitLogs.themeBoxInitFailed = false;
     if (!patterns_.begin(sd, rootCStr)) {
-        PF("[TodayContext] LightPatternStore init failed\n");
+        if (!g_repoInitLogs.patternInitFailed) {
+            PF("[TodayContext] LightPatternStore init failed\n");
+            g_repoInitLogs.patternInitFailed = true;
+        }
         return false;
     }
+    g_repoInitLogs.patternInitFailed = false;
     if (!colors_.begin(sd, rootCStr)) {
-        PF("[TodayContext] LightColorStore init failed\n");
+        if (!g_repoInitLogs.colorInitFailed) {
+            PF("[TodayContext] LightColorStore init failed\n");
+            g_repoInitLogs.colorInitFailed = true;
+        }
         return false;
     }
+    g_repoInitLogs.colorInitFailed = false;
 
     ready_ = true;
-    PF("[TodayContext] Repository initialised\n");
+    if (g_repoLogState != RepositoryLogState::Ready) {
+        PF("[TodayContext] Repository initialised\n");
+        g_repoLogState = RepositoryLogState::Ready;
+    }
     return true;
 }
 
@@ -80,7 +175,10 @@ bool ContextRepository::resolveDate(uint16_t& year, uint8_t& month, uint8_t& day
 bool ContextRepository::loadToday(TodayContext& ctx) {
     ctx = TodayContext{};
     if (!ready_) {
-        PF("[TodayContext] Repository not ready\n");
+        if (g_repoLogState != RepositoryLogState::NotReady) {
+            PF("[TodayContext] Repository not ready\n");
+            g_repoLogState = RepositoryLogState::NotReady;
+        }
         return false;
     }
 
@@ -88,7 +186,6 @@ bool ContextRepository::loadToday(TodayContext& ctx) {
     uint8_t month = 0;
     uint8_t day = 0;
     if (!resolveDate(year, month, day)) {
-        PF("[TodayContext] Clock not initialised\n");
         return false;
     }
 
@@ -99,8 +196,10 @@ bool ContextRepository::loadToday(TodayContext& ctx) {
         entry.year = year;
         entry.month = month;
         entry.day = day;
-        PF("[TodayContext] No calendar entry for %04u-%02u-%02u, using defaults\n",
-           static_cast<unsigned>(year), static_cast<unsigned>(month), static_cast<unsigned>(day));
+        if (g_logLimiter.logNoCalendar(year, month, day)) {
+            PF("[TodayContext] No calendar entry for %04u-%02u-%02u, using defaults\n",
+               static_cast<unsigned>(year), static_cast<unsigned>(month), static_cast<unsigned>(day));
+        }
     }
 
     const ThemeBox* theme = nullptr;
@@ -110,15 +209,22 @@ bool ContextRepository::loadToday(TodayContext& ctx) {
     if (!theme) {
         const ThemeBox* fallbackTheme = themeBoxes_.active();
         if (fallbackTheme) {
+            if (entry.themeBoxId != 0 && g_logLimiter.logThemeFallback(year, month, day)) {
                 PF("[TodayContext] Theme box %u missing, falling back to %u for %04u-%02u-%02u\n",
-                    static_cast<unsigned>(entry.themeBoxId), static_cast<unsigned>(fallbackTheme->id),
-               static_cast<unsigned>(month), static_cast<unsigned>(day));
+                   static_cast<unsigned>(entry.themeBoxId),
+                   static_cast<unsigned>(fallbackTheme->id),
+                   static_cast<unsigned>(year),
+                   static_cast<unsigned>(month),
+                   static_cast<unsigned>(day));
+            }
             theme = fallbackTheme;
         }
     }
     if (!theme) {
-        PF("[TodayContext] No theme boxes available for %04u-%02u-%02u\n",
-           static_cast<unsigned>(year), static_cast<unsigned>(month), static_cast<unsigned>(day));
+        if (g_logLimiter.logThemeUnavailable(year, month, day)) {
+            PF("[TodayContext] No theme boxes available for %04u-%02u-%02u\n",
+               static_cast<unsigned>(year), static_cast<unsigned>(month), static_cast<unsigned>(day));
+        }
         return false;
     }
 
@@ -129,15 +235,22 @@ bool ContextRepository::loadToday(TodayContext& ctx) {
     if (!pattern) {
         const LightPattern* fallbackPattern = patterns_.active();
         if (fallbackPattern) {
+            if (entry.patternId != 0 && g_logLimiter.logPatternFallback(year, month, day)) {
                 PF("[TodayContext] Pattern %u missing, falling back to %u for %04u-%02u-%02u\n",
-                    static_cast<unsigned>(entry.patternId), static_cast<unsigned>(fallbackPattern->id),
-               static_cast<unsigned>(month), static_cast<unsigned>(day));
+                   static_cast<unsigned>(entry.patternId),
+                   static_cast<unsigned>(fallbackPattern->id),
+                   static_cast<unsigned>(year),
+                   static_cast<unsigned>(month),
+                   static_cast<unsigned>(day));
+            }
             pattern = fallbackPattern;
         }
     }
     if (!pattern) {
-        PF("[TodayContext] No light patterns available for %04u-%02u-%02u\n",
-           static_cast<unsigned>(year), static_cast<unsigned>(month), static_cast<unsigned>(day));
+        if (g_logLimiter.logPatternUnavailable(year, month, day)) {
+            PF("[TodayContext] No light patterns available for %04u-%02u-%02u\n",
+               static_cast<unsigned>(year), static_cast<unsigned>(month), static_cast<unsigned>(day));
+        }
         return false;
     }
 
@@ -148,15 +261,22 @@ bool ContextRepository::loadToday(TodayContext& ctx) {
     if (!color) {
         const LightColor* fallbackColor = colors_.active();
         if (fallbackColor) {
+            if (entry.colorId != 0 && g_logLimiter.logColorFallback(year, month, day)) {
                 PF("[TodayContext] Color %u missing, falling back to %u for %04u-%02u-%02u\n",
-                    static_cast<unsigned>(entry.colorId), static_cast<unsigned>(fallbackColor->id),
-               static_cast<unsigned>(month), static_cast<unsigned>(day));
+                   static_cast<unsigned>(entry.colorId),
+                   static_cast<unsigned>(fallbackColor->id),
+                   static_cast<unsigned>(year),
+                   static_cast<unsigned>(month),
+                   static_cast<unsigned>(day));
+            }
             color = fallbackColor;
         }
     }
     if (!color) {
-        PF("[TodayContext] No light colors available for %04u-%02u-%02u\n",
-           static_cast<unsigned>(year), static_cast<unsigned>(month), static_cast<unsigned>(day));
+        if (g_logLimiter.logColorUnavailable(year, month, day)) {
+            PF("[TodayContext] No light colors available for %04u-%02u-%02u\n",
+               static_cast<unsigned>(year), static_cast<unsigned>(month), static_cast<unsigned>(day));
+        }
         return false;
     }
 

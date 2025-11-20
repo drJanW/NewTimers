@@ -3,6 +3,7 @@
 #include "Globals.h"
 #include "LightPolicy.h"
 #include "TimerManager.h"
+#include "ColorsStore.h"
 
 namespace {
 
@@ -12,6 +13,14 @@ uint32_t s_currentIntervalMs = 0;
 float s_currentIntensity = 0.0f;
 uint8_t s_currentPaletteId = 0;
 bool s_timerActive = false;
+
+ColorsStore &ensureColorsStore() {
+    ColorsStore &store = ColorsStore::instance();
+    if (!store.isReady()) {
+        store.begin();
+    }
+    return store;
+}
 
 void applyLightshowUpdate() {
     (void)s_currentIntensity;
@@ -76,4 +85,56 @@ void LightConduct::handleDistanceReading(float distanceMm) {
 void LightConduct::animationCallback() {
     applyLightshowUpdate();
     s_timerActive = false;
+}
+
+bool LightConduct::patternSnapshot(String &payload, String &activePatternId) {
+    ColorsStore &store = ensureColorsStore();
+    payload = store.buildPatternsJson();
+    if (payload.isEmpty()) {
+        return false;
+    }
+    activePatternId = store.getActivePatternId();
+    return true;
+}
+
+bool LightConduct::colorSnapshot(String &payload, String &activeColorId) {
+    ColorsStore &store = ensureColorsStore();
+    payload = store.buildColorsJson();
+    if (payload.isEmpty()) {
+        return false;
+    }
+    activeColorId = store.getActiveColorId();
+    return true;
+}
+
+bool LightConduct::selectPattern(const String &id, String &errorMessage) {
+    return ensureColorsStore().selectPattern(id, errorMessage);
+}
+
+bool LightConduct::updatePattern(JsonVariantConst body, String &affectedId, String &errorMessage) {
+    return ensureColorsStore().updatePattern(body, affectedId, errorMessage);
+}
+
+bool LightConduct::deletePattern(JsonVariantConst body, String &affectedId, String &errorMessage) {
+    return ensureColorsStore().deletePattern(body, affectedId, errorMessage);
+}
+
+bool LightConduct::selectColor(const String &id, String &errorMessage) {
+    return ensureColorsStore().selectColor(id, errorMessage);
+}
+
+bool LightConduct::updateColor(JsonVariantConst body, String &affectedId, String &errorMessage) {
+    return ensureColorsStore().updateColor(body, affectedId, errorMessage);
+}
+
+bool LightConduct::deleteColor(JsonVariantConst body, String &affectedId, String &errorMessage) {
+    return ensureColorsStore().deleteColor(body, affectedId, errorMessage);
+}
+
+bool LightConduct::previewPattern(JsonVariantConst body, String &errorMessage) {
+    return ensureColorsStore().preview(body, errorMessage);
+}
+
+bool LightConduct::previewColor(JsonVariantConst body, String &errorMessage) {
+    return ensureColorsStore().previewColors(body, errorMessage);
 }

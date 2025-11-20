@@ -3,11 +3,8 @@
 
 namespace LightPolicy {
 
-    // Apply brightness rules (caps, floors, context)
-    float applyBrightnessRules(float requested, bool quietHours);
-
-    // Palette overrides (e.g. Christmas mode)
-    uint32_t applyPaletteOverride(uint32_t baseColor, bool christmasMode);
+    // Apply brightness rules (caps, floors)
+    float applyBrightnessRules(float requested);
 
     // Placeholder: distance-driven light show adjustment
     bool distanceAnimationFor(float distanceMm,

@@ -11,5 +11,5 @@ namespace SDPolicy {
     bool deleteFile(uint8_t dirIndex, uint8_t fileIndex);
 
     // Diagnostics
-    void showStatus();
+    void showStatus(bool forceLog = false);
 }

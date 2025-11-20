@@ -10,6 +10,17 @@ delays, or any local timing tricks.
 conventions.
 1.4 Keep all behaviour inside the established conduct tree; do not create
 ad-hoc helpers that skip the workflow.
+1.5 Route every cross-module interaction through a Conduct intent or the
+existing manager API; if the required intent does not yet exist, create it
+and document the plan before touching code. Direct access to Policy/Boot
+layers from peer modules is forbidden.
+1.6 Before coding, perform a dependency-direction check (Boot → Plan → Policy
+→ Conduct) and record the result in the task notes; do not merge or run builds
+until the check confirms the layering is intact. Re-run the check whenever the
+task scope changes.
+1.7 Log the Conduct compliance decision in the task summary ("Architecture
+Layering: PASS/FAIL"); if a constraint must be bent, pause and obtain explicit
+approval instead of patching first.
 
 2 – Style Fidelity.
 2.1 Mirror existing naming, logging, and structural patterns automatically and
@@ -21,11 +32,31 @@ to keep vocabulary aligned:
 2.2.2 palette → color set
 2.2.3 subsystem → module (or the specific manager name)
 2.2.4 period → interval
+2.2.5 snapshot → read (or "state read" when referencing persistent dumps)
 2.3 Preserve the historical clock-sync terminology by keeping the legacy
 `isTimeFetched` naming pattern and refusing phrases such as "authoritative
 time".
 2.4 Prefer verbs like "handle" that already exist in the project for intent
 routing; never introduce alternatives such as "dispatch".
+2.5 Stick to the established Conduct verbs (boot/plan/init/begin/start for
+timers) and never invent poetic variations such as "prime" or ad-hoc
+"setup"/"init" mixes. These verbs map to specific layers:
+2.5.1 boot → Conduct boot planners that wire subsystems together before
+context resumes; use only inside Boot classes/modules.
+2.5.2 plan → TimerManager scheduling entry points that arm callbacks (e.g.
+`calendarBoot.plan()`); never call it for anything other than timer wiring.
+2.5.3 init/initialize → Manager-level resource bring-up once SD/Wi-Fi/etc. are
+ready; typically called from Conduct after plan() succeeds.
+2.5.4 begin → Library-style constructors (Arduino/driver classes) that grab
+hardware handles; do not mix this with boot/plan.
+2.5.5 start → Reserved for timers or long-running services that actually start
+after being configured (e.g. `TimerManager::startClockTick`); do not use for
+one-shot setup.
+2.6 Never bypass the boot → plan → policy → conduct layering. Every behaviour
+change must flow through those stages (Boot prepares prereqs, Plan arms
+timers, Policy enforces rules, Conduct decides intents). Shortcuts or direct
+module calls are forbidden—even if they “work faster”—because they erode the
+architecture and create the weird logs we keep wasting time on.
 
 3 – Version Accountability.
 3.1 Increment the firmware version string before every single compilation Jan

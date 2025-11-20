@@ -10,7 +10,7 @@ namespace AudioPolicy {
     bool canPlaySentence();
 
     // Rule application
-    float applyVolumeRules(float requested, bool quietHours);
+    float applyVolumeRules(float requested);
 
     // Distance-driven playback helpers
     bool distancePlaybackInterval(float distanceMm, uint32_t& intervalMs);

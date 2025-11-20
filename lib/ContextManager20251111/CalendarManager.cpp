@@ -108,7 +108,6 @@ bool CalendarManager::load() {
 
     SDBusyGuard guard;
     if (!guard.acquired()) {
-        PF("[CalendarManager] SD busy, cannot load calendar\n");
         return false;
     }
     const String path = pathFor(kCalendarFile);
@@ -122,7 +121,6 @@ bool CalendarManager::load() {
     uint8_t todayMonth = 0;
     uint8_t todayDay = 0;
     if (!resolveToday(todayYear, todayMonth, todayDay)) {
-        PF("[CalendarManager] Clock not ready, aborting calendar load\n");
         file.close();
         return false;
     }

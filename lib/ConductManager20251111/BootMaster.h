@@ -20,11 +20,13 @@ private:
         bool timerArmed = false;
         bool seedAttempted = false;
         bool seededFromCache = false;
+        bool seededFromRtc = false;
         bool stateAnnounced = false;
 
         void resetFlags() {
             seedAttempted = false;
             seededFromCache = false;
+            seededFromRtc = false;
             stateAnnounced = false;
         }
 

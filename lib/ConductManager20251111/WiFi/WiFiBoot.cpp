@@ -32,8 +32,11 @@ namespace {
         subsystemTimerStarted = false;
     }
 
+    constexpr uint32_t WIFI_WAIT_LOG_INTERVAL_MS = 5000;
+
     void wifiBootPollTick() {
         static bool lastWiFiState = false;
+        static uint32_t lastWaitLogMs = 0;
 
         bool wifiUp = isWiFiConnected();
         if (wifiUp && !lastWiFiState) {
@@ -43,7 +46,14 @@ namespace {
         }
 
         if (!wifiUp) {
-            PL("[Main] WiFi not connected yet");
+            const uint32_t now = millis();
+            if (now - lastWaitLogMs >= WIFI_WAIT_LOG_INTERVAL_MS) {
+                PL("[Main] WiFi not connected yet");
+                lastWaitLogMs = now;
+            }
+        }
+        else {
+            lastWaitLogMs = millis();
         }
 
         lastWiFiState = wifiUp;
@@ -53,12 +63,11 @@ namespace {
 
             if (!fetchScheduled) {
                 timers.cancel(wifiBootPollTick);
-                PL("[Main] Starting fetch schedulers");
                 if (bootFetchManager()) {
                     fetchScheduled = true;
-                    PL("[Main] Fetch schedulers started");
+                    PL("[Main] Fetch schedulers running");
                 } else {
-                    PL("[Main] Fetch scheduler start FAILED");
+                    PL("[Main] Fetch schedulers failed to start");
                 }
             }
 

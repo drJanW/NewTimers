@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
 class LightConduct {
 public:
@@ -9,4 +10,19 @@ public:
     static void handleDistanceReading(float distanceMm);
 
     static void animationCallback();
+
+    // Light pattern/color exports routed through conduct
+    static bool patternSnapshot(String &payload, String &activePatternId);
+    static bool colorSnapshot(String &payload, String &activeColorId);
+
+    static bool selectPattern(const String &id, String &errorMessage);
+    static bool updatePattern(JsonVariantConst body, String &affectedId, String &errorMessage);
+    static bool deletePattern(JsonVariantConst body, String &affectedId, String &errorMessage);
+
+    static bool selectColor(const String &id, String &errorMessage);
+    static bool updateColor(JsonVariantConst body, String &affectedId, String &errorMessage);
+    static bool deleteColor(JsonVariantConst body, String &affectedId, String &errorMessage);
+
+    static bool previewPattern(JsonVariantConst body, String &errorMessage);
+    static bool previewColor(JsonVariantConst body, String &errorMessage);
 };

@@ -38,11 +38,7 @@ bool canPlaySentence() {
     return true;
 }
 
-float applyVolumeRules(float requested, bool quietHours) {
-   // float v = requested;
-   // if (v < 0.0f) v = 0.0f;
-   // if (v > 1.0f) v = 1.0f;
-   // if (quietHours && v > 0.3f) v = 0.3f; // cap volume at night
+float applyVolumeRules(float requested) {
     return clamp(requested, 0.0f, 1.0f);
 }
 

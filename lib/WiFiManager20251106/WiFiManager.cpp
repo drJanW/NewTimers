@@ -48,6 +48,10 @@ namespace
     static constexpr bool WIFI_DEBUG = true;
     static std::atomic<bool> wifiConnected{false};
 
+    bool shouldLogRetryEvent(int attemptNumber) {
+        return attemptNumber <= 3 || (attemptNumber < 10 && (attemptNumber % 2 == 0)) || (attemptNumber % 5 == 0);
+    }
+
     void pollTimerHandler();
     void healthTimerHandler();
     void retryWindowHandler();
@@ -73,8 +77,15 @@ namespace
 
     void logAttemptWindow()
     {
-        if (WIFI_DEBUG)
-            PF("[WiFi] Retry %d — window %u ms\n", wifi.retryCount + 1, wifi.retryWindowMs);
+        if (!WIFI_DEBUG)
+            return;
+
+        const int attemptNumber = wifi.retryCount + 1;
+        if (!shouldLogRetryEvent(attemptNumber)) {
+            return;
+        }
+
+        PF("[WiFi] Retry %d — window %u ms\n", attemptNumber, wifi.retryWindowMs);
     }
 
     void beginRetryWindow()
@@ -172,8 +183,12 @@ namespace
             return;
         }
 
-        if (WIFI_DEBUG)
-            PF("[WiFi] Retry %d failed (status %d)\n", wifi.retryCount + 1, WiFi.status());
+        if (WIFI_DEBUG) {
+            const int attemptNumber = wifi.retryCount + 1;
+            if (shouldLogRetryEvent(attemptNumber)) {
+                PF("[WiFi] Retry %d failed (status %d)\n", attemptNumber, WiFi.status());
+            }
+        }
 
         wifi.retryCount++;
         wifi.retryWindowMs += RETRY_WINDOW_STEP_MS;

@@ -3,19 +3,7 @@
 #include <Arduino.h>
 #include <vector>
 
-struct CalendarEntry {
-    bool valid{false};
-    uint16_t year{0};
-    uint8_t month{0};
-    uint8_t day{0};
-    String iso;
-    String ttsSentence;
-    uint16_t ttsIntervalMinutes{0};
-    uint8_t themeBoxId{0};
-    uint8_t patternId{0};
-    uint8_t colorId{0};
-    String note;
-};
+#include "Calendar.h"
 
 struct ThemeBox {
     bool valid{false};

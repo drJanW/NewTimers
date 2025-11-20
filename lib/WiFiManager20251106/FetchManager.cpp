@@ -10,6 +10,7 @@
 #include "ContextManager.h"
 #include "SDManager.h"
 #include "SDBusyGuard.h"
+#include "ConductManager.h"
 
 #include <WiFiUdp.h>
 #include <NTPClient.h>
@@ -136,6 +137,7 @@ static void cb_tryNTP() {
 
     clockSvc().setTimeFetched(true);
     clk.setMoonPhaseValue();
+    ConductManager::intentSyncRtcFromClock();
 }
 
 // ===================================================

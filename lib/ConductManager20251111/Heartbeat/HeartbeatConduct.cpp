@@ -3,7 +3,6 @@
 #include "Globals.h"
 #include "TimerManager.h"
 #include "HeartbeatPolicy.h"
-#include "ConductManager.h"
 
 namespace {
 
@@ -17,12 +16,7 @@ uint32_t heartbeatIntervalMs = 0;
 bool ledState = false;
 
 void heartbeatTick() {
-    if (ConductManager::isQuietHoursActive()) {
-        ledState = false;
-    } else {
-        ledState = !ledState;
-    }
-
+    ledState = !ledState;
     digitalWrite(LED_PIN, ledState ? HIGH : LOW);
 }
 

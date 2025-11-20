@@ -49,10 +49,10 @@ bool SDBoot::plan() {
     }
 
     if (currentAttempt >= kMaxAttempts) {
-        PF("[Conduct][Plan] SD boot failed after %u attempts\n",
-           static_cast<unsigned>(kMaxAttempts));
-        s_attemptCount = 0;
-        SDPolicy::showStatus();
+          PF("[Conduct][Plan] SD boot failed after %u attempts\n",
+              static_cast<unsigned>(kMaxAttempts));
+          s_attemptCount = 0;
+          SDPolicy::showStatus(true);
         return true;
     }
 
@@ -60,7 +60,7 @@ bool SDBoot::plan() {
 
     if (!timers().restart(kRetryDelayMs, 1, SDBoot::retryTimerHandler)) {
         PF("[Conduct][Plan] Failed to schedule SD retry timer\n");
-        SDPolicy::showStatus();
+        SDPolicy::showStatus(true);
         return true;
     }
 

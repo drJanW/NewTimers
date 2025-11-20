@@ -6,11 +6,15 @@
 #include "TimerManager.h"
 #include "PRTClock.h"
 #include "SDBusyGuard.h"
+#include "SDManager.h"
+#include "TodayContext.h"
 
 namespace {
 
 constexpr uint32_t kCalendarRefreshIntervalMs = 60UL * 60UL * 1000UL;
 constexpr uint32_t kCalendarRetryIntervalMs   = 60UL * 1000UL;
+constexpr uint32_t kCalendarInitialDelayMs    = 5UL * 1000UL;
+constexpr uint32_t kCalendarBusyRetryMs       = 5UL * 1000UL;
 
 TimerManager& timers() {
   return TimerManager::instance();
@@ -18,6 +22,38 @@ TimerManager& timers() {
 
 bool clockReady() {
   return PRTClock::instance().hasValidDate();
+}
+
+struct CalendarConductLogFlags {
+  bool planManagerNotReady = false;
+  bool loadManagerNotReady = false;
+  bool loadSdBusy = false;
+};
+
+CalendarConductLogFlags s_logFlags;
+bool s_initialDelayPending = true;
+
+TodayContext s_todayContext;
+bool s_todayContextValid = false;
+
+void resetLoadFailureFlags() {
+  s_logFlags.loadManagerNotReady = false;
+  s_logFlags.loadSdBusy = false;
+}
+
+void clearTodayContextSnapshot() {
+  s_todayContext = TodayContext{};
+  s_todayContextValid = false;
+}
+
+void refreshTodayContextSnapshot() {
+  TodayContext ctx;
+  if (LoadTodayContext(ctx) && ctx.valid) {
+    s_todayContext = ctx;
+    s_todayContextValid = true;
+  } else {
+    clearTodayContextSnapshot();
+  }
 }
 
 String s_sentence;
@@ -63,18 +99,31 @@ void CalendarConduct::plan() {
   clearSentenceTimer();
 
   if (!calendarManager.isReady()) {
-    PF("[CalendarConduct] Calendar manager not ready, scheduling retry\n");
+    if (!s_logFlags.planManagerNotReady) {
+      PF("[CalendarConduct] Calendar manager not ready, scheduling retry\n");
+      s_logFlags.planManagerNotReady = true;
+    }
     scheduleLoad(kCalendarRetryIntervalMs, 1);
     return;
   }
+  s_logFlags.planManagerNotReady = false;
 
   if (!clockReady()) {
-    PF("[CalendarConduct] Waiting for valid clock before scheduling\n");
     scheduleLoad(kCalendarRetryIntervalMs, 1);
     return;
   }
 
   PF("[CalendarConduct] Calendar scheduling enabled\n");
+
+  if (s_initialDelayPending) {
+    if (!scheduleLoad(kCalendarInitialDelayMs, 1)) {
+      PF("[CalendarConduct] Failed to arm initial calendar delay\n");
+    } else {
+      s_initialDelayPending = false;
+    }
+    return;
+  }
+
   CalendarConduct::cb_loadCalendar();
 }
 
@@ -84,14 +133,26 @@ void CalendarConduct::cb_loadCalendar() {
   };
 
   if (!calendarManager.isReady()) {
-    PF("[CalendarConduct] Calendar manager not ready\n");
+    if (!s_logFlags.loadManagerNotReady) {
+      PF("[CalendarConduct] Calendar manager not ready\n");
+      s_logFlags.loadManagerNotReady = true;
+    }
+    reschedule(kCalendarRetryIntervalMs, 1);
+    return;
+  }
+  s_logFlags.loadManagerNotReady = false;
+
+  if (!clockReady()) {
     reschedule(kCalendarRetryIntervalMs, 1);
     return;
   }
 
-  if (!clockReady()) {
-    PF("[CalendarConduct] Clock not initialised yet\n");
-    reschedule(kCalendarRetryIntervalMs, 1);
+  if (SDManager::isBusy()) {
+    if (!s_logFlags.loadSdBusy) {
+      PF("[CalendarConduct] SD busy, postponing calendar load\n");
+      s_logFlags.loadSdBusy = true;
+    }
+    reschedule(kCalendarBusyRetryMs, 1);
     return;
   }
 
@@ -99,21 +160,29 @@ void CalendarConduct::cb_loadCalendar() {
   uint8_t month = 0;
   uint8_t day = 0;
   if (!ensureDate(year, month, day)) {
-    PF("[CalendarConduct] Failed to resolve clock date\n");
     reschedule(kCalendarRetryIntervalMs, 1);
     return;
   }
 
-  SDBusyGuard guard;
-  if (!guard.acquired()) {
-    PF("[CalendarConduct] SD busy, postponing calendar load\n");
-    reschedule(kCalendarRetryIntervalMs, 1);
-    return;
+  bool calendarLoaded = false;
+  {
+    SDBusyGuard guard;
+    if (!guard.acquired()) {
+      if (!s_logFlags.loadSdBusy) {
+        PF("[CalendarConduct] SD busy, postponing calendar load\n");
+        s_logFlags.loadSdBusy = true;
+      }
+      reschedule(kCalendarBusyRetryMs, 1);
+      return;
+    }
+    s_logFlags.loadSdBusy = false;
+    calendarLoaded = calendarManager.loadToday(year, month, day);
   }
 
-  if (!calendarManager.loadToday(year, month, day)) {
+  if (!calendarLoaded) {
     clearSentenceTimer();
     CalendarPolicy::handleThemeBox(CalendarThemeBox{});
+    clearTodayContextSnapshot();
     reschedule(kCalendarRefreshIntervalMs, 0);
     return;
   }
@@ -123,6 +192,7 @@ void CalendarConduct::cb_loadCalendar() {
   if (!CalendarPolicy::evaluate(snapshot, decision)) {
     clearSentenceTimer();
     CalendarPolicy::handleThemeBox(CalendarThemeBox{});
+    clearTodayContextSnapshot();
     reschedule(kCalendarRefreshIntervalMs, 0);
     return;
   }
@@ -153,7 +223,9 @@ void CalendarConduct::cb_loadCalendar() {
     CalendarPolicy::handleThemeBox(CalendarThemeBox{});
   }
 
+  refreshTodayContextSnapshot();
   reschedule(kCalendarRefreshIntervalMs, 0);
+  resetLoadFailureFlags();
 }
 
 void CalendarConduct::cb_calendarSentence() {
@@ -161,4 +233,16 @@ void CalendarConduct::cb_calendarSentence() {
     return;
   }
   CalendarPolicy::dispatchSentence(s_sentence);
+}
+
+bool CalendarConduct::contextReady() const {
+  return s_todayContextValid && s_todayContext.valid;
+}
+
+bool CalendarConduct::contextSnapshot(TodayContext& out) const {
+  if (!contextReady()) {
+    return false;
+  }
+  out = s_todayContext;
+  return true;
 }

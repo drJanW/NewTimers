@@ -6,9 +6,10 @@
 #include "ConductManager.h"
 #include "AudioManager.h"
 #include "SDVoting.h"
-#include "ColorsStore.h"
 #include "TodayContext.h"
 #include "Web/WebDirector.h"
+#include "../ConductManager20251111/Calendar/CalendarConduct.h"
+#include "../ConductManager20251111/Light/LightConduct.h"
 #include "SdPathUtils.h"
 #include "SDBusyGuard.h"
 #include <ESPAsyncWebServer.h>
@@ -34,14 +35,6 @@ static AsyncWebServer server(80);
 namespace {
 
 using namespace SdPathUtils;
-
-void ensureColorsStoreReady()
-{
-  if (!ColorsStore::instance().isReady())
-  {
-    ColorsStore::instance().begin();
-  }
-}
 
 void sendJsonResponse(AsyncWebServerRequest *request, String payload, const char *extraHeader = nullptr, const String &extraValue = String())
 {
@@ -236,23 +229,8 @@ String toIdString(uint8_t id)
 
 void handleTodayContext(AsyncWebServerRequest *request)
 {
-  if (!SDManager::isReady())
-  {
-    sendError(request, 503, F("SD not ready"));
-    return;
-  }
-
-  if (!TodayContextReady())
-  {
-    if (!InitTodayContext(SD))
-    {
-      sendError(request, 500, F("Context init failed"));
-      return;
-    }
-  }
-
   TodayContext ctx;
-  if (!LoadTodayContext(ctx) || !ctx.valid)
+  if (!calendarConduct.contextSnapshot(ctx))
   {
     sendError(request, 503, F("Context unavailable"));
     return;
@@ -321,17 +299,15 @@ void handleTodayContext(AsyncWebServerRequest *request)
 
 void handlePatternsList(AsyncWebServerRequest *request)
 {
-  ensureColorsStoreReady();
-  ColorsStore &store = ColorsStore::instance();
-  String payload = store.buildPatternsJson();
-  if (payload.isEmpty())
+  String payload;
+  String activeId;
+  if (!LightConduct::patternSnapshot(payload, activeId))
   {
     sendError(request, 500, F("Pattern export failed"));
     return;
   }
   AsyncWebServerResponse *response = request->beginResponse(200, "application/json", payload);
   response->addHeader("Cache-Control", "no-store");
-  const String activeId = store.getActivePatternId();
   if (!activeId.isEmpty())
   {
     response->addHeader("X-Pattern", activeId);
@@ -341,17 +317,15 @@ void handlePatternsList(AsyncWebServerRequest *request)
 
 void handleColorsList(AsyncWebServerRequest *request)
 {
-  ensureColorsStoreReady();
-  ColorsStore &store = ColorsStore::instance();
-  String payload = store.buildColorsJson();
-  if (payload.isEmpty())
+  String payload;
+  String activeId;
+  if (!LightConduct::colorSnapshot(payload, activeId))
   {
     sendError(request, 500, F("Color export failed"));
     return;
   }
   AsyncWebServerResponse *response = request->beginResponse(200, "application/json", payload);
   response->addHeader("Cache-Control", "no-store");
-  const String activeId = store.getActiveColorId();
   if (!activeId.isEmpty())
   {
     response->addHeader("X-Color", activeId);
@@ -525,7 +499,6 @@ void attachPatternColorRoutes()
 
   auto *patternSelect = new AsyncCallbackJsonWebHandler("/api/patterns/select");
   patternSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureColorsStoreReady();
     String error;
     String id;
     JsonObjectConst obj = json.as<JsonObjectConst>();
@@ -544,23 +517,28 @@ void attachPatternColorRoutes()
         id = request->getParam("id")->value();
       }
     }
-    PF("[ColorsStore] HTTP pattern/select id='%s' content-type='%s'\n",
+    PF("[LightConduct] HTTP pattern/select id='%s' content-type='%s'\n",
        id.c_str(),
        request->contentType().c_str());
-    if (!ColorsStore::instance().selectPattern(id, error))
+    if (!LightConduct::selectPattern(id, error))
     {
       sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
       return;
     }
-    const String activeId = ColorsStore::instance().getActivePatternId();
-    sendJsonResponse(request, ColorsStore::instance().buildPatternsJson(), "X-Pattern", activeId);
+    String payload;
+    String activeId;
+    if (!LightConduct::patternSnapshot(payload, activeId))
+    {
+      sendError(request, 500, F("pattern export failed"));
+      return;
+    }
+    sendJsonResponse(request, payload, "X-Pattern", activeId);
   });
   patternSelect->setMethod(HTTP_POST);
   server.addHandler(patternSelect);
 
   auto *patternDelete = new AsyncCallbackJsonWebHandler("/api/patterns/delete");
   patternDelete->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureColorsStoreReady();
     JsonObjectConst obj = json.as<JsonObjectConst>();
     if (obj.isNull())
     {
@@ -569,18 +547,19 @@ void attachPatternColorRoutes()
     }
     String affected;
     String error;
-    if (!ColorsStore::instance().deletePattern(obj, affected, error))
+    if (!LightConduct::deletePattern(obj, affected, error))
     {
       sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
       return;
     }
-    String payload = ColorsStore::instance().buildPatternsJson();
-    if (payload.isEmpty())
+    String payload;
+    String activeId;
+    if (!LightConduct::patternSnapshot(payload, activeId))
     {
       sendError(request, 500, F("pattern export failed"));
       return;
     }
-    const String headerId = affected.length() ? affected : ColorsStore::instance().getActivePatternId();
+    const String headerId = affected.length() ? affected : activeId;
     sendJsonResponse(request, payload, "X-Pattern", headerId);
   });
   patternDelete->setMethod(HTTP_POST);
@@ -588,7 +567,6 @@ void attachPatternColorRoutes()
 
   auto *patternUpdate = new AsyncCallbackJsonWebHandler("/api/patterns");
   patternUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureColorsStoreReady();
     JsonObjectConst obj = json.as<JsonObjectConst>();
     if (obj.isNull())
     {
@@ -598,26 +576,26 @@ void attachPatternColorRoutes()
     PF("[PatternStore] HTTP pattern/update content-type='%s' length=%d\n",
        request->contentType().c_str(),
        static_cast<int>(request->contentLength()));
-    ColorsStore &store = ColorsStore::instance();
     String affected;
     String errorMessage;
-    if (!store.updatePattern(obj, affected, errorMessage))
+    if (!LightConduct::updatePattern(obj, affected, errorMessage))
     {
       sendError(request, 400, errorMessage.length() ? errorMessage : F("update failed"));
       return;
     }
-    String payload = store.buildPatternsJson();
-    if (payload.isEmpty())
+    String payload;
+    String activeId;
+    if (!LightConduct::patternSnapshot(payload, activeId))
     {
       sendError(request, 500, F("pattern export failed"));
       return;
     }
     AsyncWebServerResponse *response = request->beginResponse(200, "application/json", payload);
     response->addHeader("Cache-Control", "no-store");
-    const String activeId = affected.length() ? affected : store.getActivePatternId();
-    if (!activeId.isEmpty())
+    const String headerId = affected.length() ? affected : activeId;
+    if (!headerId.isEmpty())
     {
-      response->addHeader("X-Pattern", activeId);
+      response->addHeader("X-Pattern", headerId);
     }
     request->send(response);
   });
@@ -626,7 +604,6 @@ void attachPatternColorRoutes()
 
   auto *colorSelect = new AsyncCallbackJsonWebHandler("/api/colors/select");
   colorSelect->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureColorsStoreReady();
     String error;
     String id;
     JsonObjectConst obj = json.as<JsonObjectConst>();
@@ -645,23 +622,28 @@ void attachPatternColorRoutes()
         id = request->getParam("id")->value();
       }
     }
-    PF("[ColorsStore] HTTP color/select id='%s' content-type='%s'\n",
+    PF("[LightConduct] HTTP color/select id='%s' content-type='%s'\n",
        id.c_str(),
        request->contentType().c_str());
-    if (!ColorsStore::instance().selectColor(id, error))
+    if (!LightConduct::selectColor(id, error))
     {
       sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
       return;
     }
-    const String activeId = ColorsStore::instance().getActiveColorId();
-    sendJsonResponse(request, ColorsStore::instance().buildColorsJson(), "X-Color", activeId);
+    String payload;
+    String activeId;
+    if (!LightConduct::colorSnapshot(payload, activeId))
+    {
+      sendError(request, 500, F("color export failed"));
+      return;
+    }
+    sendJsonResponse(request, payload, "X-Color", activeId);
   });
   colorSelect->setMethod(HTTP_POST);
   server.addHandler(colorSelect);
 
   auto *colorDelete = new AsyncCallbackJsonWebHandler("/api/colors/delete");
   colorDelete->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureColorsStoreReady();
     JsonObjectConst obj = json.as<JsonObjectConst>();
     if (obj.isNull())
     {
@@ -670,18 +652,19 @@ void attachPatternColorRoutes()
     }
     String affected;
     String error;
-    if (!ColorsStore::instance().deleteColor(obj, affected, error))
+    if (!LightConduct::deleteColor(obj, affected, error))
     {
       sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
       return;
     }
-    String payload = ColorsStore::instance().buildColorsJson();
-    if (payload.isEmpty())
+    String payload;
+    String activeId;
+    if (!LightConduct::colorSnapshot(payload, activeId))
     {
       sendError(request, 500, F("color export failed"));
       return;
     }
-    const String headerId = affected.length() ? affected : ColorsStore::instance().getActiveColorId();
+    const String headerId = affected.length() ? affected : activeId;
     sendJsonResponse(request, payload, "X-Color", headerId);
   });
   colorDelete->setMethod(HTTP_POST);
@@ -689,36 +672,35 @@ void attachPatternColorRoutes()
 
   auto *colorUpdate = new AsyncCallbackJsonWebHandler("/api/colors");
   colorUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureColorsStoreReady();
     JsonObjectConst obj = json.as<JsonObjectConst>();
     if (obj.isNull())
     {
       sendError(request, 400, F("invalid payload"));
       return;
     }
-    PF("[ColorsStore] HTTP colors/update content-type='%s' length=%d\n",
+  PF("[LightConduct] HTTP colors/update content-type='%s' length=%d\n",
        request->contentType().c_str(),
        static_cast<int>(request->contentLength()));
-    ColorsStore &store = ColorsStore::instance();
     String affected;
     String errorMessage;
-    if (!store.updateColor(obj, affected, errorMessage))
+    if (!LightConduct::updateColor(obj, affected, errorMessage))
     {
       sendError(request, 400, errorMessage.length() ? errorMessage : F("update failed"));
       return;
     }
-    String payload = store.buildColorsJson();
-    if (payload.isEmpty())
+    String payload;
+    String activeId;
+    if (!LightConduct::colorSnapshot(payload, activeId))
     {
       sendError(request, 500, F("color export failed"));
       return;
     }
     AsyncWebServerResponse *response = request->beginResponse(200, "application/json", payload);
     response->addHeader("Cache-Control", "no-store");
-    const String activeId = affected.length() ? affected : store.getActiveColorId();
-    if (!activeId.isEmpty())
+    const String headerId = affected.length() ? affected : activeId;
+    if (!headerId.isEmpty())
     {
-      response->addHeader("X-Color", activeId);
+      response->addHeader("X-Color", headerId);
     }
     request->send(response);
   });
@@ -728,10 +710,9 @@ void attachPatternColorRoutes()
   auto *previewHandler = new AsyncCallbackJsonWebHandler("/api/patterns/preview", nullptr, 4096);
   previewHandler->setMaxContentLength(2048);
   previewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureColorsStoreReady();
     String error;
     JsonVariantConst body = json;
-    if (!ColorsStore::instance().preview(body, error))
+    if (!LightConduct::previewPattern(body, error))
     {
       sendError(request, 400, error);
       return;
@@ -744,10 +725,9 @@ void attachPatternColorRoutes()
   auto *colorPreviewHandler = new AsyncCallbackJsonWebHandler("/api/colors/preview", nullptr, 2048);
   colorPreviewHandler->setMaxContentLength(1024);
   colorPreviewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    ensureColorsStoreReady();
     String error;
     JsonVariantConst body = json;
-    if (!ColorsStore::instance().previewColors(body, error))
+    if (!LightConduct::previewColor(body, error))
     {
       sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
       return;
@@ -867,8 +847,6 @@ void handleOtaStart(AsyncWebServerRequest *request)
 
 void beginWebInterface()
 {
-  ensureColorsStoreReady();
-
   server.on("/", HTTP_GET, handleRoot);
   server.on("/setBrightness", HTTP_GET, handleSetBrightness);
   server.on("/getBrightness", HTTP_GET, handleGetBrightness);

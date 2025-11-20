@@ -23,13 +23,13 @@ Web Interface
 
 Context Manager becomes the runtime brain: gathers state from the environment, normalizes it, and surfaces “what’s happening now” to the rest of the system; timer-driven updates and sensor snapshots all feed into that shared context.
 Conduct Manager is the decision layer: it consumes context plus intent inputs (user/web/etc.), applies high-level rules, and emits intents toward subsystems (audio, light, OTA) without touching hardware details itself.
-Each Policy (AudioPolicy, LightPolicy, SDPolicy, etc.) is now a focused ruleset: given a request and the current context, it enforces local constraints (quiet hours, brightness caps, playback arbitration) before delegating to the subsystem managers.
+Each Policy (AudioPolicy, LightPolicy, SDPolicy, etc.) is now a focused ruleset: given a request and the current context, it enforces local constraints (context-driven brightness caps, playback arbitration) before delegating to the subsystem managers.
 Net effect: context collects facts, conduct chooses actions, policies enforce domain-specific guardrails—clean separation that keeps subsystems modular and easier to evolve.
 
 A TimerManager slot fires and runs its callback (e.g., hourly “say time”, periodic fragment shuffle).
 Each callback raises an intent toward ConductManager (or directly queues a ContextManager refresh), never touching hardware.
 ConductManager combines the intent with the current context snapshot, then consults the relevant policy (audio/light/SD/etc.).
-The policy enforces its domain rules—quiet hours, resource availability, safety thresholds—and either rejects or forwards the request.
+The policy enforces its domain rules—resource availability, safety thresholds—and either rejects or forwards the request.
 Approved requests go to the subsystem manager (AudioManager, LightManager, …), which executes the action; rejections are logged or deferred.
 
  producers → Context → Conduct → policies → intents → consumers (audio/light/serial)
