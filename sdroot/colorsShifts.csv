@@ -97,3 +97,83 @@ isPM;colors.colorB.brightness;0.0
 isPM;colors.colorB.hue;0.0
 isPM;colors.colorB.saturation;0.0
 isPM;colors.colorB.value;0.0
+
+# ============================================================
+# SEASON SHIFTS
+# ============================================================
+# Spring: fresh greens, bright
+isSpring;colors.colorA.hue;-15.0
+isSpring;colors.colorA.saturation;10.0
+isSpring;colors.colorA.brightness;10.0
+isSpring;colors.colorB.hue;-15.0
+isSpring;colors.colorB.saturation;10.0
+isSpring;colors.colorB.brightness;10.0
+# Summer: warm yellows/oranges
+isSummer;colors.colorA.hue;15.0
+isSummer;colors.colorA.saturation;5.0
+isSummer;colors.colorA.brightness;15.0
+isSummer;colors.colorB.hue;15.0
+isSummer;colors.colorB.saturation;5.0
+isSummer;colors.colorB.brightness;15.0
+# Autumn: warm reds/oranges, slightly muted
+isAutumn;colors.colorA.hue;25.0
+isAutumn;colors.colorA.saturation;-10.0
+isAutumn;colors.colorA.brightness;-5.0
+isAutumn;colors.colorB.hue;25.0
+isAutumn;colors.colorB.saturation;-10.0
+isAutumn;colors.colorB.brightness;-5.0
+# Winter: cooler blues, dimmer
+isWinter;colors.colorA.hue;-30.0
+isWinter;colors.colorA.saturation;-15.0
+isWinter;colors.colorA.brightness;-10.0
+isWinter;colors.colorB.hue;-30.0
+isWinter;colors.colorB.saturation;-15.0
+isWinter;colors.colorB.brightness;-10.0
+
+# ============================================================
+# WEATHER/TEMPERATURE SHIFTS
+# ============================================================
+# Freezing: very cool blue tones
+isFreezing;colors.colorA.hue;-40.0
+isFreezing;colors.colorA.saturation;-20.0
+isFreezing;colors.colorB.hue;-40.0
+isFreezing;colors.colorB.saturation;-20.0
+# Cold: cool blue shift
+isCold;colors.colorA.hue;-20.0
+isCold;colors.colorA.saturation;-10.0
+isCold;colors.colorB.hue;-20.0
+isCold;colors.colorB.saturation;-10.0
+# Mild: neutral, no shift
+# Warm: warmer tones
+isWarm;colors.colorA.hue;15.0
+isWarm;colors.colorA.saturation;5.0
+isWarm;colors.colorB.hue;15.0
+isWarm;colors.colorB.saturation;5.0
+# Hot: intense warm tones
+isHot;colors.colorA.hue;30.0
+isHot;colors.colorA.saturation;15.0
+isHot;colors.colorB.hue;30.0
+isHot;colors.colorB.saturation;15.0
+
+# ============================================================
+# WEEKEND SHIFT
+# ============================================================
+# Weekend: slightly more vibrant/festive
+isWeekend;colors.colorA.saturation;10.0
+isWeekend;colors.colorA.brightness;10.0
+isWeekend;colors.colorB.saturation;10.0
+isWeekend;colors.colorB.brightness;10.0
+
+# ============================================================
+# MOON PHASE SHIFTS
+# ============================================================
+# Full Moon: brighter, slightly cooler
+isFullMoon;colors.colorA.brightness;15.0
+isFullMoon;colors.colorA.hue;-10.0
+isFullMoon;colors.colorB.brightness;15.0
+isFullMoon;colors.colorB.hue;-10.0
+# New Moon: dimmer, warmer
+isNewMoon;colors.colorA.brightness;-15.0
+isNewMoon;colors.colorA.hue;10.0
+isNewMoon;colors.colorB.brightness;-15.0
+isNewMoon;colors.colorB.hue;10.0

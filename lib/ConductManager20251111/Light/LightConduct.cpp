@@ -6,7 +6,7 @@
 #include "ColorsStore.h"
 #include "PatternStore.h"
 #include "ShiftStore.h"
-#include "TimeOfDay.h"
+#include "ContextFlags.h"
 
 namespace {
 
@@ -83,7 +83,7 @@ void LightConduct::plan() {// TODO: route light intents and policies here
     scheduleShiftTimer();
     
     // Apply shifts immediately on startup
-    uint64_t statusBits = TimeOfDay::getActiveStatusBits();
+    uint64_t statusBits = ContextFlags::getFullContextBits();
     intentApplyColorShifts(statusBits);
     
     PL("[Conduct][Plan] Light shift system initialized");
@@ -120,8 +120,8 @@ void LightConduct::animationCallback() {
 void LightConduct::shiftTimerCallback() {
     s_shiftTimerActive = false;
     
-    // Get current time-of-day status bits
-    uint64_t statusBits = TimeOfDay::getActiveStatusBits();
+    // Get full context bits (time-of-day, season, weekday, weather, moon)
+    uint64_t statusBits = ContextFlags::getFullContextBits();
     
     // Apply color shifts based on active statuses
     intentApplyColorShifts(statusBits);

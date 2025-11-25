@@ -3,7 +3,9 @@
 #include <stdint.h>
 
 // Time-of-day and context status flags (bit positions for uint64_t bitmask)
+// All flags can be combined - shifts multiply together when multiple flags active
 enum TimeStatus : uint8_t {
+    // Time-of-day flags (0-10)
     STATUS_NIGHT = 0,
     STATUS_DAWN,
     STATUS_MORNING,
@@ -15,11 +17,37 @@ enum TimeStatus : uint8_t {
     STATUS_DARK,
     STATUS_AM,
     STATUS_PM,
-    // Future expansion: seasons, weather, etc.
-    // STATUS_SPRING, STATUS_SUMMER, STATUS_AUTUMN, STATUS_WINTER,
-    // STATUS_WEEKEND, STATUS_WEEKDAY,
-    // STATUS_WARM, STATUS_COLD, STATUS_FREEZING,
-    STATUS_COUNT
+    
+    // Season flags (11-14) - based on month
+    STATUS_SPRING,      // Mar-May
+    STATUS_SUMMER,      // Jun-Aug
+    STATUS_AUTUMN,      // Sep-Nov
+    STATUS_WINTER,      // Dec-Feb
+    
+    // Weather/temperature flags (15-18) - based on outdoor temp
+    STATUS_FREEZING,    // < 0°C
+    STATUS_COLD,        // 0-10°C
+    STATUS_MILD,        // 10-20°C
+    STATUS_WARM,        // 20-30°C
+    STATUS_HOT,         // > 30°C
+    
+    // Weekday flags (20-27)
+    STATUS_MONDAY,
+    STATUS_TUESDAY,
+    STATUS_WEDNESDAY,
+    STATUS_THURSDAY,
+    STATUS_FRIDAY,
+    STATUS_SATURDAY,
+    STATUS_SUNDAY,
+    STATUS_WEEKEND,     // Sat or Sun
+    
+    // Moon phase flags (28-31) - based on lunar cycle
+    STATUS_NEW_MOON,    // 0-12.5% illumination
+    STATUS_WAXING,      // 12.5-50% (growing)
+    STATUS_FULL_MOON,   // 87.5-100% illumination
+    STATUS_WANING,      // 50-87.5% (shrinking)
+    
+    STATUS_COUNT        // Must be < 64 for uint64_t bitmask
 };
 
 // Color parameters for shift system

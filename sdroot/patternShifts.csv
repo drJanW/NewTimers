@@ -157,3 +157,62 @@ isPM;pattern.x_amp;0.0
 isPM;pattern.y_amp;0.0
 isPM;pattern.x_cycle_sec;0.0
 isPM;pattern.y_cycle_sec;0.0
+
+# ============================================================
+# SEASON PATTERN SHIFTS
+# ============================================================
+# Winter: slower, calmer animations
+isWinter;pattern.color_cycle_sec;30.0
+isWinter;pattern.bright_cycle_sec;30.0
+isWinter;pattern.gradient_speed;-20.0
+# Summer: faster, more lively
+isSummer;pattern.color_cycle_sec;-20.0
+isSummer;pattern.bright_cycle_sec;-15.0
+isSummer;pattern.gradient_speed;25.0
+isSummer;pattern.radius_osc;20.0
+# Spring: medium lively
+isSpring;pattern.color_cycle_sec;-10.0
+isSpring;pattern.gradient_speed;15.0
+# Autumn: slightly slower
+isAutumn;pattern.color_cycle_sec;15.0
+isAutumn;pattern.gradient_speed;-10.0
+
+# ============================================================
+# WEATHER PATTERN SHIFTS  
+# ============================================================
+# Freezing: very slow, minimal movement
+isFreezing;pattern.color_cycle_sec;60.0
+isFreezing;pattern.bright_cycle_sec;60.0
+isFreezing;pattern.gradient_speed;-40.0
+isFreezing;pattern.radius_osc;-30.0
+# Cold: slower
+isCold;pattern.color_cycle_sec;30.0
+isCold;pattern.gradient_speed;-20.0
+# Warm: faster
+isWarm;pattern.color_cycle_sec;-15.0
+isWarm;pattern.gradient_speed;20.0
+# Hot: fastest, most active
+isHot;pattern.color_cycle_sec;-30.0
+isHot;pattern.bright_cycle_sec;-20.0
+isHot;pattern.gradient_speed;40.0
+isHot;pattern.radius_osc;30.0
+
+# ============================================================
+# WEEKEND PATTERN SHIFTS
+# ============================================================
+# Weekend: more festive/active
+isWeekend;pattern.color_cycle_sec;-15.0
+isWeekend;pattern.gradient_speed;20.0
+isWeekend;pattern.radius_osc;15.0
+
+# ============================================================
+# MOON PHASE PATTERN SHIFTS
+# ============================================================
+# Full Moon: slightly more movement
+isFullMoon;pattern.radius;10.0
+isFullMoon;pattern.radius_osc;15.0
+isFullMoon;pattern.gradient_speed;10.0
+# New Moon: calmer, smaller
+isNewMoon;pattern.radius;-10.0
+isNewMoon;pattern.radius_osc;-15.0
+isNewMoon;pattern.gradient_speed;-15.0

@@ -31,6 +31,7 @@ bool ShiftStore::begin() {
 }
 
 bool ShiftStore::parseStatusString(const String& s, uint8_t& out) {
+    // Time-of-day flags
     if (s == "isNight")     { out = STATUS_NIGHT; return true; }
     if (s == "isDawn")      { out = STATUS_DAWN; return true; }
     if (s == "isMorning")   { out = STATUS_MORNING; return true; }
@@ -42,6 +43,37 @@ bool ShiftStore::parseStatusString(const String& s, uint8_t& out) {
     if (s == "isDark")      { out = STATUS_DARK; return true; }
     if (s == "isAM")        { out = STATUS_AM; return true; }
     if (s == "isPM")        { out = STATUS_PM; return true; }
+    
+    // Season flags
+    if (s == "isSpring")    { out = STATUS_SPRING; return true; }
+    if (s == "isSummer")    { out = STATUS_SUMMER; return true; }
+    if (s == "isAutumn")    { out = STATUS_AUTUMN; return true; }
+    if (s == "isFall")      { out = STATUS_AUTUMN; return true; }  // Alias
+    if (s == "isWinter")    { out = STATUS_WINTER; return true; }
+    
+    // Weather/temperature flags
+    if (s == "isFreezing")  { out = STATUS_FREEZING; return true; }
+    if (s == "isCold")      { out = STATUS_COLD; return true; }
+    if (s == "isMild")      { out = STATUS_MILD; return true; }
+    if (s == "isWarm")      { out = STATUS_WARM; return true; }
+    if (s == "isHot")       { out = STATUS_HOT; return true; }
+    
+    // Weekday flags
+    if (s == "isMonday")    { out = STATUS_MONDAY; return true; }
+    if (s == "isTuesday")   { out = STATUS_TUESDAY; return true; }
+    if (s == "isWednesday") { out = STATUS_WEDNESDAY; return true; }
+    if (s == "isThursday")  { out = STATUS_THURSDAY; return true; }
+    if (s == "isFriday")    { out = STATUS_FRIDAY; return true; }
+    if (s == "isSaturday")  { out = STATUS_SATURDAY; return true; }
+    if (s == "isSunday")    { out = STATUS_SUNDAY; return true; }
+    if (s == "isWeekend")   { out = STATUS_WEEKEND; return true; }
+    
+    // Moon phase flags
+    if (s == "isNewMoon")   { out = STATUS_NEW_MOON; return true; }
+    if (s == "isWaxing")    { out = STATUS_WAXING; return true; }
+    if (s == "isFullMoon")  { out = STATUS_FULL_MOON; return true; }
+    if (s == "isWaning")    { out = STATUS_WANING; return true; }
+    
     return false;
 }
 
