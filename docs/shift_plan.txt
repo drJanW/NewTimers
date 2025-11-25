@@ -1,0 +1,24 @@
+Where to Begin - Implementation Sequence
+Based on our architecture decisions, here's the logical starting order:
+
+1. Configuration First (Zero Code Impact)
+Create /config/time_shifts.csv with example shifts
+Test file readability without any code changes
+Lowest risk - can be reverted easily
+2. Policy Layer Foundation
+Create TimeOfDayPolicy class (empty shell)
+Create ParameterShiftPolicy interface
+Wire into existing Policy infrastructure
+Architecture compliant from the start
+3. Status Detection in TodayContext
+Extend TodayContext with time-of-day booleans
+Add status calculation logic using sunrise/sunset
+Core functionality - enables everything else
+4. Shift Application Infrastructure
+Create shift application methods in ColorsStore
+Test with hardcoded shifts first
+Proven approach before CSV integration
+5. Full Integration
+Connect CSV parsing to shift application
+Wire timer triggering in Policy layer
+Final integration - everything working together

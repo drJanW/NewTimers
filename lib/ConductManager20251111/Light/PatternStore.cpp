@@ -400,6 +400,7 @@ bool PatternStore::loadFromSD() {
         PatternEntry entry;
         entry.id = columns[0];
         entry.label = columns[1];
+        PF("[PatternStore] CSV row id='%s' label='%s'\n", entry.id.c_str(), entry.label.c_str());
         if (entry.id.isEmpty()) {
             continue;
         }

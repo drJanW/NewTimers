@@ -18,6 +18,8 @@
 // goal 10:!! RTC on i2c
 // goal 11: watchdog
 // goal 12: error handling/alarm
+// goal 13: context/conduct mager 
+
 
 void setup()
 {
@@ -26,7 +28,7 @@ void setup()
     {
         delay(10);
     }
-    PL("\n[Main] Version 11_20_10_B"); // Version MM_DD_XX_A, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation)
+    PL("\n[Main] Version 11_25_00_C"); // Version MM_DD_XX_A, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation)
                                     // version 10_30_02_C means : on oct 30, we had (at least) 3 attempts to get the second goal completed
 
     otaBootDispatcher();

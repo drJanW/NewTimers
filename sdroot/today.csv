@@ -1,0 +1,9 @@
+period_id;priority;active_from;active_to;light_brightness;light_colorset;light_pattern_params;audio_volume;audio_theme_box;audio_tts
+isNight;90;00:00;startmorning;15;calm_blue;fade_width=8,speed=1;40;quiet_box;tts_off
+isDawn;80;sunrise-01:00;sunrise+01:00;35;warm_pulse;fade_width=12,speed=2;55;sunrise_box;mellow_greeting
+isMorning;70;startmorning;12:00;60;warm_day;speed=4;65;daytime_box;news_digest
+isDay;60;startday;endday;75;daylight_blend;speed=5;70;daytime_box;default
+isAfternoon;50;12:00;endday;70;warm_day;speed=4;65;daytime_box;default
+isDusk;40;sunset-01:00;sunset+01:00;25;sunset_glow;fade_width=10,speed=2;45;evening_box;quiet
+isEvening;30;endafternoon;24:00;30;evening_blend;fade_width=14,speed=1;50;evening_box;evening_summary
+isDark;20;sunset+01:00;sunrise+01:00;10;night_glow;fade_width=16,speed=1;35;quiet_box;tts_off

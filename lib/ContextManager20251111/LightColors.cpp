@@ -184,7 +184,7 @@ bool LightColorStore::load() {
         if (color.label.isEmpty() || rgb1.isEmpty() || rgb2.isEmpty()) {
             continue;
         }
-        if (!HexToRgb(rgb1, color.primary) || !HexToRgb(rgb2, color.secondary)) {
+        if (!HexToRgb(rgb1, color.colorA) || !HexToRgb(rgb2, color.colorB)) {
             PF("[LightColorStore] invalid hex colors for id=%u\n", static_cast<unsigned>(color.id));
             continue;
         }

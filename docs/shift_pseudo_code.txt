@@ -1,0 +1,109 @@
+Here’s an extended, modular pseudocode breakdown, showing how each major file/module would participate in the multi-input, multi-output adjustment system:
+
+---
+
+### TodayContext.cpp/h
+```
+// Called periodically
+function updateActiveQualifications():
+    activeQualifications = []
+    IF isDawn(): activeQualifications.append("dawn")
+    IF isNight(): activeQualifications.append("night")
+    IF isWinter(): activeQualifications.append("winter")
+    // ...other checks
+    return activeQualifications
+```
+
+---
+
+### ContextManager.cpp/h
+```
+// Aggregates context from TodayContext and other sources
+function getContext():
+    timeQualifications = TodayContext.updateActiveQualifications()
+    sensorQualifications = getSensorStates()
+    userQualifications = getUserOverrides()
+    return merge(timeQualifications, sensorQualifications, userQualifications)
+```
+
+---
+
+### ConductManager.cpp/h
+```
+// Orchestrates which shifts to apply
+function computeShifts():
+    activeInputs = ContextManager.getContext()
+    shifts = []
+    FOR input IN activeInputs:
+        shifts.append(getShiftParametersFor(input))
+    return shifts
+
+function applyShiftsToAllModules():
+    shifts = computeShifts()
+    ColorsStore.applyShifts(shifts)
+    PatternManager.applyShifts(shifts)
+    AudioManager.applyShifts(shifts)
+```
+
+---
+
+### ColorsStore.cpp/h
+```
+// Applies color-related shifts
+function applyShifts(shifts):
+    FOR colorParam IN colorParameters:
+        baseValue = colorParam.getBaseValue()
+        adjustedValue = baseValue
+        FOR shift IN shifts:
+            IF shift.affects("color"):
+                adjustedValue = colorShiftFunction(adjustedValue, shift)
+        colorParam.setValue(adjustedValue)
+```
+
+---
+
+### PatternManager.cpp/h
+```
+// Applies pattern-related shifts
+function applyShifts(shifts):
+    FOR patternParam IN patternParameters:
+        baseValue = patternParam.getBaseValue()
+        adjustedValue = baseValue
+        FOR shift IN shifts:
+            IF shift.affects("pattern"):
+                adjustedValue = patternShiftFunction(adjustedValue, shift)
+        patternParam.setValue(adjustedValue)
+```
+
+---
+
+### AudioManager.cpp/h
+```
+// Applies audio-related shifts
+function applyShifts(shifts):
+    FOR audioParam IN audioParameters:
+        baseValue = audioParam.getBaseValue()
+        adjustedValue = baseValue
+        FOR shift IN shifts:
+            IF shift.affects("audio"):
+                adjustedValue = audioShiftFunction(adjustedValue, shift)
+        audioParam.setValue(adjustedValue)
+```
+
+---
+
+### Configuration Files (CSV/JSON/YAML)
+```
+qualification, parameter, shiftType, value
+dawn, color, hueShift, +10
+night, brightness, scale, 0.25
+winter, patternSpeed, scale, 0.8
+// ...etc.
+```
+
+---
+
+**Summary:**  
+- Each module (TodayContext, ContextManager, ConductManager, ColorsStore, PatternManager, AudioManager) has a clear role and function for handling qualifications and applying shifts.
+- The system is pipelined: context is gathered, shifts are computed, and each module applies relevant adjustments to its parameters.
+- Configuration files define what shifts to apply for each qualification and parameter.

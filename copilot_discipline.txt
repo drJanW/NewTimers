@@ -30,9 +30,13 @@ use it consistently in code, comments, and docs. Use the following replacements
 to keep vocabulary aligned:
 2.2.1 cadence → interval
 2.2.2 palette → color set
+2.2.2.1 primary/secondary → colorA/colorB
 2.2.3 subsystem → module (or the specific manager name)
 2.2.4 period → interval
 2.2.5 snapshot → read (or "state read" when referencing persistent dumps)
+2.2.6 architecture → keep the word "architecture" (or the concrete layer name);
+	never substitute phrases such as "layered conduct scaffolding" or other
+	poetic aliases.
 2.3 Preserve the historical clock-sync terminology by keeping the legacy
 `isTimeFetched` naming pattern and refusing phrases such as "authoritative
 time".

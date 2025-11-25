@@ -1,82 +1,71 @@
 ===========================================================
-SYSTEM ARCHITECTURE OVERVIEW
+SYSTEM ARCHITECTURE OVERVIEW (2025)
 ===========================================================
 
 INPUT SOURCES
 -------------
-- Web Interface (HTTP routes, sliders, buttons)
-- Timers (scheduled events via TimerManager)
-- Sensors (lux, temp, voltage, sunrise/sunset)
-- OTA triggers (arm/confirm)
-- Manual hardware inputs (buttons, GPIO)
+- Web interface routes (HTTP intents)
+- TimerManager callbacks
+- Calendar/context refresh
+- Sensors (distance, lux, temp, voltage)
+- OTA arming/confirm signals
+- Manual GPIO inputs
+
+STACK SUMMARY
+-------------
+Input → Boot → Conduct → Director → Policy → Manager → Hardware
 
 FLOW OF CONTROL
----------------
-1. Input source generates an INTENT
-   (e.g. "play fragment", "say time", "set brightness", "arm OTA")
-
-2. ConductManager receives the intent
-   - Central orchestrator
-   - Applies context profiles 
-   - Delegates to the appropriate Policy
-
-3. Policy layer enforces domain rules
-   - AudioPolicy
-     * TTS > fragment
-     * Reject fragment if busy
-  
-   - LightPolicy
-  
-  
-   - SDPolicy
-     * Weighted random fragment selection
-     * Score-based arbitration
-   - OTAPolicy (tiny)
-     * Only allow OTA inside armed window
-
-4. Manager layer executes
-   - AudioManager
-     * Owns decoder, fades, gain
-     * State machine: Idle / PlayingFragment / PlayingTTS / FadingOut
-   - LightManager
-     * Owns LED state, brightness, patterns
-   - SDManager
-     * Owns SD index, file access
-   - OTAManager
-     * Owns OTA arming, confirmation, update streaming
-   - WiFiManager
-     * Owns connection, retries
-   - SensorManager
-     * Owns temp, lux, voltage
-   - TimerManager
-     * Cooperative scheduler for callbacks
-
-5. Hardware drivers
-   - I²S audio output
-   - FastLED / WS2812B LEDs
-   - SD card SPI
-   - I²C sensors
-   - GPIO pins
-
-DATA FLOW
----------
-- SpeakManager: builds phrases (time/date/number) → ConductManager → AudioPolicy → AudioManager
-- WebInterfaceManager: parses HTTP → ConductManager intents
-- TimerManager: scheduled callbacks → ConductManager intents
-- SensorManager: updates values → ConductManager may trigger actions (e.g. lights on at sunset)
-
-STATE MANAGEMENT
 ----------------
-- No global flags in Globals.h
-- Each Manager owns its own state (busy flags, levels, values)
-- ConductManager queries Managers for state, never pokes globals
-- Policies enforce invariants before delegating to Managers
+1. Input source generates an intent
+  (e.g. "play fragment", "say time", "silence for 2h", "arm OTA")
+
+2. **Boot layer** (ConductBoot, BootMaster, *Boot.cpp)
+   - Registers timers, seeds RNG/clock, hands pointers into conductors.
+   - Logs readiness using `PL("[Conduct][Plan] ...")`.
+
+3. **Conduct layer** (ConductManager, AudioConduct, LightConduct, ...)
+   - Receives intents, owns timer lifecycles, invokes directors, retries on failure.
+   - Only this layer calls `TimerManager::restart()` or `TimerManager::cancel()`.
+
+4. **Director layer** (*Director.cpp)
+   - Pulls context (calendar rows, SD weights, sensor caches) and assembles a plan.
+   - Directors never touch hardware or timers; they simply feed policies.
+
+5. **Policy layer** (*Policy.cpp)
+   - Arbitrates requests, clamps values, chooses intervals, exposes helper queries.
+   - Returns either APPROVED + params or REJECTED + reason. No side effects.
+
+6. **Manager layer** (AudioManager, LightManager, SDManager, OTAManager, WiFiManager, SensorManager)
+   - Owns runtime state machines and is the only code that talks to drivers (FastLED, I2S, SPI, Wi-Fi, etc.).
+
+7. **Hardware drivers**
+   - Perform the physical work (audio output, LEDs, SD, sensors, GPIO).
+
+LAYER PLAYBOOK
+--------------
+- Boot prepares dependencies → Conduct sequences work → Director gathers facts → Policy decides → Manager executes.
+- Stick to this order for _every_ subsystem. No shortcuts, even for "tiny" features.
+
+EXAMPLE CHAINS
+--------------
+- **Web silence control**: Web intent → WebConduct → WebDirector (parse duration + context) → WebPolicy (approve clamp) → AudioConduct applies via AudioPolicy/AudioManager.
+- **Calendar default lights**: Calendar tick → CalendarConduct (no show) → LightDirector builds deterministic `LightShowParams` → LightPolicy approves → LightConduct arms timers and calls LightManager.
+- **Distance PCM**: SensorsConduct caches measurements → AudioConduct schedules timer → AudioDirector picks clip → AudioPolicy approves volume/interval → AudioManager plays PCM.
+
+STATE + LOGGING
+---------------
+- Managers own all mutable state; conduct/policy/director query through getters only.
+- No globals in `Globals.h` for behaviour flags.
+- Log every boot/conduct action with `[Conduct][Plan]` so bring-up order stays auditable.
+- Directors/policies log under their own tags when rejecting or mutating requests.
 
 ===========================================================
 SUMMARY
 ===========================================================
-- ConductManager = WHEN and WHY
-- Policies       = WHAT is allowed
-- Managers       = HOW it is executed
-- Hardware       = Actual effect in the world
+- Conduct = WHEN + sequencing
+- Director = WHAT data is available
+- Policy = WHAT is allowed
+- Manager = HOW it executes
+- Hardware = Physical effect
 ===========================================================

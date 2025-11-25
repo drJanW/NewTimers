@@ -1,16 +1,46 @@
-# Conduct Manager Architecture Notes
+# Conduct Manager Architecture
 
-This module wires together end-to-end input→output chains. To keep responsibilities clear:
+Every subsystem that lives under `lib/ConductManager20251111/**` follows the same stack so we can iterate on behaviour without touching boot code, timers, or hardware drivers. The stack is strict—skip a layer and you get bugs that are impossible to reason about later.
 
-- **Sensor side** modules (e.g. `SensorManager`, `SensorsPolicy`) acquire and normalise raw values only. They must not decide how the system reacts.
-- **Conduct** modules schedule work and pass normalised signals onward. They coordinate modules but avoid embedding behavioural rules.
-- **Output policies** (e.g. `HeartbeatPolicy`) own the response logic for a specific actuator. They translate high-level cues into concrete actions such as LED interval or brightness profiles.
+## Layer Contract
 
-For any new chain:
+| Layer | Responsibility | Typical Files |
+| --- | --- | --- |
+| **Boot** | Register timers, seed caches, hand off any pointers that conduct/policy will need later. Boot files run exactly once during system bring-up. | `AudioBoot.*`, `LightBoot.*`, `ConductBoot.*`, `BootMaster.*` |
+| **Conduct** | Orchestrate intents. They own timer callbacks, subscribe to manager signals, and decide which director to invoke. Conduct code may _sequence_ work but must not invent behaviour. | `*Conduct.*`, `ConductManager.*` |
+| **Director** | Translate context + storage into actionable requests. Directors query managers (state, SD indices, calendar rows) and shape the payload that policies evaluate. They never touch hardware APIs directly. | `*Director.*` |
+| **Policy** | Enforce rules for a single domain (audio, light, OTA, etc.). Policies approve/deny requests, clamp levels, pick intervals, and expose helpers such as “distance playback volume”. They cannot schedule timers or manipulate global singletons. | `*Policy.*` |
+| **Manager** | Own hardware drivers and runtime state. Managers expose query/update APIs and keep the state machines honest. | `AudioManager.*`, `LightManager.*`, `SDManager.*`, ... |
+| **Hardware** | Actual drivers (I²S, FastLED, SPI, GPIO). Only managers touch these.
 
-1. Capture raw input in the appropriate manager.
-2. Normalise or filter it in the matching input policy.
-3. Route the processed value through the conduct coordinator.
-4. Apply the behavioural rules inside a dedicated output policy that drives the actual hardware.
+## Intent Flow
 
-Following this flow keeps input processing, orchestration, and output behaviour isolated, so we can iterate on the “feel” of an output without touching sensor plumbing or timer wiring.
+1. An input source (web, timers, calendar, sensors) raises an intent via `ConductManager::intent*` or a subsystem-specific entry point.
+2. The owning **Conduct** module validates prerequisites (boot complete, timer slots free) and invokes the matching **Director**.
+3. The **Director** builds a request composed of current context (calendar themes, distance cache, OTA arm window, etc.).
+4. The **Policy** evaluates that request, returning either approval plus concrete parameters or a rejection reason.
+5. If approved, the **Conduct** code asks the appropriate **Manager** to execute. Managers update hardware via their drivers and report state back up the stack.
+
+## Boot Discipline
+
+- `BootMaster` coordinates shared start-up (clock seeding, fallback timers) and hands off to `ConductBoot` once common services are alive.
+- Each subsystem boot (`AudioBoot`, `LightBoot`, etc.) is responsible for: registering timers with `TimerManager`, caching pointers (e.g. PCM clips), and logging readiness via `PL("[Conduct][Plan] ...")`.
+- Boot layers must never start behaviour directly. They only prepare the scaffolding so that `ConductManager::update()` and the subsystem conductors can run deterministically.
+
+## Logging + Telemetry Rules
+
+- Use `PL("[Conduct][Plan] ...")` for lifecycle events and conductor state changes so the boot log shows every registration in order.
+- Directors and policies log through `[AudioDirector]`, `[LightPolicy]`, etc. Keep rejection reasons explicit so conductors can surface them upstream without guessing.
+- Timer churn stays visible by logging whenever a conductor parks or re-arms a slot (especially for distance audio and OTA windows).
+
+## Do / Don’t Checklist
+
+- ✅ Conduct owns timers, sequencing, retries, and is the only layer that calls `TimerManager::restart`.
+- ✅ Directors read data (calendar CSV, SD index, sensors) and return structured plans. They never make policy decisions.
+- ✅ Policies accept a plan and spit back either a green-light (with concrete numbers) or “no” with a reason. No side effects besides cached clamp state.
+- ✅ Managers expose explicit APIs for every action; do not reach into singletons or globals directly from conduct/policy code.
+- ❌ No layer except managers talks to hardware (`FastLED`, `I2S`, `SPI`, raw GPIO).
+- ❌ Policies never schedule timers, mutate manager state directly, or call other policies.
+- ❌ Conductors do not normalise raw sensor readings—that belongs to the relevant input policy/manager.
+
+Keeping these contracts tight lets us replace a policy, director, or even an entire subsystem without rewriting the rest of the pipeline.

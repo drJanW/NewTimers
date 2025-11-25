@@ -88,7 +88,8 @@ String ColorsStore::buildPatternsJson() const {
 }
 
 String ColorsStore::buildColorsJson() const {
-    DynamicJsonDocument doc(4096);
+    // 40+ color entries need generous heap; reserve 12 KB to avoid truncation/empty JSON
+    DynamicJsonDocument doc(12288);
     doc["schema"] = kSchemaVersion;
     doc["active_color"] = activeColorId_;
     JsonArray arr = doc.createNestedArray("colors");
@@ -99,10 +100,10 @@ String ColorsStore::buildColorsJson() const {
             obj["label"] = entry.label;
         }
         char buff[8];
-        snprintf(buff, sizeof(buff), "#%02X%02X%02X", entry.primary.r, entry.primary.g, entry.primary.b);
-        obj["rgb1_hex"] = buff;
-        snprintf(buff, sizeof(buff), "#%02X%02X%02X", entry.secondary.r, entry.secondary.g, entry.secondary.b);
-        obj["rgb2_hex"] = buff;
+        snprintf(buff, sizeof(buff), "#%02X%02X%02X", entry.colorA.r, entry.colorA.g, entry.colorA.b);
+        obj["colorA_hex"] = buff;
+        snprintf(buff, sizeof(buff), "#%02X%02X%02X", entry.colorB.r, entry.colorB.g, entry.colorB.b);
+        obj["colorB_hex"] = buff;
     }
     String out;
     serializeJson(doc, out);
@@ -194,12 +195,13 @@ bool ColorsStore::updateColor(JsonVariantConst body, String& affectedId, String&
     String rawBody;
     serializeJson(body, rawBody);
     PF("[ColorsStore] updateColor payload=%s\n", rawBody.c_str());
-    CRGB primary, secondary;
-    JsonVariantConst colorVariant = obj;
-    if (obj.containsKey("color")) {
-        colorVariant = obj["color"];
+    CRGB colorA;
+    CRGB colorB;
+    JsonVariantConst colorVariant = obj["color"];
+    if (colorVariant.isNull()) {
+        colorVariant = obj;
     }
-    if (!parseColorPayload(colorVariant, primary, secondary, errorMessage)) {
+    if (!parseColorPayload(colorVariant, colorA, colorB, errorMessage)) {
         return false;
     }
     JsonObjectConst colorObj = colorVariant.as<JsonObjectConst>();
@@ -207,9 +209,18 @@ bool ColorsStore::updateColor(JsonVariantConst body, String& affectedId, String&
     if (label.isEmpty() && !colorObj.isNull() && colorObj.containsKey("label")) {
         label = colorObj["label"].as<String>();
     }
+    const bool labelKeyPresent = obj.containsKey("label") || (!colorObj.isNull() && colorObj.containsKey("label"));
     if (label.length() > 48) {
         label = label.substring(0, 48);
     }
+    sanitizeLabel(label);
+    // Label guard disabled: allow updates without label (legacy clients)
+    // if (!labelKeyPresent || label.isEmpty()) {
+    //     errorMessage = F("label required");
+    //     const String logId = obj["id"].as<String>();
+    //     PF("[ColorsStore] updateColor reject: missing label for id=%s\n", logId.c_str());
+    //     return false;
+    // }
     bool select = obj["select"].as<bool>();
 
     auto resolveId = [&]() -> String {
@@ -227,6 +238,8 @@ bool ColorsStore::updateColor(JsonVariantConst body, String& affectedId, String&
 
     const String resolvedId = resolveId();
 
+    bool shouldApply = false;
+
     if (!resolvedId.isEmpty()) {
         String id = resolvedId;
         ColorEntry* existing = findColor(id);
@@ -234,23 +247,31 @@ bool ColorsStore::updateColor(JsonVariantConst body, String& affectedId, String&
             errorMessage = F("color not found");
             return false;
         }
-        existing->primary = primary;
-        existing->secondary = secondary;
+        existing->colorA = colorA;
+        existing->colorB = colorB;
         existing->label = label;
+        ensureLabelForId(existing->id, existing->label);
         affectedId = existing->id;
         if (select) {
             activeColorId_ = existing->id;
+            shouldApply = true;
+        } else if (activeColorId_ == existing->id) {
+            shouldApply = true;
+        }
+        if (select) {
         }
     } else {
         ColorEntry entry;
         entry.id = generateColorId();
         entry.label = label;
-        entry.primary = primary;
-        entry.secondary = secondary;
+        ensureLabelForId(entry.id, entry.label);
+        entry.colorA = colorA;
+        entry.colorB = colorB;
         colors_.push_back(entry);
         affectedId = entry.id;
         if (select || activeColorId_.isEmpty()) {
             activeColorId_ = entry.id;
+            shouldApply = true;
         }
     }
 
@@ -258,7 +279,9 @@ bool ColorsStore::updateColor(JsonVariantConst body, String& affectedId, String&
         errorMessage = F("write failed");
         return false;
     }
-    applyActiveToLights();
+    if (shouldApply) {
+        applyActiveToLights();
+    }
     return true;
 }
 
@@ -326,9 +349,9 @@ bool ColorsStore::preview(JsonVariantConst body, String& errorMessage) {
            errorMessage.isEmpty() ? "<no message>" : errorMessage.c_str());
         return false;
     }
-    CRGB primary;
-    CRGB secondary;
-    if (!parseColorPayload(colorVariant, primary, secondary, errorMessage)) {
+    CRGB colorA;
+    CRGB colorB;
+    if (!parseColorPayload(colorVariant, colorA, colorB, errorMessage)) {
         PF("[ColorsStore] preview reject: color parse failed: %s\n",
            errorMessage.isEmpty() ? "<no message>" : errorMessage.c_str());
         return false;
@@ -347,10 +370,10 @@ bool ColorsStore::preview(JsonVariantConst body, String& errorMessage) {
        colorJson.c_str());
 
     previewBackupParams_ = params;
-    previewBackupColorA_ = primary;
-    previewBackupColorB_ = secondary;
-    params.RGB1 = primary;
-    params.RGB2 = secondary;
+    previewBackupColorA_ = colorA;
+    previewBackupColorB_ = colorB;
+    params.RGB1 = colorA;
+    params.RGB2 = colorB;
     PlayLightShow(params);
     previewActive_ = true;
     PF("[ColorsStore] preview applied\n");
@@ -373,10 +396,13 @@ bool ColorsStore::previewColors(JsonVariantConst body, String& errorMessage)
         return false;
     }
 
-    JsonVariantConst colorVariant = obj.containsKey("color") ? obj["color"] : body;
-    CRGB primary;
-    CRGB secondary;
-    if (!parseColorPayload(colorVariant, primary, secondary, errorMessage))
+    JsonVariantConst colorVariant = obj["color"];
+    if (colorVariant.isNull()) {
+        colorVariant = body;
+    }
+    CRGB colorA;
+    CRGB colorB;
+    if (!parseColorPayload(colorVariant, colorA, colorB, errorMessage))
     {
         PF("[ColorsStore] previewColors reject: color parse failed: %s\n",
            errorMessage.isEmpty() ? "<no message>" : errorMessage.c_str());
@@ -393,10 +419,10 @@ bool ColorsStore::previewColors(JsonVariantConst body, String& errorMessage)
        colorJson.c_str());
 
     previewBackupParams_ = params;
-    previewBackupColorA_ = primary;
-    previewBackupColorB_ = secondary;
-    params.RGB1 = primary;
-    params.RGB2 = secondary;
+    previewBackupColorA_ = colorA;
+    previewBackupColorB_ = colorB;
+    params.RGB1 = colorA;
+    params.RGB2 = colorB;
     PlayLightShow(params);
     previewActive_ = true;
     PF("[ColorsStore] previewColors applied\n");
@@ -464,12 +490,15 @@ bool ColorsStore::loadColorsFromSD() {
         ColorEntry entry;
         entry.id = columns[0];
         entry.label = columns[1];
+        PF("[ColorsStore] CSV row id='%s' label='%s'\n", entry.id.c_str(), entry.label.c_str());
+        sanitizeLabel(entry.label);
+        ensureLabelForId(entry.id, entry.label);
         const String rgb1 = columns[2];
         const String rgb2 = columns[3];
         if (entry.id.isEmpty() || rgb1.isEmpty() || rgb2.isEmpty()) {
             continue;
         }
-        if (!parseHexColor(rgb1, entry.primary) || !parseHexColor(rgb2, entry.secondary)) {
+        if (!parseHexColor(rgb1, entry.colorA) || !parseHexColor(rgb2, entry.colorB)) {
             PF("[ColorsStore] invalid hex in CSV id=%s\n", entry.id.c_str());
             continue;
         }
@@ -488,8 +517,8 @@ void ColorsStore::loadDefaultColors() {
         ColorEntry entry;
         entry.id = src.id;
         entry.label = src.label;
-        entry.primary = toCRGB(src.rgb1);
-        entry.secondary = toCRGB(src.rgb2);
+        entry.colorA = toCRGB(src.rgb1);
+        entry.colorB = toCRGB(src.rgb2);
         colors_.push_back(entry);
     }
 }
@@ -520,11 +549,11 @@ bool ColorsStore::saveColorsToSD() const {
         file.print(entry.label);
         file.print(';');
         char buff[7];
-        snprintf(buff, sizeof(buff), "%02X%02X%02X", entry.primary.r, entry.primary.g, entry.primary.b);
+        snprintf(buff, sizeof(buff), "%02X%02X%02X", entry.colorA.r, entry.colorA.g, entry.colorA.b);
         file.print('#');
         file.print(buff);
         file.print(';');
-        snprintf(buff, sizeof(buff), "%02X%02X%02X", entry.secondary.r, entry.secondary.g, entry.secondary.b);
+        snprintf(buff, sizeof(buff), "%02X%02X%02X", entry.colorB.r, entry.colorB.g, entry.colorB.b);
         file.print('#');
         file.print(buff);
         file.println();
@@ -561,6 +590,35 @@ bool ColorsStore::parseHexColor(const String& hex, CRGB& color) {
     return true;
 }
 
+void ColorsStore::sanitizeLabel(String& label) {
+    label.trim();
+    if (label.equalsIgnoreCase(F("null"))) {
+        label.clear();
+    }
+}
+
+void ColorsStore::ensureLabelForId(const String& id, String& label) {
+    label.trim();
+    if (!label.isEmpty()) {
+        return;
+    }
+    const String fallback = lookupDefaultLabel(id);
+    if (!fallback.isEmpty()) {
+        label = fallback;
+    } else if (!id.isEmpty()) {
+        label = id;
+    }
+}
+
+String ColorsStore::lookupDefaultLabel(const String& id) {
+    for (const auto& color : kDefaultColors) {
+        if (id.equals(color.id)) {
+            return String(color.label);
+        }
+    }
+    return String();
+}
+
 bool ColorsStore::parseColorPayload(JsonVariantConst src, CRGB& a, CRGB& b, String& errorMessage) {
     JsonObjectConst obj = src.as<JsonObjectConst>();
     if (obj.isNull()) {
@@ -568,17 +626,29 @@ bool ColorsStore::parseColorPayload(JsonVariantConst src, CRGB& a, CRGB& b, Stri
         return false;
     }
 
-    String rgb1 = obj["rgb1_hex"].as<String>();
-    String rgb2 = obj["rgb2_hex"].as<String>();
+    auto readColorHex = [&](const char* hexKey,
+                            const char* plainKey,
+                            const char* legacyHexKey,
+                            const char* legacyPlainKey) -> String {
+        if (hexKey && obj.containsKey(hexKey)) {
+            return obj[hexKey].as<String>();
+        }
+        if (plainKey && obj.containsKey(plainKey)) {
+            return obj[plainKey].as<String>();
+        }
+        if (legacyHexKey && obj.containsKey(legacyHexKey)) {
+            return obj[legacyHexKey].as<String>();
+        }
+        if (legacyPlainKey && obj.containsKey(legacyPlainKey)) {
+            return obj[legacyPlainKey].as<String>();
+        }
+        return String();
+    };
 
-    if (rgb1.isEmpty() && obj.containsKey("primary")) {
-        rgb1 = obj["primary"].as<String>();
-    }
-    if (rgb2.isEmpty() && obj.containsKey("secondary")) {
-        rgb2 = obj["secondary"].as<String>();
-    }
+    const String colorAHex = readColorHex("colorA_hex", "colorA", "rgb1_hex", "primary");
+    const String colorBHex = readColorHex("colorB_hex", "colorB", "rgb2_hex", "secondary");
 
-    if (!parseHexColor(rgb1, a) || !parseHexColor(rgb2, b)) {
+    if (!parseHexColor(colorAHex, a) || !parseHexColor(colorBHex, b)) {
         errorMessage = F("bad color");
         return false;
     }
@@ -641,11 +711,11 @@ void ColorsStore::applyActiveToLights() {
     }
 
     if (color) {
-        params.RGB1 = color->primary;
-        params.RGB2 = color->secondary;
+        params.RGB1 = color->colorA;
+        params.RGB2 = color->colorB;
     } else if (fallbackColor) {
-        params.RGB1 = fallbackColor->primary;
-        params.RGB2 = fallbackColor->secondary;
+        params.RGB1 = fallbackColor->colorA;
+        params.RGB2 = fallbackColor->colorB;
     } else {
         params.RGB1 = toCRGB(kDefaultColors[0].rgb1);
         params.RGB2 = toCRGB(kDefaultColors[0].rgb2);
@@ -657,5 +727,84 @@ void ColorsStore::applyActiveToLights() {
        params.RGB1.r, params.RGB1.g, params.RGB1.b,
        params.RGB2.r, params.RGB2.g, params.RGB2.b);
     PlayLightShow(params);
+}
+
+// Color shifting functions for dynamic adjustment
+CRGB colorShiftHSV(const CRGB &oldRGB,
+                   int hueShift,        // + = vooruit op hue-cirkel, − = terug
+                   int satShift,        // + = meer kleur, − = richting wit
+                   int valShift,        // + = helderder, − = donkerder
+                   int whiteShift)      // extra wit = saturation omlaag
+{
+    // Convert RGB → HSV (use approx variant to avoid unavailable helper)
+    CHSV hsv=rgb2hsv_approximate(oldRGB);
+
+    // 1. Hue shift (wrap automatisch in uint8)
+    hsv.h += hueShift;
+
+    // 2. Saturation shift
+    if (satShift >= 0)
+        hsv.s = qadd8(hsv.s, (uint8_t)satShift);
+    else
+        hsv.s = qsub8(hsv.s, (uint8_t)(-satShift));
+
+    // 3. Value shift
+    if (valShift >= 0)
+        hsv.v = qadd8(hsv.v, (uint8_t)valShift);
+    else
+        hsv.v = qsub8(hsv.v, (uint8_t)(-valShift));
+
+    // 4. White-shift = saturation omlaag
+    if (whiteShift != 0) {
+        if (whiteShift > 0)
+            hsv.s = qsub8(hsv.s, (uint8_t)whiteShift);
+        else
+            hsv.s = qadd8(hsv.s, (uint8_t)(-whiteShift));
+    }
+
+    return CRGB(hsv);
+}
+
+CRGB colorShiftRGB(const CRGB &oldRGB,
+                int redShift,
+                int greenShift,
+                int blueShift,
+                int whiteShift)
+{
+    uint8_t r = oldRGB.r;
+    uint8_t g = oldRGB.g;
+    uint8_t b = oldRGB.b;
+
+    // R-shift
+    r = (redShift >= 0)
+        ? qadd8(r, (uint8_t)redShift)
+        : qsub8(r, (uint8_t)(-redShift));
+
+    // G-shift
+    g = (greenShift >= 0)
+        ? qadd8(g, (uint8_t)greenShift)
+        : qsub8(g, (uint8_t)(-greenShift));
+
+    // B-shift
+    b = (blueShift >= 0)
+        ? qadd8(b, (uint8_t)blueShift)
+        : qsub8(b, (uint8_t)(-blueShift));
+
+    // White-shift = tegelijk alle kanalen
+    if (whiteShift != 0) {
+        if (whiteShift > 0) {
+            uint8_t w = (uint8_t)whiteShift;
+            r = qadd8(r, w);
+            g = qadd8(g, w);
+            b = qadd8(b, w);
+        } else {
+            uint8_t w = (uint8_t)(-whiteShift);
+            r = qsub8(r, w);
+            g = qsub8(g, w);
+            b = qsub8(b, w);
+        }
+    }
+
+    return CRGB(r, g, b);
 }
 

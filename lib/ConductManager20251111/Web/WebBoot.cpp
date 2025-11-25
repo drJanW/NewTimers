@@ -8,4 +8,5 @@ void WebBoot::plan() {
     setWebInterfaceActive(true);
     PL("[Conduct][Plan] Web interface initialized");
     WebPolicy::configure();
+    PL("\n================ WEB UI READY ================\n");
 }

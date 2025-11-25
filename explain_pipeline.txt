@@ -1,0 +1,26 @@
+# Pipeline for Multiple-Shift Function Input Parameters
+
+## 1. TodayContext
+- Computes which qualifications (periods/bands) are currently active (e.g., dawn, night, special event).
+- Provides time-based context and boolean flags for each period.
+
+## 2. ConductManager
+- Acts as the high-level orchestrator.
+- Receives context from TodayContext and other sources (sensors, user input).
+- Decides which policies or shifts should be applied.
+- Manages intent routing.
+
+## 3. ContextManager
+- Aggregates additional context (environmental, user, system state).
+- Helps resolve conflicts or priorities between overlapping qualifications.
+
+## 4. Pipeline Flow
+1. TodayContext computes active periods and exposes them (e.g., `isDawn`, `isNight`).
+2. ConductManager receives these flags, combines them with other context (from ContextManager), and determines which shifts to apply.
+3. ConductManager calls the multiple-shift-function in ColorsStore (and other modules), passing a list of active qualifications and their associated shift parameters.
+4. ColorsStore applies all relevant shifts to the lightshow/pattern parameters.
+
+## Summary
+- Input parameters for the multiple-shift-function are pipelined from TodayContext (time bands), possibly merged with ContextManager (other context), and routed by ConductManager (policy/intent manager) to ColorsStore (where the actual shifts are applied).
+
+This modular architecture keeps the system maintainable, transparent, and flexible for future expansion.

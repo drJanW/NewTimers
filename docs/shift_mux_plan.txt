@@ -1,0 +1,89 @@
+Shift/Mux Implementation Plan
+=============================
+
+Purpose
+-------
+Link the time-of-day qualifications to concrete color and pattern adjustments using the CSV tables (`colorsShifts.csv`, `patternShifts.csv`) while keeping the Conduct/Policy architecture intact.
+
+Pseudocode Overview
+-------------------
+
+```
+function periodicShiftUpdateTimerTick():
+    // 1. Gather active qualifications
+    activeQuals = TodayContext.updateActiveQualifications()
+    activeQuals += ContextManager.getOtherQualifications()
+
+    // 2. Translate qualifications into shift rows
+    colorShiftRows = ColorShiftTable.lookupRows(activeQuals)
+    patternShiftRows = PatternShiftTable.lookupRows(activeQuals)
+
+    // 3. Aggregate shifts per parameter (mux)
+    colorMux = MuxAccumulator()
+    FOR row IN colorShiftRows:
+        colorMux.add(row.parameter, row.shift_percent)
+
+    patternMux = MuxAccumulator()
+    FOR row IN patternShiftRows:
+        patternMux.add(row.parameter, row.shift_percent)
+
+    // 4. Apply aggregated shifts to each subsystem via ConductManager
+    ConductManager.applyColorShifts(colorMux)
+    ConductManager.applyPatternShifts(patternMux)
+```
+
+```
+class ConductManager:
+    function applyColorShifts(colorMux):
+        ColorsStore.applyShiftMux(colorMux)
+
+    function applyPatternShifts(patternMux):
+        PatternStore.applyShiftMux(patternMux)
+```
+
+```
+class ColorsStore:
+    function applyShiftMux(colorMux):
+        FOR colorEntry IN colors_:
+            colorEntry.primary = computeMuxedColor(colorEntry.primary_base, colorMux)
+            colorEntry.secondary = computeMuxedColor(colorEntry.secondary_base, colorMux)
+
+    // Current implementation exposes mux endpoints per HSV component
+    // setColorAShiftBrightness(), setColorAShiftHue(), setColorAShiftSaturation(), setColorAShiftValue()
+    // setColorBShiftBrightness(), setColorBShiftHue(), setColorBShiftSaturation(), setColorBShiftValue()
+    // Each setter pairs with a get* helper so Conduct code and LightManager share the same atomic values.
+```
+
+```
+class PatternStore:
+    function applyShiftMux(patternMux):
+        patternState = getBasePatternState()
+        FOR parameter IN patternState:
+            adjustedValue = patternMux.applyTo(parameter)
+            patternState.set(parameter, adjustedValue)
+```
+
+```
+class MuxAccumulator:
+    function add(parameter, shiftPercent):
+        listForParameter(parameter).append(shiftPercent)
+
+    function applyTo(parameter):
+        shiftList = listForParameter(parameter)
+        return combineShifts(shiftList)
+```
+
+Key Notes
+---------
+1. TodayContext + ContextManager produce the active qualifications (isNight, isDawn, season flags, etc.).
+2. `colorsShifts.csv` and `patternShifts.csv` map each qualification to shift percentages for every parameter.
+3. MuxAccumulator gathers all shift inputs per parameter so multiple bands can influence the same target.
+4. ConductManager remains the central orchestrator, routing aggregated results into ColorsStore and PatternManager without violating the Conduct/Policy layering.
+5. Colors and patterns stay separate; each manager handles only its own muxed values.
+
+Next Steps
+----------
+1. Implement CSV parsing to build lookup tables for the shift rows.
+2. Introduce a reusable accumulation helper (or equivalent logic) that can gather shifts for any parameter set.
+3. Add mux-protected getters/setters inside ColorsStore and PatternManager so base values remain intact while adjusted values flow to LightManager.
+4. Wire the periodic timer callback (prefixed `cb_`) through ConductManager to execute the pseudocode path above.

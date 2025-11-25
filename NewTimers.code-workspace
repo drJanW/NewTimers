@@ -8,6 +8,8 @@
 		"files.associations": {
 			"atomic": "cpp",
 			"*.inc": "cpp"
-		}
+		},
+		"claudeCode.useCtrlEnterToSend": true,
+		"github.copilot.chat.models.preview.enabled": true
 	}
 }

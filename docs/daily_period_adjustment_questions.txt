@@ -1,0 +1,25 @@
+Daily Period Adjustment Design Questions
+=======================================
+
+1. Definition of Daily Periods
+   - How are daily periods defined? (e.g., morning, afternoon, evening, night)
+   - Are these periods fixed by time, or can they overlap and be dynamic?
+
+2. Adjustment Rules
+   - For each period, do you want to specify relative adjustments (e.g., divide, multiply, add, subtract) for each parameter (volume, brightness, colors, patterns)?
+   - Should these adjustments be cumulative if periods overlap, or should one period take precedence?
+
+3. Parameter Scope
+   - Which parameters should be adjustable per period? (e.g., audio volume, brightness, color values, pattern speed/intensity)
+   - Are there any parameters that should remain unaffected by certain periods?
+
+4. Configuration Source
+   - Should these rules be defined in a CSV (like today.csv), or would you prefer a different format (JSON, YAML, etc.)?
+   - How do you want to specify the adjustment type (e.g., /3, *0.5, +10, -20) in the configuration?
+
+5. Runtime Behavior
+   - Should the system continuously monitor and apply adjustments as the current period changes?
+   - How should the system handle transitions between periods (e.g., smooth fade, instant change)?
+
+6. Conflict Resolution
+   - If two periods overlap and both specify adjustments for the same parameter, how should the system resolve this? (e.g., priority, additive, multiplicative, last-wins)

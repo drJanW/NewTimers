@@ -42,8 +42,8 @@ struct LightColor {
     bool valid{false};
     uint8_t id{0};
     String label;
-    RgbColor primary;
-    RgbColor secondary;
+    RgbColor colorA;
+    RgbColor colorB;
 };
 
 struct TodayContext {

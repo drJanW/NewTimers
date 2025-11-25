@@ -164,8 +164,8 @@
     };
 
     const defaultColor = {
-        rgb1_hex: '#ff7f00',
-        rgb2_hex: '#552200'
+        colorA_hex: '#ff7f00',
+        colorB_hex: '#552200'
     };
 
     const dom = {
@@ -201,8 +201,8 @@
         colorSaveAs: document.getElementById('colorSaveAs'),
         colorDelete: document.getElementById('colorDelete'),
         colorInputs: {
-            rgb1_hex: document.querySelector('input[data-color="rgb1_hex"]'),
-            rgb2_hex: document.querySelector('input[data-color="rgb2_hex"]')
+            colorA_hex: document.querySelector('input[data-color="colorA_hex"]'),
+            colorB_hex: document.querySelector('input[data-color="colorB_hex"]')
         },
         sdModal: document.getElementById('sdModal'),
         sdStatus: document.getElementById('sdStatus'),
@@ -335,8 +335,8 @@
             id: '',
             label: '',
             source: defaultSource,
-            rgb1_hex: '',
-            rgb2_hex: '',
+            colorA_hex: '',
+            colorB_hex: '',
             updatedAt: 0,
             calendarManaged: false
         }
@@ -383,7 +383,7 @@
         const entry = state.pattern.map.get(id);
         if (entry) {
             const label = typeof entry.label === 'string' ? entry.label.trim() : '';
-            if (label) {
+            if (label && label !== 'null') {
                 return label;
             }
             return entry.id || formatIdLabel(id);
@@ -422,7 +422,7 @@
         const entry = state.color.map.get(id);
         if (entry) {
             const label = typeof entry.label === 'string' ? entry.label.trim() : '';
-            if (label) {
+            if (label && label !== 'null') {
                 return label;
             }
             return entry.id || formatIdLabel(id);
@@ -584,11 +584,11 @@
         if (!source || typeof source !== 'object') {
             return base;
         }
-        if (validHex(source.rgb1_hex)) {
-            base.rgb1_hex = source.rgb1_hex;
+        if (validHex(source.colorA_hex)) {
+            base.colorA_hex = source.colorA_hex;
         }
-        if (validHex(source.rgb2_hex)) {
-            base.rgb2_hex = source.rgb2_hex;
+        if (validHex(source.colorB_hex)) {
+            base.colorB_hex = source.colorB_hex;
         }
         return base;
     };
@@ -952,11 +952,11 @@
         if (!draft) {
             return;
         }
-        if (dom.colorInputs.rgb1_hex) {
-            dom.colorInputs.rgb1_hex.value = draft.rgb1_hex;
+        if (dom.colorInputs.colorA_hex) {
+            dom.colorInputs.colorA_hex.value = draft.colorA_hex;
         }
-        if (dom.colorInputs.rgb2_hex) {
-            dom.colorInputs.rgb2_hex.value = draft.rgb2_hex;
+        if (dom.colorInputs.colorB_hex) {
+            dom.colorInputs.colorB_hex.value = draft.colorB_hex;
         }
         state.color.dirty = false;
     };
@@ -1362,8 +1362,8 @@
                     id: normalizeId(patternData.id),
                     label: typeof patternData.label === 'string' ? patternData.label : '',
                     source: patternData.source || (calendarManaged ? 'calendar' : 'context'),
-                    rgb1_hex: '',
-                    rgb2_hex: '',
+                    colorA_hex: '',
+                    colorB_hex: '',
                     updatedAt: now,
                     calendarManaged
                 };
@@ -1371,8 +1371,8 @@
                     id: normalizeId(colorData.id),
                     label: typeof colorData.label === 'string' ? colorData.label : '',
                     source: colorData.source || (calendarManaged ? 'calendar' : 'default'),
-                    rgb1_hex: typeof colorData.rgb1_hex === 'string' ? colorData.rgb1_hex : '',
-                    rgb2_hex: typeof colorData.rgb2_hex === 'string' ? colorData.rgb2_hex : '',
+                    colorA_hex: typeof colorData.colorA_hex === 'string' ? colorData.colorA_hex : '',
+                    colorB_hex: typeof colorData.colorB_hex === 'string' ? colorData.colorB_hex : '',
                     updatedAt: now,
                     calendarManaged
                 };
@@ -1711,8 +1711,8 @@
         const body = {
             label,
             select: createNew || state.color.selectedId === state.color.activeId,
-            rgb1_hex: state.color.draft.rgb1_hex,
-            rgb2_hex: state.color.draft.rgb2_hex
+            colorA_hex: state.color.draft.colorA_hex,
+            colorB_hex: state.color.draft.colorB_hex
         };
         console.log('persistColor payload', body, { createNew });
         if (!createNew) {
@@ -1857,8 +1857,8 @@
 
         const patternPayload = deepClone(state.pattern.draft.params);
         const colorPayload = {
-            rgb1_hex: state.color.draft.rgb1_hex,
-            rgb2_hex: state.color.draft.rgb2_hex
+            colorA_hex: state.color.draft.colorA_hex,
+            colorB_hex: state.color.draft.colorB_hex
         };
         const body = {
             pattern: patternPayload,
@@ -1941,8 +1941,8 @@
         })();
 
         const colorPayload = {
-            rgb1_hex: state.color.draft.rgb1_hex,
-            rgb2_hex: state.color.draft.rgb2_hex
+            colorA_hex: state.color.draft.colorA_hex,
+            colorB_hex: state.color.draft.colorB_hex
         };
         const body = { color: colorPayload };
 

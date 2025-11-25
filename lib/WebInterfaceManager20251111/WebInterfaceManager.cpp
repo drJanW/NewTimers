@@ -283,8 +283,12 @@ void handleTodayContext(AsyncWebServerRequest *request)
     {
       colorObj["label"] = ctx.colors.label;
     }
-    colorObj["rgb1_hex"] = rgbToHex(ctx.colors.primary);
-    colorObj["rgb2_hex"] = rgbToHex(ctx.colors.secondary);
+    const String colorAHex = rgbToHex(ctx.colors.colorA);
+    colorObj["colorA_hex"] = colorAHex;
+    colorObj["rgb1_hex"] = colorAHex; // legacy alias
+    const String colorBHex = rgbToHex(ctx.colors.colorB);
+    colorObj["colorB_hex"] = colorBHex;
+    colorObj["rgb2_hex"] = colorBHex; // legacy alias
   }
   if (ctx.entry.colorId != 0)
   {
@@ -565,6 +569,24 @@ void attachPatternColorRoutes()
   patternDelete->setMethod(HTTP_POST);
   server.addHandler(patternDelete);
 
+  // IMPORTANT: Register /api/patterns/preview BEFORE /api/patterns
+  // otherwise the generic handler catches the request first
+  auto *patternPreviewHandler = new AsyncCallbackJsonWebHandler("/api/patterns/preview", nullptr, 4096);
+  patternPreviewHandler->setMaxContentLength(2048);
+  patternPreviewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    PF("[WebIF] /api/patterns/preview hit\n");
+    String error;
+    JsonVariantConst body = json;
+    if (!LightConduct::previewPattern(body, error))
+    {
+      sendError(request, 400, error);
+      return;
+    }
+    sendJsonResponse(request, String("{\"status\":\"ok\"}"));
+  });
+  patternPreviewHandler->setMethod(HTTP_POST);
+  server.addHandler(patternPreviewHandler);
+
   auto *patternUpdate = new AsyncCallbackJsonWebHandler("/api/patterns");
   patternUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObjectConst obj = json.as<JsonObjectConst>();
@@ -670,6 +692,24 @@ void attachPatternColorRoutes()
   colorDelete->setMethod(HTTP_POST);
   server.addHandler(colorDelete);
 
+  // IMPORTANT: Register /api/colors/preview BEFORE /api/colors
+  // otherwise the generic handler catches the request first
+  auto *colorPreviewHandler = new AsyncCallbackJsonWebHandler("/api/colors/preview", nullptr, 2048);
+  colorPreviewHandler->setMaxContentLength(1024);
+  colorPreviewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
+    PF("[WebIF] /api/colors/preview hit\n");
+    String error;
+    JsonVariantConst body = json;
+    if (!LightConduct::previewColor(body, error))
+    {
+      sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
+      return;
+    }
+    sendJsonResponse(request, String("{\"status\":\"ok\"}"));
+  });
+  colorPreviewHandler->setMethod(HTTP_POST);
+  server.addHandler(colorPreviewHandler);
+
   auto *colorUpdate = new AsyncCallbackJsonWebHandler("/api/colors");
   colorUpdate->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObjectConst obj = json.as<JsonObjectConst>();
@@ -678,9 +718,11 @@ void attachPatternColorRoutes()
       sendError(request, 400, F("invalid payload"));
       return;
     }
-  PF("[LightConduct] HTTP colors/update content-type='%s' length=%d\n",
-       request->contentType().c_str(),
-       static_cast<int>(request->contentLength()));
+      const String remoteIp = request->client() ? request->client()->remoteIP().toString() : String(F("unknown"));
+    PF("[LightConduct] HTTP colors/update from %s content-type='%s' length=%d\n",
+      remoteIp.c_str(),
+      request->contentType().c_str(),
+      static_cast<int>(request->contentLength()));
     String affected;
     String errorMessage;
     if (!LightConduct::updateColor(obj, affected, errorMessage))
@@ -706,36 +748,6 @@ void attachPatternColorRoutes()
   });
   colorUpdate->setMethod(HTTP_POST);
   server.addHandler(colorUpdate);
-
-  auto *previewHandler = new AsyncCallbackJsonWebHandler("/api/patterns/preview", nullptr, 4096);
-  previewHandler->setMaxContentLength(2048);
-  previewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    String error;
-    JsonVariantConst body = json;
-    if (!LightConduct::previewPattern(body, error))
-    {
-      sendError(request, 400, error);
-      return;
-    }
-    sendJsonResponse(request, String("{\"status\":\"ok\"}"));
-  });
-  previewHandler->setMethod(HTTP_POST);
-  server.addHandler(previewHandler);
-
-  auto *colorPreviewHandler = new AsyncCallbackJsonWebHandler("/api/colors/preview", nullptr, 2048);
-  colorPreviewHandler->setMaxContentLength(1024);
-  colorPreviewHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
-    String error;
-    JsonVariantConst body = json;
-    if (!LightConduct::previewColor(body, error))
-    {
-      sendError(request, 400, error.isEmpty() ? F("invalid payload") : error);
-      return;
-    }
-    sendJsonResponse(request, String("{\"status\":\"ok\"}"));
-  });
-  colorPreviewHandler->setMethod(HTTP_POST);
-  server.addHandler(colorPreviewHandler);
 
   auto *sdDeleteHandler = new AsyncCallbackJsonWebHandler("/api/sd/delete");
   sdDeleteHandler->onRequest([](AsyncWebServerRequest *request, JsonVariant &json) {
