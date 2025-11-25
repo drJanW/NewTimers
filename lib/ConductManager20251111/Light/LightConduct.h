@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <cstdint>
 
 class LightConduct {
 public:
@@ -10,6 +11,10 @@ public:
     static void handleDistanceReading(float distanceMm);
 
     static void animationCallback();
+
+    // Time-of-day shift system
+    static void shiftTimerCallback();
+    static void intentApplyColorShifts(uint64_t statusBits);
 
     // Light pattern/color exports routed through conduct
     static bool patternSnapshot(String &payload, String &activePatternId);

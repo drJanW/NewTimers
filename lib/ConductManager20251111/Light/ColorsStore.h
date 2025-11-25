@@ -52,18 +52,8 @@ public:
     String getActivePatternId() const;
     const String& getActiveColorId() const { return activeColorId_; }
 
-    // Color shifting functions for dynamic adjustment
-    CRGB colorShiftHSV(const CRGB &oldRGB,
-                   int hueShift,
-                   int satShift,
-                   int valShift,
-                   int whiteShift);
-
-    CRGB colorShiftRGB(const CRGB &oldRGB,
-                int redShift,
-                int greenShift,
-                int blueShift,
-                int whiteShift);
+    // Re-apply current colors with shifts (call when shifts change)
+    void reapplyWithShifts();
 
 private:
     ColorsStore() = default;

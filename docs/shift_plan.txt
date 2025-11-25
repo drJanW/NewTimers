@@ -22,3 +22,48 @@ Proven approach before CSV integration
 Connect CSV parsing to shift application
 Wire timer triggering in Policy layer
 Final integration - everything working together
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         CONDUCT LAYER (orchestration)                       │
+│                                                                             │
+│  ConductManager::update()                                                   │
+│       │                                                                     │
+│       ├── cb_shiftUpdate() ←── TimerManager (every 60s)                     │
+│       │       │                                                             │
+│       │       ├── TodayContext::getActiveStatusBits()                       │
+│       │       │                                                             │
+│       │       └── intentApplyColorShifts(statusBits)                        │
+│       │           intentApplyPatternShifts(statusBits)                      │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         POLICY LAYER (rules/data)                           │
+│                                                                             │
+│  ShiftStore (new)                                                           │
+│       │                                                                     │
+│       ├── loadColorShiftsFromSD()    → vector<ShiftEntry>                   │
+│       ├── loadPatternShiftsFromSD()  → vector<ShiftEntry>                   │
+│       │                                                                     │
+│       └── computeColorMultipliers(statusBits) → float[8]                    │
+│           computePatternMultipliers(statusBits) → float[14]                 │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         STORE LAYER (state)                                 │
+│                                                                             │
+│  ColorsStore                          PatternStore                          │
+│       │                                    │                                │
+│       ├── setColorAShiftHue(mult)         ├── (similar pattern mux)         │
+│       ├── setColorAShiftSat(mult)         │                                 │
+│       └── getMuxedColorA() → CRGB         │                                 │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         OUTPUT (LightManager)                               │
+└─────────────────────────────────────────────────────────────────────────────┘

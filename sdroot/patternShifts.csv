@@ -1,10 +1,10 @@
 status;parameter;shift_percent
-
-isNight;pattern.color_cycle_sec;0.0
-isNight;pattern.bright_cycle_sec;0.0
+# Night: slower, calmer animations
+isNight;pattern.color_cycle_sec;50.0
+isNight;pattern.bright_cycle_sec;50.0
 isNight;pattern.fade_width;0.0
-isNight;pattern.min_brightness;0.0
-isNight;pattern.gradient_speed;0.0
+isNight;pattern.min_brightness;-30.0
+isNight;pattern.gradient_speed;-30.0
 isNight;pattern.center_x;0.0
 isNight;pattern.center_y;0.0
 isNight;pattern.radius;0.0
@@ -12,8 +12,8 @@ isNight;pattern.window_width;0.0
 isNight;pattern.radius_osc;0.0
 isNight;pattern.x_amp;0.0
 isNight;pattern.y_amp;0.0
-isNight;pattern.x_cycle_sec;0.0
-isNight;pattern.y_cycle_sec;0.0
+isNight;pattern.x_cycle_sec;50.0
+isNight;pattern.y_cycle_sec;50.0
 isDawn;pattern.color_cycle_sec;0.0
 isDawn;pattern.bright_cycle_sec;0.0
 isDawn;pattern.fade_width;0.0
@@ -42,20 +42,21 @@ isMorning;pattern.x_amp;0.0
 isMorning;pattern.y_amp;0.0
 isMorning;pattern.x_cycle_sec;0.0
 isMorning;pattern.y_cycle_sec;0.0
-isLight;pattern.color_cycle_sec;0.0
-isLight;pattern.bright_cycle_sec;0.0
+# isLight: TEST - faster gradient, more movement
+isLight;pattern.color_cycle_sec;-30.0
+isLight;pattern.bright_cycle_sec;-20.0
 isLight;pattern.fade_width;0.0
 isLight;pattern.min_brightness;0.0
-isLight;pattern.gradient_speed;0.0
+isLight;pattern.gradient_speed;50.0
 isLight;pattern.center_x;0.0
 isLight;pattern.center_y;0.0
-isLight;pattern.radius;0.0
+isLight;pattern.radius;20.0
 isLight;pattern.window_width;0.0
-isLight;pattern.radius_osc;0.0
+isLight;pattern.radius_osc;30.0
 isLight;pattern.x_amp;0.0
 isLight;pattern.y_amp;0.0
-isLight;pattern.x_cycle_sec;0.0
-isLight;pattern.y_cycle_sec;0.0
+isLight;pattern.x_cycle_sec;-20.0
+isLight;pattern.y_cycle_sec;-20.0
 isDay;pattern.color_cycle_sec;0.0
 isDay;pattern.bright_cycle_sec;0.0
 isDay;pattern.fade_width;0.0
@@ -70,11 +71,12 @@ isDay;pattern.x_amp;0.0
 isDay;pattern.y_amp;0.0
 isDay;pattern.x_cycle_sec;0.0
 isDay;pattern.y_cycle_sec;0.0
-isAfternoon;pattern.color_cycle_sec;0.0
-isAfternoon;pattern.bright_cycle_sec;0.0
-isAfternoon;pattern.fade_width;0.0
+# Afternoon: TEST - slightly slower, wider fade
+isAfternoon;pattern.color_cycle_sec;20.0
+isAfternoon;pattern.bright_cycle_sec;20.0
+isAfternoon;pattern.fade_width;30.0
 isAfternoon;pattern.min_brightness;0.0
-isAfternoon;pattern.gradient_speed;0.0
+isAfternoon;pattern.gradient_speed;-20.0
 isAfternoon;pattern.center_x;0.0
 isAfternoon;pattern.center_y;0.0
 isAfternoon;pattern.radius;0.0
@@ -98,11 +100,12 @@ isDusk;pattern.x_amp;0.0
 isDusk;pattern.y_amp;0.0
 isDusk;pattern.x_cycle_sec;0.0
 isDusk;pattern.y_cycle_sec;0.0
-isEvening;pattern.color_cycle_sec;0.0
-isEvening;pattern.bright_cycle_sec;0.0
+# Evening: calmer
+isEvening;pattern.color_cycle_sec;30.0
+isEvening;pattern.bright_cycle_sec;30.0
 isEvening;pattern.fade_width;0.0
-isEvening;pattern.min_brightness;0.0
-isEvening;pattern.gradient_speed;0.0
+isEvening;pattern.min_brightness;-20.0
+isEvening;pattern.gradient_speed;-20.0
 isEvening;pattern.center_x;0.0
 isEvening;pattern.center_y;0.0
 isEvening;pattern.radius;0.0

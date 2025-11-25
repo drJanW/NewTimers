@@ -288,7 +288,47 @@ LightShowParams PatternStore::getActiveParams() const {
     if (!entry && !patterns_.empty()) {
         entry = &patterns_.front();
     }
-    return entry ? entry->params : LightShowParams();
+    LightShowParams params = entry ? entry->params : LightShowParams();
+    applyShifts(params);
+    return params;
+}
+
+void PatternStore::setShift(PatternParam param, float percent) {
+    if (param < PAT_PARAM_COUNT) {
+        shifts_[param].store(percent, std::memory_order_relaxed);
+    }
+}
+
+float PatternStore::getShift(PatternParam param) const {
+    if (param < PAT_PARAM_COUNT) {
+        return shifts_[param].load(std::memory_order_relaxed);
+    }
+    return 0.0f;
+}
+
+void PatternStore::applyShifts(LightShowParams& p) const {
+    // Get shift percentages and convert to multipliers
+    // multiplier = 1.0 + (percent / 100.0)
+    auto mult = [this](PatternParam param) -> float {
+        float pct = shifts_[param].load(std::memory_order_relaxed);
+        return 1.0f + (pct / 100.0f);
+    };
+    
+    // Apply multipliers to each parameter (clamp to reasonable ranges)
+    p.colorCycleSec  = static_cast<uint8_t>(constrain(p.colorCycleSec * mult(PAT_COLOR_CYCLE), 1, 255));
+    p.brightCycleSec = static_cast<uint8_t>(constrain(p.brightCycleSec * mult(PAT_BRIGHT_CYCLE), 1, 255));
+    p.fadeWidth      = p.fadeWidth * mult(PAT_FADE_WIDTH);
+    p.minBrightness  = static_cast<uint8_t>(constrain(p.minBrightness * mult(PAT_MIN_BRIGHT), 0, 255));
+    p.gradientSpeed  = p.gradientSpeed * mult(PAT_GRADIENT_SPEED);
+    p.centerX        = p.centerX * mult(PAT_CENTER_X);
+    p.centerY        = p.centerY * mult(PAT_CENTER_Y);
+    p.radius         = p.radius * mult(PAT_RADIUS);
+    p.windowWidth    = static_cast<int>(p.windowWidth * mult(PAT_WINDOW_WIDTH));
+    p.radiusOsc      = p.radiusOsc * mult(PAT_RADIUS_OSC);
+    p.xAmp           = p.xAmp * mult(PAT_X_AMP);
+    p.yAmp           = p.yAmp * mult(PAT_Y_AMP);
+    p.xCycleSec      = static_cast<uint8_t>(constrain(p.xCycleSec * mult(PAT_X_CYCLE), 1, 255));
+    p.yCycleSec      = static_cast<uint8_t>(constrain(p.yCycleSec * mult(PAT_Y_CYCLE), 1, 255));
 }
 
 bool PatternStore::parseParams(JsonVariantConst src, LightShowParams& out, String& errorMessage) const {
@@ -400,7 +440,6 @@ bool PatternStore::loadFromSD() {
         PatternEntry entry;
         entry.id = columns[0];
         entry.label = columns[1];
-        PF("[PatternStore] CSV row id='%s' label='%s'\n", entry.id.c_str(), entry.label.c_str());
         if (entry.id.isEmpty()) {
             continue;
         }

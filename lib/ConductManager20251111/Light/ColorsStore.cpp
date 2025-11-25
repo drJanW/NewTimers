@@ -9,6 +9,9 @@
 #include "CsvUtils.h"
 #include "SDBusyGuard.h"
 
+// Forward declaration for colorShiftHSV (defined at bottom of file)
+static CRGB colorShiftHSV(const CRGB &oldRGB, int hueShift, int satShift, int valShift, int whiteShift);
+
 namespace {
 constexpr const char* kColorPath = "/light_colors.csv";
 constexpr const char* kActiveColorPrefix = "# active_color=";
@@ -490,7 +493,6 @@ bool ColorsStore::loadColorsFromSD() {
         ColorEntry entry;
         entry.id = columns[0];
         entry.label = columns[1];
-        PF("[ColorsStore] CSV row id='%s' label='%s'\n", entry.id.c_str(), entry.label.c_str());
         sanitizeLabel(entry.label);
         ensureLabelForId(entry.id, entry.label);
         const String rgb1 = columns[2];
@@ -682,6 +684,11 @@ String ColorsStore::generateColorId() const {
     return String(buff);
 }
 
+void ColorsStore::reapplyWithShifts() {
+    if (!ready_) return;
+    applyActiveToLights();
+}
+
 void ColorsStore::applyActiveToLights() {
     PatternStore& patternStore = PatternStore::instance();
     if (!patternStore.isReady()) {
@@ -721,6 +728,31 @@ void ColorsStore::applyActiveToLights() {
         params.RGB2 = toCRGB(kDefaultColors[0].rgb2);
     }
 
+    // Apply time-of-day color shifts
+    // Shift percentages are stored as -100..+100, convert to HSV scale (approx 0-255)
+    // Hue: percentage of 256 (full circle)
+    // Sat/Val: percentage of 255
+    float aHue = getMux(&colorShifts_.colorA_hue);
+    float aSat = getMux(&colorShifts_.colorA_saturation);
+    float aVal = getMux(&colorShifts_.colorA_value);
+    float bHue = getMux(&colorShifts_.colorB_hue);
+    float bSat = getMux(&colorShifts_.colorB_saturation);
+    float bVal = getMux(&colorShifts_.colorB_value);
+    
+    // Only apply if any shift is non-zero
+    if (aHue != 0.0f || aSat != 0.0f || aVal != 0.0f) {
+        int hShift = static_cast<int>(aHue * 256.0f / 100.0f);
+        int sShift = static_cast<int>(aSat * 255.0f / 100.0f);
+        int vShift = static_cast<int>(aVal * 255.0f / 100.0f);
+        params.RGB1 = colorShiftHSV(params.RGB1, hShift, sShift, vShift, 0);
+    }
+    if (bHue != 0.0f || bSat != 0.0f || bVal != 0.0f) {
+        int hShift = static_cast<int>(bHue * 256.0f / 100.0f);
+        int sShift = static_cast<int>(bSat * 255.0f / 100.0f);
+        int vShift = static_cast<int>(bVal * 255.0f / 100.0f);
+        params.RGB2 = colorShiftHSV(params.RGB2, hShift, sShift, vShift, 0);
+    }
+
     PF("[ColorsStore] Apply pattern=%s color=%s rgb1=%02X%02X%02X rgb2=%02X%02X%02X\n",
        patternId.c_str(),
        color ? color->id.c_str() : (fallbackColor ? fallbackColor->id.c_str() : "<default>"),
@@ -730,7 +762,7 @@ void ColorsStore::applyActiveToLights() {
 }
 
 // Color shifting functions for dynamic adjustment
-CRGB colorShiftHSV(const CRGB &oldRGB,
+static CRGB colorShiftHSV(const CRGB &oldRGB,
                    int hueShift,        // + = vooruit op hue-cirkel, − = terug
                    int satShift,        // + = meer kleur, − = richting wit
                    int valShift,        // + = helderder, − = donkerder

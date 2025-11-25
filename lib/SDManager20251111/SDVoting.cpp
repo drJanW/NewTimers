@@ -205,7 +205,6 @@ void SDVoting::attachVoteRoute(AsyncWebServer& server) {
   SDVoting::applyVote(dir, file, (int8_t)delta);
   uint8_t score = 0;
   readCurrentScore(dir, file, score);
-  WEBIF_LOG("[Web][Vote] dir=%u file=%u delta=%d\n", dir, file, delta);
     char b3[96]; snprintf(b3, sizeof(b3), "OK dir=%u file=%u delta=%d score=%u", dir, file, delta, score);
     req->send(200, "text/plain", b3);
   });

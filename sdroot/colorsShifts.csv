@@ -1,36 +1,41 @@
 status;parameter;shift_percent
-isNight;colors.colorA.brightness;0.0
+# Night: dim brightness significantly (-50%)
+isNight;colors.colorA.brightness;-50.0
 isNight;colors.colorA.hue;0.0
 isNight;colors.colorA.saturation;0.0
-isNight;colors.colorA.value;0.0
-isNight;colors.colorB.brightness;0.0
+isNight;colors.colorA.value;-50.0
+isNight;colors.colorB.brightness;-50.0
 isNight;colors.colorB.hue;0.0
 isNight;colors.colorB.saturation;0.0
-isNight;colors.colorB.value;0.0
+isNight;colors.colorB.value;-50.0
+# Dawn: slight warmth shift
 isDawn;colors.colorA.brightness;0.0
-isDawn;colors.colorA.hue;0.0
+isDawn;colors.colorA.hue;10.0
 isDawn;colors.colorA.saturation;0.0
 isDawn;colors.colorA.value;0.0
 isDawn;colors.colorB.brightness;0.0
-isDawn;colors.colorB.hue;0.0
+isDawn;colors.colorB.hue;10.0
 isDawn;colors.colorB.saturation;0.0
 isDawn;colors.colorB.value;0.0
-isMorning;colors.colorA.brightness;0.0
+# Morning: fresh, slightly brighter
+isMorning;colors.colorA.brightness;20.0
 isMorning;colors.colorA.hue;0.0
-isMorning;colors.colorA.saturation;0.0
-isMorning;colors.colorA.value;0.0
-isMorning;colors.colorB.brightness;0.0
+isMorning;colors.colorA.saturation;10.0
+isMorning;colors.colorA.value;20.0
+isMorning;colors.colorB.brightness;20.0
 isMorning;colors.colorB.hue;0.0
-isMorning;colors.colorB.saturation;0.0
-isMorning;colors.colorB.value;0.0
+isMorning;colors.colorB.saturation;10.0
+isMorning;colors.colorB.value;20.0
+# isLight: TEST - shift hue significantly to see effect
 isLight;colors.colorA.brightness;0.0
-isLight;colors.colorA.hue;0.0
-isLight;colors.colorA.saturation;0.0
+isLight;colors.colorA.hue;30.0
+isLight;colors.colorA.saturation;20.0
 isLight;colors.colorA.value;0.0
 isLight;colors.colorB.brightness;0.0
-isLight;colors.colorB.hue;0.0
-isLight;colors.colorB.saturation;0.0
+isLight;colors.colorB.hue;30.0
+isLight;colors.colorB.saturation;20.0
 isLight;colors.colorB.value;0.0
+# Day: full brightness
 isDay;colors.colorA.brightness;0.0
 isDay;colors.colorA.hue;0.0
 isDay;colors.colorA.saturation;0.0
@@ -39,38 +44,43 @@ isDay;colors.colorB.brightness;0.0
 isDay;colors.colorB.hue;0.0
 isDay;colors.colorB.saturation;0.0
 isDay;colors.colorB.value;0.0
+# Afternoon: TEST - noticeable warmth + brightness
 isAfternoon;colors.colorA.brightness;0.0
-isAfternoon;colors.colorA.hue;0.0
+isAfternoon;colors.colorA.hue;20.0
 isAfternoon;colors.colorA.saturation;0.0
-isAfternoon;colors.colorA.value;0.0
+isAfternoon;colors.colorA.value;-20.0
 isAfternoon;colors.colorB.brightness;0.0
-isAfternoon;colors.colorB.hue;0.0
+isAfternoon;colors.colorB.hue;20.0
 isAfternoon;colors.colorB.saturation;0.0
-isAfternoon;colors.colorB.value;0.0
-isDusk;colors.colorA.brightness;0.0
-isDusk;colors.colorA.hue;0.0
+isAfternoon;colors.colorB.value;-20.0
+# Dusk: warmer, start dimming
+isDusk;colors.colorA.brightness;-20.0
+isDusk;colors.colorA.hue;15.0
 isDusk;colors.colorA.saturation;0.0
-isDusk;colors.colorA.value;0.0
-isDusk;colors.colorB.brightness;0.0
-isDusk;colors.colorB.hue;0.0
+isDusk;colors.colorA.value;-20.0
+isDusk;colors.colorB.brightness;-20.0
+isDusk;colors.colorB.hue;15.0
 isDusk;colors.colorB.saturation;0.0
-isDusk;colors.colorB.value;0.0
-isEvening;colors.colorA.brightness;0.0
+isDusk;colors.colorB.value;-20.0
+# Evening: significantly dimmer
+isEvening;colors.colorA.brightness;-30.0
 isEvening;colors.colorA.hue;0.0
 isEvening;colors.colorA.saturation;0.0
-isEvening;colors.colorA.value;0.0
-isEvening;colors.colorB.brightness;0.0
+isEvening;colors.colorA.value;-30.0
+isEvening;colors.colorB.brightness;-30.0
 isEvening;colors.colorB.hue;0.0
 isEvening;colors.colorB.saturation;0.0
-isEvening;colors.colorB.value;0.0
-isDark;colors.colorA.brightness;0.0
+isEvening;colors.colorB.value;-30.0
+# isDark: dim brightness
+isDark;colors.colorA.brightness;-25.0
 isDark;colors.colorA.hue;0.0
 isDark;colors.colorA.saturation;0.0
-isDark;colors.colorA.value;0.0
-isDark;colors.colorB.brightness;0.0
+isDark;colors.colorA.value;-25.0
+isDark;colors.colorB.brightness;-25.0
 isDark;colors.colorB.hue;0.0
 isDark;colors.colorB.saturation;0.0
-isDark;colors.colorB.value;0.0
+isDark;colors.colorB.value;-25.0
+# isAM/isPM: no special changes
 isAM;colors.colorA.brightness;0.0
 isAM;colors.colorA.hue;0.0
 isAM;colors.colorA.saturation;0.0

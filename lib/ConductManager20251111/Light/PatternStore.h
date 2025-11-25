@@ -4,8 +4,10 @@
 #include <ArduinoJson.h>
 #include <FastLED.h>
 #include <vector>
+#include <atomic>
 
 #include "LightManager.h"
+#include "ShiftEnums.h"
 
 class PatternStore {
 public:
@@ -26,6 +28,10 @@ public:
     bool parseParams(JsonVariantConst src, LightShowParams& out, String& errorMessage) const;
     bool getParamsForId(const String& id, LightShowParams& out) const;
 
+    // Pattern shift mux setters (percent values, applied as multipliers)
+    void setShift(PatternParam param, float percent);
+    float getShift(PatternParam param) const;
+
 private:
     PatternStore() = default;
 
@@ -45,7 +51,12 @@ private:
 
     String generateId() const;
 
+    // Apply shifts to params
+    void applyShifts(LightShowParams& params) const;
+
     std::vector<PatternEntry> patterns_;
     String activePatternId_;
     bool ready_{false};
+    
+    std::atomic<float> shifts_[PAT_PARAM_COUNT] = {};
 };
