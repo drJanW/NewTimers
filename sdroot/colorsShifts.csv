@@ -1,179 +1,33 @@
-status;parameter;shift_percent
-# Night: dim brightness significantly (-50%)
-isNight;colors.colorA.brightness;-50.0
-isNight;colors.colorA.hue;0.0
-isNight;colors.colorA.saturation;0.0
-isNight;colors.colorA.value;-50.0
-isNight;colors.colorB.brightness;-50.0
-isNight;colors.colorB.hue;0.0
-isNight;colors.colorB.saturation;0.0
-isNight;colors.colorB.value;-50.0
-# Dawn: slight warmth shift
-isDawn;colors.colorA.brightness;0.0
-isDawn;colors.colorA.hue;10.0
-isDawn;colors.colorA.saturation;0.0
-isDawn;colors.colorA.value;0.0
-isDawn;colors.colorB.brightness;0.0
-isDawn;colors.colorB.hue;10.0
-isDawn;colors.colorB.saturation;0.0
-isDawn;colors.colorB.value;0.0
-# Morning: fresh, slightly brighter
-isMorning;colors.colorA.brightness;20.0
-isMorning;colors.colorA.hue;0.0
-isMorning;colors.colorA.saturation;10.0
-isMorning;colors.colorA.value;20.0
-isMorning;colors.colorB.brightness;20.0
-isMorning;colors.colorB.hue;0.0
-isMorning;colors.colorB.saturation;10.0
-isMorning;colors.colorB.value;20.0
-# isLight: TEST - shift hue significantly to see effect
-isLight;colors.colorA.brightness;0.0
-isLight;colors.colorA.hue;30.0
-isLight;colors.colorA.saturation;20.0
-isLight;colors.colorA.value;0.0
-isLight;colors.colorB.brightness;0.0
-isLight;colors.colorB.hue;30.0
-isLight;colors.colorB.saturation;20.0
-isLight;colors.colorB.value;0.0
-# Day: full brightness
-isDay;colors.colorA.brightness;0.0
-isDay;colors.colorA.hue;0.0
-isDay;colors.colorA.saturation;0.0
-isDay;colors.colorA.value;0.0
-isDay;colors.colorB.brightness;0.0
-isDay;colors.colorB.hue;0.0
-isDay;colors.colorB.saturation;0.0
-isDay;colors.colorB.value;0.0
-# Afternoon: TEST - noticeable warmth + brightness
-isAfternoon;colors.colorA.brightness;0.0
-isAfternoon;colors.colorA.hue;20.0
-isAfternoon;colors.colorA.saturation;0.0
-isAfternoon;colors.colorA.value;-20.0
-isAfternoon;colors.colorB.brightness;0.0
-isAfternoon;colors.colorB.hue;20.0
-isAfternoon;colors.colorB.saturation;0.0
-isAfternoon;colors.colorB.value;-20.0
-# Dusk: warmer, start dimming
-isDusk;colors.colorA.brightness;-20.0
-isDusk;colors.colorA.hue;15.0
-isDusk;colors.colorA.saturation;0.0
-isDusk;colors.colorA.value;-20.0
-isDusk;colors.colorB.brightness;-20.0
-isDusk;colors.colorB.hue;15.0
-isDusk;colors.colorB.saturation;0.0
-isDusk;colors.colorB.value;-20.0
-# Evening: significantly dimmer
-isEvening;colors.colorA.brightness;-30.0
-isEvening;colors.colorA.hue;0.0
-isEvening;colors.colorA.saturation;0.0
-isEvening;colors.colorA.value;-30.0
-isEvening;colors.colorB.brightness;-30.0
-isEvening;colors.colorB.hue;0.0
-isEvening;colors.colorB.saturation;0.0
-isEvening;colors.colorB.value;-30.0
-# isDark: dim brightness
-isDark;colors.colorA.brightness;-25.0
-isDark;colors.colorA.hue;0.0
-isDark;colors.colorA.saturation;0.0
-isDark;colors.colorA.value;-25.0
-isDark;colors.colorB.brightness;-25.0
-isDark;colors.colorB.hue;0.0
-isDark;colors.colorB.saturation;0.0
-isDark;colors.colorB.value;-25.0
-# isAM/isPM: no special changes
-isAM;colors.colorA.brightness;0.0
-isAM;colors.colorA.hue;0.0
-isAM;colors.colorA.saturation;0.0
-isAM;colors.colorA.value;0.0
-isAM;colors.colorB.brightness;0.0
-isAM;colors.colorB.hue;0.0
-isAM;colors.colorB.saturation;0.0
-isAM;colors.colorB.value;0.0
-isPM;colors.colorA.brightness;0.0
-isPM;colors.colorA.hue;0.0
-isPM;colors.colorA.saturation;0.0
-isPM;colors.colorA.value;0.0
-isPM;colors.colorB.brightness;0.0
-isPM;colors.colorB.hue;0.0
-isPM;colors.colorB.saturation;0.0
-isPM;colors.colorB.value;0.0
-
-# ============================================================
-# SEASON SHIFTS
-# ============================================================
-# Spring: fresh greens, bright
-isSpring;colors.colorA.hue;-15.0
-isSpring;colors.colorA.saturation;10.0
-isSpring;colors.colorA.brightness;10.0
-isSpring;colors.colorB.hue;-15.0
-isSpring;colors.colorB.saturation;10.0
-isSpring;colors.colorB.brightness;10.0
-# Summer: warm yellows/oranges
-isSummer;colors.colorA.hue;15.0
-isSummer;colors.colorA.saturation;5.0
-isSummer;colors.colorA.brightness;15.0
-isSummer;colors.colorB.hue;15.0
-isSummer;colors.colorB.saturation;5.0
-isSummer;colors.colorB.brightness;15.0
-# Autumn: warm reds/oranges, slightly muted
-isAutumn;colors.colorA.hue;25.0
-isAutumn;colors.colorA.saturation;-10.0
-isAutumn;colors.colorA.brightness;-5.0
-isAutumn;colors.colorB.hue;25.0
-isAutumn;colors.colorB.saturation;-10.0
-isAutumn;colors.colorB.brightness;-5.0
-# Winter: cooler blues, dimmer
-isWinter;colors.colorA.hue;-30.0
-isWinter;colors.colorA.saturation;-15.0
-isWinter;colors.colorA.brightness;-10.0
-isWinter;colors.colorB.hue;-30.0
-isWinter;colors.colorB.saturation;-15.0
-isWinter;colors.colorB.brightness;-10.0
-
-# ============================================================
-# WEATHER/TEMPERATURE SHIFTS
-# ============================================================
-# Freezing: very cool blue tones
-isFreezing;colors.colorA.hue;-40.0
-isFreezing;colors.colorA.saturation;-20.0
-isFreezing;colors.colorB.hue;-40.0
-isFreezing;colors.colorB.saturation;-20.0
-# Cold: cool blue shift
-isCold;colors.colorA.hue;-20.0
-isCold;colors.colorA.saturation;-10.0
-isCold;colors.colorB.hue;-20.0
-isCold;colors.colorB.saturation;-10.0
-# Mild: neutral, no shift
-# Warm: warmer tones
-isWarm;colors.colorA.hue;15.0
-isWarm;colors.colorA.saturation;5.0
-isWarm;colors.colorB.hue;15.0
-isWarm;colors.colorB.saturation;5.0
-# Hot: intense warm tones
-isHot;colors.colorA.hue;30.0
-isHot;colors.colorA.saturation;15.0
-isHot;colors.colorB.hue;30.0
-isHot;colors.colorB.saturation;15.0
-
-# ============================================================
-# WEEKEND SHIFT
-# ============================================================
-# Weekend: slightly more vibrant/festive
-isWeekend;colors.colorA.saturation;10.0
-isWeekend;colors.colorA.brightness;10.0
-isWeekend;colors.colorB.saturation;10.0
-isWeekend;colors.colorB.brightness;10.0
-
-# ============================================================
-# MOON PHASE SHIFTS
-# ============================================================
-# Full Moon: brighter, slightly cooler
-isFullMoon;colors.colorA.brightness;15.0
-isFullMoon;colors.colorA.hue;-10.0
-isFullMoon;colors.colorB.brightness;15.0
-isFullMoon;colors.colorB.hue;-10.0
-# New Moon: dimmer, warmer
-isNewMoon;colors.colorA.brightness;-15.0
-isNewMoon;colors.colorA.hue;10.0
-isNewMoon;colors.colorB.brightness;-15.0
-isNewMoon;colors.colorB.hue;10.0
+status;colorA.brightness;colorA.hue;colorA.saturation;colorA.value;colorB.brightness;colorB.hue;colorB.saturation;colorB.value
+isNight;-50;0;0;-50;-50;0;0;-50
+isDawn;0;10;0;0;0;10;0;0
+isMorning;20;0;10;20;20;0;10;20
+isLight;0;30;20;0;0;30;20;0
+isDay;0;0;0;0;0;0;0;0
+isAfternoon;0;20;0;-20;0;20;0;-20
+isDusk;-20;15;0;-20;-20;15;0;-20
+isEvening;-30;0;0;-30;-30;0;0;-30
+isDark;-25;0;0;-25;-25;0;0;-25
+isAM;0;0;0;0;0;0;0;0
+isPM;0;0;0;0;0;0;0;0
+isSpring;10;-15;10;0;10;-15;10;0
+isSummer;15;15;5;0;15;15;5;0
+isAutumn;-5;25;-10;0;-5;25;-10;0
+isWinter;-10;-30;-15;0;-10;-30;-15;0
+isFreezing;0;-40;-20;0;0;-40;-20;0
+isCold;0;-20;-10;0;0;-20;-10;0
+isMild;0;0;0;0;0;0;0;0
+isWarm;0;15;5;0;0;15;5;0
+isHot;0;30;15;0;0;30;15;0
+isMonday;0;0;0;0;0;0;0;0
+isTuesday;0;0;0;0;0;0;0;0
+isWednesday;0;0;0;0;0;0;0;0
+isThursday;0;0;0;0;0;0;0;0
+isFriday;0;0;0;0;0;0;0;0
+isSaturday;0;0;0;0;0;0;0;0
+isSunday;0;0;0;0;0;0;0;0
+isWeekend;10;0;10;0;10;0;10;0
+isNewMoon;-15;10;0;0;-15;10;0;0
+isWaxing;0;0;0;0;0;0;0;0
+isFullMoon;15;-10;0;0;15;-10;0;0
+isWaning;0;0;0;0;0;0;0;0

@@ -4,6 +4,7 @@
 #include "SDBusyGuard.h"
 #include "Globals.h"
 #include <SD.h>
+#include <algorithm>
 
 namespace {
     constexpr const char* kColorShiftPath = "/colorsShifts.csv";
@@ -78,32 +79,42 @@ bool ShiftStore::parseStatusString(const String& s, uint8_t& out) {
 }
 
 bool ShiftStore::parseColorParam(const String& s, uint8_t& out) {
-    if (s == "colors.colorA.hue")        { out = COLOR_A_HUE; return true; }
-    if (s == "colors.colorA.saturation") { out = COLOR_A_SAT; return true; }
-    if (s == "colors.colorA.brightness") { out = COLOR_A_BRIGHT; return true; }
-    if (s == "colors.colorA.value")      { out = COLOR_A_VALUE; return true; }
-    if (s == "colors.colorB.hue")        { out = COLOR_B_HUE; return true; }
-    if (s == "colors.colorB.saturation") { out = COLOR_B_SAT; return true; }
-    if (s == "colors.colorB.brightness") { out = COLOR_B_BRIGHT; return true; }
-    if (s == "colors.colorB.value")      { out = COLOR_B_VALUE; return true; }
+    String key = s;
+    key.trim();
+    if (key.startsWith("colors.")) {
+        key = key.substring(7);
+    }
+    if (key == "colorA.hue")        { out = COLOR_A_HUE; return true; }
+    if (key == "colorA.saturation") { out = COLOR_A_SAT; return true; }
+    if (key == "colorA.brightness") { out = COLOR_A_BRIGHT; return true; }
+    if (key == "colorA.value")      { out = COLOR_A_VALUE; return true; }
+    if (key == "colorB.hue")        { out = COLOR_B_HUE; return true; }
+    if (key == "colorB.saturation") { out = COLOR_B_SAT; return true; }
+    if (key == "colorB.brightness") { out = COLOR_B_BRIGHT; return true; }
+    if (key == "colorB.value")      { out = COLOR_B_VALUE; return true; }
     return false;
 }
 
 bool ShiftStore::parsePatternParam(const String& s, uint8_t& out) {
-    if (s == "pattern.color_cycle_sec")  { out = PAT_COLOR_CYCLE; return true; }
-    if (s == "pattern.bright_cycle_sec") { out = PAT_BRIGHT_CYCLE; return true; }
-    if (s == "pattern.fade_width")       { out = PAT_FADE_WIDTH; return true; }
-    if (s == "pattern.min_brightness")   { out = PAT_MIN_BRIGHT; return true; }
-    if (s == "pattern.gradient_speed")   { out = PAT_GRADIENT_SPEED; return true; }
-    if (s == "pattern.center_x")         { out = PAT_CENTER_X; return true; }
-    if (s == "pattern.center_y")         { out = PAT_CENTER_Y; return true; }
-    if (s == "pattern.radius")           { out = PAT_RADIUS; return true; }
-    if (s == "pattern.window_width")     { out = PAT_WINDOW_WIDTH; return true; }
-    if (s == "pattern.radius_osc")       { out = PAT_RADIUS_OSC; return true; }
-    if (s == "pattern.x_amp")            { out = PAT_X_AMP; return true; }
-    if (s == "pattern.y_amp")            { out = PAT_Y_AMP; return true; }
-    if (s == "pattern.x_cycle_sec")      { out = PAT_X_CYCLE; return true; }
-    if (s == "pattern.y_cycle_sec")      { out = PAT_Y_CYCLE; return true; }
+    String key = s;
+    key.trim();
+    if (key.startsWith("pattern.")) {
+        key = key.substring(8);
+    }
+    if (key == "color_cycle_sec" || key == "colorCycleSec")   { out = PAT_COLOR_CYCLE; return true; }
+    if (key == "bright_cycle_sec" || key == "brightCycleSec") { out = PAT_BRIGHT_CYCLE; return true; }
+    if (key == "fade_width" || key == "fadeWidth")            { out = PAT_FADE_WIDTH; return true; }
+    if (key == "min_brightness" || key == "minBrightness")    { out = PAT_MIN_BRIGHT; return true; }
+    if (key == "gradient_speed" || key == "gradientSpeed")    { out = PAT_GRADIENT_SPEED; return true; }
+    if (key == "center_x" || key == "centerX")                { out = PAT_CENTER_X; return true; }
+    if (key == "center_y" || key == "centerY")                { out = PAT_CENTER_Y; return true; }
+    if (key == "radius")                                       { out = PAT_RADIUS; return true; }
+    if (key == "window_width" || key == "windowWidth")        { out = PAT_WINDOW_WIDTH; return true; }
+    if (key == "radius_osc" || key == "radiusOsc")            { out = PAT_RADIUS_OSC; return true; }
+    if (key == "x_amp" || key == "xAmp")                      { out = PAT_X_AMP; return true; }
+    if (key == "y_amp" || key == "yAmp")                      { out = PAT_Y_AMP; return true; }
+    if (key == "x_cycle_sec" || key == "xCycleSec")           { out = PAT_X_CYCLE; return true; }
+    if (key == "y_cycle_sec" || key == "yCycleSec")           { out = PAT_Y_CYCLE; return true; }
     return false;
 }
 
@@ -132,8 +143,9 @@ bool ShiftStore::loadColorShiftsFromSD() {
     
     String line;
     std::vector<String> columns;
-    columns.reserve(4);
-    bool headerSkipped = false;
+    columns.reserve(16);
+    std::vector<int8_t> columnParamIds;
+    bool headerLoaded = false;
     
     while (csv::readLine(file, line)) {
         if (line.isEmpty()) continue;
@@ -142,29 +154,63 @@ bool ShiftStore::loadColorShiftsFromSD() {
         trimmed.trim();
         if (trimmed.isEmpty() || trimmed.charAt(0) == '#') continue;
         
-        if (!headerSkipped) {
-            headerSkipped = true;
-            if (trimmed.startsWith("status")) continue;
+        csv::splitColumns(line, columns);
+        if (columns.empty()) continue;
+        
+        if (!headerLoaded) {
+            if (columns[0] != "status") {
+                PF("[ShiftStore] Color CSV: header must start with 'status', got '%s'\n", columns[0].c_str());
+                break;
+            }
+            columnParamIds.assign(columns.size(), -1);
+            bool anyKnownColumns = false;
+            for (size_t i = 1; i < columns.size(); ++i) {
+                String headerName = columns[i];
+                headerName.trim();
+                uint8_t paramId;
+                if (parseColorParam(headerName, paramId)) {
+                    columnParamIds[i] = static_cast<int8_t>(paramId);
+                    anyKnownColumns = true;
+                } else {
+                    PF("[ShiftStore] Color CSV: ignoring column '%s'\n", headerName.c_str());
+                }
+            }
+            if (!anyKnownColumns) {
+                PF("[ShiftStore] Color CSV: no recognizable parameter columns\n");
+                break;
+            }
+            headerLoaded = true;
+            continue;
         }
         
-        csv::splitColumns(line, columns);
-        if (columns.size() < 3) continue;
-        
-        float pct = columns[2].toFloat();
-        if (pct == 0.0f) continue;  // SKIP ZEROS - no effect
-        
-        uint8_t statusId, paramId;
-        if (!parseStatusString(columns[0], statusId)) continue;
-        if (!parseColorParam(columns[1], paramId)) continue;
-        
-        ColorShiftEntry entry;
-        entry.statusId = statusId;
-        entry.paramId = paramId;
-        entry.multiplier = 1.0f + (pct / 100.0f);  // -50% → 0.5, +100% → 2.0
-        colorShifts_.push_back(entry);
+        // Wide format: status + N parameter columns
+        uint8_t statusId;
+        String status = columns[0];
+        status.trim();
+        if (!parseStatusString(status, statusId)) {
+            PF("[ShiftStore] Color CSV: unknown status '%s'\n", status.c_str());
+            continue;
+        }
+        size_t columnCount = std::min(columns.size(), columnParamIds.size());
+        for (size_t i = 1; i < columnCount; ++i) {
+            int8_t paramIndex = columnParamIds[i];
+            if (paramIndex < 0) continue;
+            float pct = columns[i].toFloat();
+            if (pct == 0.0f) continue;
+            ColorShiftEntry entry;
+            entry.statusId = statusId;
+            entry.paramId = static_cast<uint8_t>(paramIndex);
+            entry.multiplier = 1.0f + (pct / 100.0f);
+            colorShifts_.push_back(entry);
+        }
     }
     
     file.close();
+    if (!headerLoaded) {
+        PF("[ShiftStore] Color CSV: header missing or invalid\n");
+        colorShifts_.clear();
+        return false;
+    }
     return true;
 }
 
@@ -194,8 +240,9 @@ bool ShiftStore::loadPatternShiftsFromSD() {
     
     String line;
     std::vector<String> columns;
-    columns.reserve(4);
-    bool headerSkipped = false;
+    columns.reserve(16);
+    std::vector<int8_t> columnParamIds;
+    bool headerLoaded = false;
     
     while (csv::readLine(file, line)) {
         if (line.isEmpty()) continue;
@@ -204,38 +251,62 @@ bool ShiftStore::loadPatternShiftsFromSD() {
         trimmed.trim();
         if (trimmed.isEmpty() || trimmed.charAt(0) == '#') continue;
         
-        if (!headerSkipped) {
-            headerSkipped = true;
-            if (trimmed.startsWith("status")) continue;
-        }
-        
         csv::splitColumns(line, columns);
-        if (columns.size() < 3) {
-            PF("[ShiftStore] Pattern CSV: skip line, cols=%d\n", columns.size());
+        if (columns.empty()) continue;
+        
+        if (!headerLoaded) {
+            if (columns[0] != "status") {
+                PF("[ShiftStore] Pattern CSV: header must start with 'status', got '%s'\n", columns[0].c_str());
+                break;
+            }
+            columnParamIds.assign(columns.size(), -1);
+            bool anyKnownColumns = false;
+            for (size_t i = 1; i < columns.size(); ++i) {
+                String headerName = columns[i];
+                headerName.trim();
+                uint8_t paramId;
+                if (parsePatternParam(headerName, paramId)) {
+                    columnParamIds[i] = static_cast<int8_t>(paramId);
+                    anyKnownColumns = true;
+                } else {
+                    PF("[ShiftStore] Pattern CSV: ignoring column '%s'\n", headerName.c_str());
+                }
+            }
+            if (!anyKnownColumns) {
+                PF("[ShiftStore] Pattern CSV: no recognizable parameter columns\n");
+                break;
+            }
+            headerLoaded = true;
             continue;
         }
         
-        float pct = columns[2].toFloat();
-        if (pct == 0.0f) continue;  // SKIP ZEROS
-        
-        uint8_t statusId, paramId;
-        if (!parseStatusString(columns[0], statusId)) {
-            PF("[ShiftStore] Pattern CSV: unknown status '%s'\n", columns[0].c_str());
+        uint8_t statusId;
+        String status = columns[0];
+        status.trim();
+        if (!parseStatusString(status, statusId)) {
+            PF("[ShiftStore] Pattern CSV: unknown status '%s'\n", status.c_str());
             continue;
         }
-        if (!parsePatternParam(columns[1], paramId)) {
-            PF("[ShiftStore] Pattern CSV: unknown param '%s'\n", columns[1].c_str());
-            continue;
+        size_t columnCount = std::min(columns.size(), columnParamIds.size());
+        for (size_t i = 1; i < columnCount; ++i) {
+            int8_t paramIndex = columnParamIds[i];
+            if (paramIndex < 0) continue;
+            float pct = columns[i].toFloat();
+            if (pct == 0.0f) continue;
+            PatternShiftEntry entry;
+            entry.statusId = statusId;
+            entry.paramId = static_cast<uint8_t>(paramIndex);
+            entry.multiplier = 1.0f + (pct / 100.0f);
+            patternShifts_.push_back(entry);
         }
-        
-        PatternShiftEntry entry;
-        entry.statusId = statusId;
-        entry.paramId = paramId;
-        entry.multiplier = 1.0f + (pct / 100.0f);
-        patternShifts_.push_back(entry);
     }
     
     file.close();
+    if (!headerLoaded) {
+        PF("[ShiftStore] Pattern CSV: header missing or invalid\n");
+        patternShifts_.clear();
+        return false;
+    }
     return true;
 }
 
