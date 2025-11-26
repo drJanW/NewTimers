@@ -21,8 +21,7 @@ struct CalendarThemeBox {
 	bool valid{false};
 	uint8_t id{0};
 	String entries;
-	String note;//TODO: OBSOLETE??
-
+	String note;
 };
 
 struct CalendarSnapshot {

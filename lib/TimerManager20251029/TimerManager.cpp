@@ -150,17 +150,3 @@ void TimerManager::showTimerCountStatus(bool showAlways) {
     showAvailableTimers(showAlways);
 }
 
-void TimerManager::dump() {//TODO: get rid of this unwanted shit
-    TIMER_LOG_INFO("[TimerManager] Active timers:\n");
-    uint32_t now = millis();
-    for (uint8_t i = 0; i < MAX_TIMERS; i++) {
-        if (slots[i].active) {
-            TIMER_LOG_INFO("  Slot %d: cb=%p interval=%lu ms nextFire in %ld ms repeat=%ld\n",
-                           i,
-                           (void*)slots[i].cb,
-                           (unsigned long)slots[i].interval,
-                           (long)(slots[i].nextFire - now),
-                           (long)slots[i].repeat);
-        }
-    }
-}

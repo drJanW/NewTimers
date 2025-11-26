@@ -43,7 +43,6 @@ public:
     // Diagnostics
     void showAvailableTimers(bool showAlways);
     void showTimerCountStatus(bool showAlways = false);
-    void dump();
 
 private:
     TimerManager();

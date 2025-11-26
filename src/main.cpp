@@ -7,7 +7,7 @@
 
 // goal 00: cleanup and refactor existing code
 // goal 01:!! sensor-sonar
-// goal 02: calendar & day-of-time & seasons
+// goal 02:!! calendar & day-of-time & seasons
 // goal 03:!! lightshows-simple
 // goal 04:!! git status un-globalize
 // goal 05:!! OTA
@@ -28,7 +28,7 @@ void setup()
     {
         delay(10);
     }
-    PL("\n[Main] Version 11_25_02_H"); // Version MM_DD_XX_A, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation)
+    PL("\n[Main] Version 11_26_14_A"); // Version MM_DD_XX_A, XX (by Jan indication his list of goals) A (by copilot: A..Z-> update BEFORE any new compilation)
                                     // version 10_30_02_C means : on oct 30, we had (at least) 3 attempts to get the second goal completed
 
     otaBootDispatcher();
