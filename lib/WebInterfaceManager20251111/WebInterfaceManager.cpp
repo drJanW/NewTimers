@@ -19,6 +19,7 @@
 #include <memory>
 #include <cstring>
 #include <cstdio>
+#include <time.h>
 
 #ifndef WEBIF_LOG_LEVEL
 #define WEBIF_LOG_LEVEL 1
@@ -150,29 +151,65 @@ void handleSdList(AsyncWebServerRequest *request)
     return;
   }
 
-  constexpr size_t kMaxEntries = 256U;
+  constexpr size_t kMaxEntries = 128U;
   size_t entryCount = 0;
   bool truncated = false;
-  String entries;
-  entries.reserve(512);
+
+  AsyncResponseStream *response = request->beginResponseStream("application/json");
+  response->addHeader("Cache-Control", "no-store");
+
+  response->print(F("{\"path\":\""));
+  String escapedPath;
+  appendJsonEscaped(escapedPath, path.c_str());
+  response->print(escapedPath);
+  response->print(F("\",\"parent\":\""));
+  String escapedParent;
+  appendJsonEscaped(escapedParent, parentPath(path).c_str());
+  response->print(escapedParent);
+  response->print(F("\",\"ready\":true,\"busy\":"));
+  response->print(SDManager::isBusy() ? F("true") : F("false"));
+  response->print(F(",\"entries\":["));
 
   for (File entry = dir.openNextFile(); entry; entry = dir.openNextFile())
   {
     if (entryCount > 0)
     {
-      entries += ',';
+      response->print(',');
     }
+
     const bool isDir = entry.isDirectory();
-    const uint32_t sizeBytes = isDir ? 0U : static_cast<uint32_t>(entry.size());
+    const time_t lastWrite = entry.getLastWrite();
+    char timeBuffer[24] = "";
+    if (lastWrite > 0)
+    {
+      struct tm timeinfo;
+      if (localtime_r(&lastWrite, &timeinfo))
+      {
+        strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
+      }
+    }
     const String baseName = extractBaseName(entry.name());
 
-    entries += F("{\"name\":\"");
-    appendJsonEscaped(entries, baseName.c_str());
-    entries += F("\",\"type\":\"");
-    entries += isDir ? F("dir") : F("file");
-    entries += F("\",\"size\":");
-    entries += String(sizeBytes);
-    entries += '}';
+    response->print(F("{\"name\":\""));
+    String escapedName;
+    appendJsonEscaped(escapedName, baseName.c_str());
+    response->print(escapedName);
+    response->print(F("\",\"type\":\""));
+    response->print(isDir ? F("dir") : F("file"));
+    response->print(F("\",\"mtime\":"));
+    if (lastWrite > 0)
+    {
+      response->print(static_cast<uint32_t>(lastWrite));
+    }
+    else
+    {
+      response->print(F("null"));
+    }
+    response->print(F(",\"modified\":\""));
+    String escapedTime;
+    appendJsonEscaped(escapedTime, timeBuffer);
+    response->print(escapedTime);
+    response->print(F("\"}"));
 
     entry.close();
     ++entryCount;
@@ -186,24 +223,13 @@ void handleSdList(AsyncWebServerRequest *request)
 
   lock.release();
 
-  const bool busyFlag = SDManager::isBusy();
-  String payload;
-  payload.reserve(entries.length() + 160);
-  payload += F("{\"path\":\"");
-  appendJsonEscaped(payload, path.c_str());
-  payload += F("\",\"parent\":\"");
-  appendJsonEscaped(payload, parentPath(path).c_str());
-  payload += F("\",\"ready\":true,\"busy\":");
-  payload += busyFlag ? F("true") : F("false");
-  payload += F(",\"entryCount\":");
-  payload += String(entryCount);
-  payload += F(",\"truncated\":");
-  payload += truncated ? F("true") : F("false");
-  payload += F(",\"entries\":[");
-  payload += entries;
-  payload += F("]}");
+  response->print(F("],\"entryCount\":"));
+  response->print(entryCount);
+  response->print(F(",\"truncated\":"));
+  response->print(truncated ? F("true") : F("false"));
+  response->print('}');
 
-  sendJsonResponse(request, payload);
+  request->send(response);
 }
 
 String rgbToHex(const RgbColor &rgb)

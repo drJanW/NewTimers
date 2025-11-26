@@ -140,7 +140,7 @@
 
     // Build sentinel: update version string whenever web assets change so the device/browser can verify freshness.
     window.APP_BUILD_INFO = Object.freeze({
-        version: 'webui-otaonebutton-20251112T1230Z',
+        version: 'webui-otaonebutton-20251125T2335Z',
         features: ['previewFallback', 'lastAppliedTracking', 'patternPaletteSplit', 'splitLightModals', 'otaOneButton']
     });
 
@@ -374,6 +374,18 @@
         return id
             .replace(/_/g, ' ')
             .replace(/\b\w/g, (ch) => ch.toUpperCase());
+    };
+
+    const formatDateTime = (epochSeconds) => {
+        if (typeof epochSeconds !== 'number' || !Number.isFinite(epochSeconds) || epochSeconds <= 0) {
+            return '';
+        }
+        try {
+            return new Date(epochSeconds * 1000).toLocaleString('nl-NL', { hour12: false });
+        } catch (error) {
+            console.warn('formatDateTime failed', error);
+            return '';
+        }
     };
 
     const resolvePatternLabel = (id) => {
@@ -700,20 +712,6 @@
         return task;
     };
 
-    const formatBytes = (value) => {
-        const units = ['B', 'KB', 'MB', 'GB'];
-        let result = Number(value);
-        let unitIndex = 0;
-        while (result >= 1024 && unitIndex < units.length - 1) {
-            result /= 1024;
-            unitIndex += 1;
-        }
-        if (unitIndex === 0) {
-            return `${Math.round(result)} ${units[unitIndex]}`;
-        }
-        return `${result.toFixed(result < 10 ? 1 : 0)} ${units[unitIndex]}`;
-    };
-
     const renderSdEntries = () => {
         if (!dom.sdEntries) {
             return;
@@ -723,7 +721,7 @@
         if (entries.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 4;
+            cell.colSpan = 3;
             cell.className = 'sd-empty';
             cell.textContent = 'Geen bestanden';
             row.appendChild(cell);
@@ -748,13 +746,16 @@
                 }
                 row.appendChild(nameCell);
 
-                const typeCell = document.createElement('td');
-                typeCell.textContent = entry.type === 'dir' ? 'Map' : 'Bestand';
-                row.appendChild(typeCell);
-
-                const sizeCell = document.createElement('td');
-                sizeCell.textContent = entry.type === 'dir' ? '-' : formatBytes(entry.size || 0);
-                row.appendChild(sizeCell);
+                const dateCell = document.createElement('td');
+                if (entry.type === 'dir') {
+                    dateCell.textContent = 'Map';
+                } else {
+                    const timestampLabel = (typeof entry.modified === 'string' && entry.modified.length > 0)
+                        ? entry.modified
+                        : formatDateTime(entry.mtime);
+                    dateCell.textContent = timestampLabel && timestampLabel.length > 0 ? timestampLabel : '—';
+                }
+                row.appendChild(dateCell);
 
                 const actionsCell = document.createElement('td');
                 actionsCell.className = 'sd-actions';

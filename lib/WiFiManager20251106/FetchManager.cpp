@@ -16,6 +16,7 @@
 #include <NTPClient.h>
 #include <Timezone.h>
 #include <HTTPClient.h>
+#include <sys/time.h>
 
 static void cacheTimeSnapshotTick();
 static void persistClockSnapshot();
@@ -112,6 +113,10 @@ static void cb_tryNTP() {
 
     time_t utc   = timeClient.getEpochTime();
     time_t local = CE.toLocal(utc);
+
+    // Set ESP32 system time so SD library uses correct timestamps
+    struct timeval tv = { .tv_sec = local, .tv_usec = 0 };
+    settimeofday(&tv, nullptr);
 
     struct tm t;
     localtime_r(&local, &t);
